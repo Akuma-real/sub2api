@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/semver"
 )
 
 const (
@@ -513,6 +515,12 @@ func (s *UpdateService) saveToCache(ctx context.Context, info *UpdateInfo) {
 
 // compareVersions compares two semantic versions
 func compareVersions(current, latest string) int {
+	currentSemver := normalizeSemver(current)
+	latestSemver := normalizeSemver(latest)
+	if semver.IsValid(currentSemver) && semver.IsValid(latestSemver) {
+		return semver.Compare(currentSemver, latestSemver)
+	}
+
 	currentParts := parseVersion(current)
 	latestParts := parseVersion(latest)
 
@@ -527,14 +535,35 @@ func compareVersions(current, latest string) int {
 	return 0
 }
 
+func normalizeSemver(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+	if !strings.HasPrefix(v, "v") {
+		v = "v" + v
+	}
+	return v
+}
+
 func parseVersion(v string) [3]int {
 	v = strings.TrimPrefix(v, "v")
 	parts := strings.Split(v, ".")
 	result := [3]int{0, 0, 0}
 	for i := 0; i < len(parts) && i < 3; i++ {
-		if parsed, err := strconv.Atoi(parts[i]); err == nil {
+		part := leadingDigits(parts[i])
+		if parsed, err := strconv.Atoi(part); err == nil {
 			result[i] = parsed
 		}
 	}
 	return result
+}
+
+func leadingDigits(s string) string {
+	for i, r := range s {
+		if r < '0' || r > '9' {
+			return s[:i]
+		}
+	}
+	return s
 }
