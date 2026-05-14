@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { buildEmbeddedUrl, detectTheme } from '../embedded-url'
+import { buildEmbeddedUrl } from '../embedded-url'
 
 describe('embedded-url', () => {
   const originalLocation = window.location
@@ -21,7 +21,6 @@ describe('embedded-url', () => {
       writable: true,
       configurable: true,
     })
-    document.documentElement.classList.remove('dark')
     vi.restoreAllMocks()
   })
 
@@ -58,10 +57,5 @@ describe('embedded-url', () => {
 
   it('returns original string for invalid url input', () => {
     expect(buildEmbeddedUrl('not a url', 1, 'token')).toBe('not a url')
-  })
-
-  it('detects dark mode from document root class', () => {
-    document.documentElement.classList.add('dark')
-    expect(detectTheme()).toBe('dark')
   })
 })

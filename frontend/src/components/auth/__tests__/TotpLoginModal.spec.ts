@@ -36,6 +36,6 @@ describe('TotpLoginModal', () => {
 
     expect(showErrorMock).toHaveBeenCalledWith('Invalid code')
     expect(wrapper.text()).not.toContain('Invalid code')
-    expect(wrapper.find('.bg-red-50').exists()).toBe(false)
+    expect(wrapper.find('.bg-error\\/15').exists()).toBe(false)
   })
 })

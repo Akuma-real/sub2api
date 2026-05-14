@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@airwallex/components-sdk": "^1.30.2",
+    "@fontsource/cormorant-garamond": "^5.2.11",
+    "@fontsource/inter": "^5.2.8",
     "@lobehub/icons": "^4.0.2",
     "@stripe/stripe-js": "^9.0.1",
     "@tanstack/vue-virtual": "^3.13.23",
@@ -56,6 +58,7 @@
     "vite": "^5.0.10",
     "vite-plugin-checker": "^0.9.1",
     "vitest": "^2.1.9",
+    "vue-eslint-parser": "^10.4.0",
     "vue-tsc": "^2.2.0"
   }
 }

@@ -122,7 +122,7 @@ describe('OAuthCallbackView', () => {
 
     expect(showErrorMock).toHaveBeenCalledWith('oauth failed')
     expect(wrapper.text()).not.toContain('oauth failed')
-    expect(wrapper.find('.bg-red-50').exists()).toBe(false)
+    expect(wrapper.find('.bg-error\\/15').exists()).toBe(false)
   })
 
   it('does not render manual copy fields for direct email oauth callback visits', async () => {

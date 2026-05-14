@@ -1,37 +1,34 @@
 <template>
   <div :class="props.embedded ? 'space-y-4' : 'card overflow-hidden'">
-    <div
-      v-if="!props.embedded"
-      class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-    >
-      <h2 class="text-lg font-medium text-gray-900 dark:text-white">
-        {{ t('profile.authBindings.title') }}
+    <div v-if="!props.embedded" class="border-b border-hairline-soft px-6 py-4">
+      <h2 class="text-lg font-medium text-ink">
+        {{ t("profile.authBindings.title") }}
       </h2>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        {{ t('profile.authBindings.description') }}
+      <p class="mt-1 text-sm text-muted">
+        {{ t("profile.authBindings.description") }}
       </p>
     </div>
 
-    <div :class="props.embedded ? 'space-y-4' : 'divide-y divide-gray-100 dark:divide-dark-700'">
+    <div
+      :class="props.embedded ? 'space-y-4' : 'divide-y divide-hairline-soft '"
+    >
       <div v-if="props.embedded">
-        <p class="text-sm font-semibold text-gray-900 dark:text-white">
-          {{ t('profile.authBindings.title') }}
+        <p class="text-sm font-semibold text-ink">
+          {{ t("profile.authBindings.title") }}
         </p>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {{ t('profile.authBindings.description') }}
+        <p class="mt-1 text-sm text-muted">
+          {{ t("profile.authBindings.description") }}
         </p>
       </div>
 
-      <div
-        v-for="item in providerItems"
-        :key="item.provider"
-        :class="rowClass"
-      >
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div v-for="item in providerItems" :key="item.provider" :class="rowClass">
+        <div
+          class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+        >
           <div class="flex min-w-0 flex-1 items-start gap-4">
             <div
               :class="providerIconClass(item.provider)"
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
             >
               <Icon
                 v-if="item.provider === 'email'"
@@ -44,39 +41,44 @@
 
             <div class="min-w-0 flex-1 space-y-3">
               <div class="flex flex-wrap items-center gap-2">
-                <h3 class="font-medium text-gray-900 dark:text-white">
+                <h3 class="font-medium text-ink">
                   {{ item.label }}
                 </h3>
                 <span
                   :data-testid="`profile-binding-${item.provider}-status`"
-                  :class="['badge', item.bound ? 'badge-success' : 'badge-gray']"
+                  :class="[
+                    'badge',
+                    item.bound ? 'badge-success' : 'badge-gray',
+                  ]"
                 >
                   {{
                     item.bound
-                      ? t('profile.authBindings.status.bound')
-                      : t('profile.authBindings.status.notBound')
+                      ? t("profile.authBindings.status.bound")
+                      : t("profile.authBindings.status.notBound")
                   }}
                 </span>
               </div>
 
               <p
                 v-if="providerSummary(item.provider)"
-                class="text-sm text-gray-600 dark:text-gray-300"
+                class="text-sm text-body"
               >
                 {{ providerSummary(item.provider) }}
               </p>
 
               <div
                 v-if="hasBindingDetails(item.provider, item.details)"
-                class="grid gap-1 text-sm text-gray-500 dark:text-gray-400"
+                class="grid gap-1 text-sm text-muted"
               >
                 <p
                   v-if="item.provider !== 'email' && item.details?.display_name"
-                  class="font-medium text-gray-700 dark:text-gray-200"
+                  class="font-medium text-body"
                 >
                   {{ item.details.display_name }}
                 </p>
-                <p v-if="item.provider !== 'email' && item.details?.subject_hint">
+                <p
+                  v-if="item.provider !== 'email' && item.details?.subject_hint"
+                >
                   {{ item.details.subject_hint }}
                 </p>
                 <p v-if="bindingCountLabel(item.details)">
@@ -109,8 +111,8 @@
                 >
                   {{
                     isSendingEmailCode
-                      ? t('common.loading')
-                      : t('profile.authBindings.sendCodeAction')
+                      ? t("common.loading")
+                      : t("profile.authBindings.sendCodeAction")
                   }}
                 </button>
                 <input
@@ -140,7 +142,7 @@
                 >
                   {{
                     isBindingEmail
-                      ? t('common.loading')
+                      ? t("common.loading")
                       : emailSubmitActionLabel
                   }}
                 </button>
@@ -158,8 +160,8 @@
             >
               {{
                 showEmailForm
-                  ? t('profile.authBindings.hideEmailFormAction')
-                  : t('profile.authBindings.manageEmailAction')
+                  ? t("profile.authBindings.hideEmailFormAction")
+                  : t("profile.authBindings.manageEmailAction")
               }}
             </button>
             <button
@@ -169,7 +171,11 @@
               class="btn btn-primary btn-sm"
               @click="startBinding(item.provider)"
             >
-              {{ t('profile.authBindings.bindAction', { providerName: item.label }) }}
+              {{
+                t("profile.authBindings.bindAction", {
+                  providerName: item.label,
+                })
+              }}
             </button>
             <button
               v-if="item.canUnbind"
@@ -181,8 +187,8 @@
             >
               {{
                 unbindingProvider === item.provider
-                  ? t('common.loading')
-                  : t('profile.authBindings.unbindAction')
+                  ? t("common.loading")
+                  : t("profile.authBindings.unbindAction")
               }}
             </button>
           </div>
@@ -193,446 +199,507 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { computed, reactive, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 import {
   hasExplicitWeChatOAuthCapabilities,
   resolveWeChatOAuthStartStrict,
   type WeChatOAuthPublicSettings,
-} from '@/api/auth'
+} from "@/api/auth";
 import {
   bindEmailIdentity,
   sendEmailBindingCode,
   startOAuthBinding,
   unbindAuthIdentity,
-} from '@/api/user'
-import Icon from '@/components/icons/Icon.vue'
-import { useAppStore, useAuthStore } from '@/stores'
-import type { User, UserAuthBindingStatus, UserAuthProvider } from '@/types'
+} from "@/api/user";
+import Icon from "@/components/icons/Icon.vue";
+import { useAppStore, useAuthStore } from "@/stores";
+import type { User, UserAuthBindingStatus, UserAuthProvider } from "@/types";
 
-type BindableProvider = Exclude<UserAuthProvider, 'email'>
+type BindableProvider = Exclude<UserAuthProvider, "email">;
 
 const props = withDefaults(
   defineProps<{
-    user: User | null
-    linuxdoEnabled?: boolean
-    oidcEnabled?: boolean
-    oidcProviderName?: string
-    wechatEnabled?: boolean
-    wechatOpenEnabled?: boolean
-    wechatMpEnabled?: boolean
-    embedded?: boolean
-    compact?: boolean
+    user: User | null;
+    linuxdoEnabled?: boolean;
+    oidcEnabled?: boolean;
+    oidcProviderName?: string;
+    wechatEnabled?: boolean;
+    wechatOpenEnabled?: boolean;
+    wechatMpEnabled?: boolean;
+    embedded?: boolean;
+    compact?: boolean;
   }>(),
   {
     linuxdoEnabled: false,
     oidcEnabled: false,
-    oidcProviderName: 'OIDC',
+    oidcProviderName: "OIDC",
     wechatEnabled: false,
     wechatOpenEnabled: undefined,
     wechatMpEnabled: undefined,
     embedded: false,
     compact: false,
-  }
-)
+  },
+);
 
-const { t } = useI18n()
-const route = useRoute()
-const appStore = useAppStore()
-const authStore = useAuthStore()
+const { t } = useI18n();
+const route = useRoute();
+const appStore = useAppStore();
+const authStore = useAuthStore();
 
-const localUser = ref<User | null>(null)
-const isSendingEmailCode = ref(false)
-const isBindingEmail = ref(false)
-const isEmailFormExpanded = ref(!props.compact)
-const unbindingProvider = ref<BindableProvider | null>(null)
+const localUser = ref<User | null>(null);
+const isSendingEmailCode = ref(false);
+const isBindingEmail = ref(false);
+const isEmailFormExpanded = ref(!props.compact);
+const unbindingProvider = ref<BindableProvider | null>(null);
 const emailBindingForm = reactive({
-  email: '',
-  verifyCode: '',
-  password: '',
-})
+  email: "",
+  verifyCode: "",
+  password: "",
+});
 
 watch(
   () => props.user,
   (user) => {
-    localUser.value = null
+    localUser.value = null;
     if (!user) {
-      return
+      return;
     }
-    if (typeof user.email === 'string' && !user.email.endsWith('.invalid')) {
-      emailBindingForm.email = user.email
+    if (typeof user.email === "string" && !user.email.endsWith(".invalid")) {
+      emailBindingForm.email = user.email;
     }
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
 watch(
   () => props.compact,
   (value) => {
     if (!value) {
-      isEmailFormExpanded.value = true
+      isEmailFormExpanded.value = true;
     }
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
-const currentUser = computed(() => localUser.value ?? props.user)
-const compact = computed(() => props.compact)
+const currentUser = computed(() => localUser.value ?? props.user);
+const compact = computed(() => props.compact);
 const rowClass = computed(() =>
   props.embedded
     ? compact.value
-      ? 'rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-dark-700 dark:bg-dark-900/40'
-      : 'rounded-2xl border border-gray-100 bg-gray-50/70 p-4 dark:border-dark-700 dark:bg-dark-900/30'
-    : 'px-6 py-5'
-)
-const emailBound = computed(() => getBindingStatus('email'))
-const showEmailForm = computed(() => !compact.value || isEmailFormExpanded.value)
+      ? "rounded-lg border border-hairline-soft bg-canvas p-4 shadow-sm "
+      : "rounded-lg border border-hairline-soft bg-surface-soft/70 p-4 "
+    : "px-6 py-5",
+);
+const emailBound = computed(() => getBindingStatus("email"));
+const showEmailForm = computed(
+  () => !compact.value || isEmailFormExpanded.value,
+);
 const emailPasswordPlaceholder = computed(() =>
   emailBound.value
-    ? t('profile.authBindings.replaceEmailPasswordPlaceholder')
-    : t('profile.authBindings.passwordPlaceholder')
-)
+    ? t("profile.authBindings.replaceEmailPasswordPlaceholder")
+    : t("profile.authBindings.passwordPlaceholder"),
+);
 const emailSubmitActionLabel = computed(() =>
   emailBound.value
-    ? t('profile.authBindings.confirmEmailReplaceAction')
-    : t('profile.authBindings.confirmEmailBindAction')
-)
+    ? t("profile.authBindings.confirmEmailReplaceAction")
+    : t("profile.authBindings.confirmEmailBindAction"),
+);
 const legacyBindingNoteKeys: Record<string, string> = {
-  'Primary account email is managed from the profile form.':
-    'profile.authBindings.notes.emailManagedFromProfile',
-  'You can unbind this sign-in method.': 'profile.authBindings.notes.canUnbind',
-  'Bind another sign-in method before unbinding.':
-    'profile.authBindings.notes.bindAnotherBeforeUnbind',
-}
+  "Primary account email is managed from the profile form.":
+    "profile.authBindings.notes.emailManagedFromProfile",
+  "You can unbind this sign-in method.": "profile.authBindings.notes.canUnbind",
+  "Bind another sign-in method before unbinding.":
+    "profile.authBindings.notes.bindAnotherBeforeUnbind",
+};
 
 function resolveLegacyCompatibleWeChatSettings(
-  settings: WeChatOAuthPublicSettings | null | undefined
-): (WeChatOAuthPublicSettings & {
-  wechat_oauth_open_enabled: boolean
-  wechat_oauth_mp_enabled: boolean
-}) | null {
+  settings: WeChatOAuthPublicSettings | null | undefined,
+):
+  | (WeChatOAuthPublicSettings & {
+      wechat_oauth_open_enabled: boolean;
+      wechat_oauth_mp_enabled: boolean;
+    })
+  | null {
   if (!settings) {
-    return null
+    return null;
   }
 
   if (hasExplicitWeChatOAuthCapabilities(settings)) {
-    return settings
+    return settings;
   }
 
-  if (typeof settings.wechat_oauth_enabled !== 'boolean') {
-    return null
+  if (typeof settings.wechat_oauth_enabled !== "boolean") {
+    return null;
   }
 
   return {
     ...settings,
     wechat_oauth_open_enabled: settings.wechat_oauth_enabled,
     wechat_oauth_mp_enabled: settings.wechat_oauth_enabled,
-  }
+  };
 }
 
 const wechatOAuthSettings = computed<WeChatOAuthPublicSettings | null>(() => {
-  const cachedSettings = resolveLegacyCompatibleWeChatSettings(appStore.cachedPublicSettings)
+  const cachedSettings = resolveLegacyCompatibleWeChatSettings(
+    appStore.cachedPublicSettings,
+  );
   if (cachedSettings) {
-    return cachedSettings
+    return cachedSettings;
   }
 
   return resolveLegacyCompatibleWeChatSettings({
     wechat_oauth_enabled: props.wechatEnabled,
     wechat_oauth_open_enabled: props.wechatOpenEnabled,
     wechat_oauth_mp_enabled: props.wechatMpEnabled,
-  })
-})
+  });
+});
 
-const resolvedWeChatBinding = computed(() => resolveWeChatOAuthStartStrict(wechatOAuthSettings.value))
+const resolvedWeChatBinding = computed(() =>
+  resolveWeChatOAuthStartStrict(wechatOAuthSettings.value),
+);
 
-function normalizeBindingStatus(binding: boolean | UserAuthBindingStatus | undefined): boolean | null {
-  if (typeof binding === 'boolean') {
-    return binding
+function normalizeBindingStatus(
+  binding: boolean | UserAuthBindingStatus | undefined,
+): boolean | null {
+  if (typeof binding === "boolean") {
+    return binding;
   }
   if (!binding) {
-    return null
+    return null;
   }
-  if (typeof binding.bound === 'boolean') {
-    return binding.bound
+  if (typeof binding.bound === "boolean") {
+    return binding.bound;
   }
-  return Boolean(binding.provider_subject || binding.issuer || binding.provider_key)
+  return Boolean(
+    binding.provider_subject || binding.issuer || binding.provider_key,
+  );
 }
 
 function getBindingStatus(provider: UserAuthProvider): boolean {
-  return getBindingStatusForUser(currentUser.value, provider)
+  return getBindingStatusForUser(currentUser.value, provider);
 }
 
-function getBindingStatusForUser(user: User | null | undefined, provider: UserAuthProvider): boolean {
-  if (provider === 'email') {
-    if (typeof user?.email_bound === 'boolean') {
-      return user.email_bound
+function getBindingStatusForUser(
+  user: User | null | undefined,
+  provider: UserAuthProvider,
+): boolean {
+  if (provider === "email") {
+    if (typeof user?.email_bound === "boolean") {
+      return user.email_bound;
     }
-    const nested = user?.auth_bindings?.email ?? user?.identity_bindings?.email
-    const normalized = normalizeBindingStatus(nested)
-    return normalized ?? false
+    const nested = user?.auth_bindings?.email ?? user?.identity_bindings?.email;
+    const normalized = normalizeBindingStatus(nested);
+    return normalized ?? false;
   }
 
-  const directFlag = user?.[`${provider}_bound` as keyof User]
-  if (typeof directFlag === 'boolean') {
-    return directFlag
+  const directFlag = user?.[`${provider}_bound` as keyof User];
+  if (typeof directFlag === "boolean") {
+    return directFlag;
   }
 
-  const nested = user?.auth_bindings?.[provider] ?? user?.identity_bindings?.[provider]
-  const normalized = normalizeBindingStatus(nested)
-  return normalized ?? false
+  const nested =
+    user?.auth_bindings?.[provider] ?? user?.identity_bindings?.[provider];
+  const normalized = normalizeBindingStatus(nested);
+  return normalized ?? false;
 }
 
-function getBindingDetails(provider: UserAuthProvider): UserAuthBindingStatus | null {
-  const binding = currentUser.value?.auth_bindings?.[provider] ?? currentUser.value?.identity_bindings?.[provider]
-  if (!binding || typeof binding === 'boolean') {
-    return null
+function getBindingDetails(
+  provider: UserAuthProvider,
+): UserAuthBindingStatus | null {
+  const binding =
+    currentUser.value?.auth_bindings?.[provider] ??
+    currentUser.value?.identity_bindings?.[provider];
+  if (!binding || typeof binding === "boolean") {
+    return null;
   }
-  return binding
+  return binding;
 }
 
 function getDisplayableEmail(user: User | null | undefined): string {
-  const email = user?.email?.trim() || ''
+  const email = user?.email?.trim() || "";
   if (!email) {
-    return ''
+    return "";
   }
-  if (email.endsWith('.invalid') && !getBindingStatusForUser(user, 'email')) {
-    return ''
+  if (email.endsWith(".invalid") && !getBindingStatusForUser(user, "email")) {
+    return "";
   }
-  return email
+  return email;
 }
 
 function isProviderEnabledForBinding(provider: BindableProvider): boolean {
-  if (provider === 'linuxdo') {
-    return props.linuxdoEnabled
+  if (provider === "linuxdo") {
+    return props.linuxdoEnabled;
   }
-  if (provider === 'oidc') {
-    return props.oidcEnabled
+  if (provider === "oidc") {
+    return props.oidcEnabled;
   }
-  return resolvedWeChatBinding.value.mode !== null
+  return resolvedWeChatBinding.value.mode !== null;
 }
 
 const providerItems = computed(() => [
   {
-    provider: 'email' as const,
-    label: t('profile.authBindings.providers.email'),
-    bound: getBindingStatus('email'),
+    provider: "email" as const,
+    label: t("profile.authBindings.providers.email"),
+    bound: getBindingStatus("email"),
     canBind: false,
     canUnbind: false,
-    details: getBindingDetails('email'),
+    details: getBindingDetails("email"),
   },
   {
-    provider: 'linuxdo' as const,
-    label: t('profile.authBindings.providers.linuxdo'),
-    bound: getBindingStatus('linuxdo'),
+    provider: "linuxdo" as const,
+    label: t("profile.authBindings.providers.linuxdo"),
+    bound: getBindingStatus("linuxdo"),
     canBind:
-      !getBindingStatus('linuxdo') &&
-      isProviderEnabledForBinding('linuxdo') &&
-      (getBindingDetails('linuxdo')?.can_bind ?? true),
-    canUnbind: Boolean(getBindingStatus('linuxdo') && getBindingDetails('linuxdo')?.can_unbind),
-    details: getBindingDetails('linuxdo'),
+      !getBindingStatus("linuxdo") &&
+      isProviderEnabledForBinding("linuxdo") &&
+      (getBindingDetails("linuxdo")?.can_bind ?? true),
+    canUnbind: Boolean(
+      getBindingStatus("linuxdo") && getBindingDetails("linuxdo")?.can_unbind,
+    ),
+    details: getBindingDetails("linuxdo"),
   },
   {
-    provider: 'oidc' as const,
-    label: t('profile.authBindings.providers.oidc', { providerName: props.oidcProviderName }),
-    bound: getBindingStatus('oidc'),
+    provider: "oidc" as const,
+    label: t("profile.authBindings.providers.oidc", {
+      providerName: props.oidcProviderName,
+    }),
+    bound: getBindingStatus("oidc"),
     canBind:
-      !getBindingStatus('oidc') &&
-      isProviderEnabledForBinding('oidc') &&
-      (getBindingDetails('oidc')?.can_bind ?? true),
-    canUnbind: Boolean(getBindingStatus('oidc') && getBindingDetails('oidc')?.can_unbind),
-    details: getBindingDetails('oidc'),
+      !getBindingStatus("oidc") &&
+      isProviderEnabledForBinding("oidc") &&
+      (getBindingDetails("oidc")?.can_bind ?? true),
+    canUnbind: Boolean(
+      getBindingStatus("oidc") && getBindingDetails("oidc")?.can_unbind,
+    ),
+    details: getBindingDetails("oidc"),
   },
   {
-    provider: 'wechat' as const,
-    label: t('profile.authBindings.providers.wechat'),
-    bound: getBindingStatus('wechat'),
+    provider: "wechat" as const,
+    label: t("profile.authBindings.providers.wechat"),
+    bound: getBindingStatus("wechat"),
     canBind:
-      !getBindingStatus('wechat') &&
-      isProviderEnabledForBinding('wechat') &&
-      (getBindingDetails('wechat')?.can_bind ?? true),
-    canUnbind: Boolean(getBindingStatus('wechat') && getBindingDetails('wechat')?.can_unbind),
-    details: getBindingDetails('wechat'),
+      !getBindingStatus("wechat") &&
+      isProviderEnabledForBinding("wechat") &&
+      (getBindingDetails("wechat")?.can_bind ?? true),
+    canUnbind: Boolean(
+      getBindingStatus("wechat") && getBindingDetails("wechat")?.can_unbind,
+    ),
+    details: getBindingDetails("wechat"),
   },
-])
+]);
 
 function providerInitial(provider: UserAuthProvider): string {
-  if (provider === 'linuxdo') {
-    return 'L'
+  if (provider === "linuxdo") {
+    return "L";
   }
-  if (provider === 'wechat') {
-    return 'W'
+  if (provider === "wechat") {
+    return "W";
   }
-  if (provider === 'oidc') {
-    return 'O'
+  if (provider === "oidc") {
+    return "O";
   }
-  return 'E'
+  return "E";
 }
 
 function providerIconClass(provider: UserAuthProvider): string {
-  if (provider === 'linuxdo') {
-    return 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-300'
+  if (provider === "linuxdo") {
+    return "bg-accent-amber/15 text-warning ";
   }
-  if (provider === 'wechat') {
-    return 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-300'
+  if (provider === "wechat") {
+    return "bg-success/15 text-success ";
   }
-  if (provider === 'oidc') {
-    return 'bg-sky-100 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300'
+  if (provider === "oidc") {
+    return "bg-accent-teal/15 text-accent-teal ";
   }
-  return 'bg-primary-100 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300'
+  return "bg-primary-100 text-primary-600 ";
 }
 
 function providerSummary(provider: UserAuthProvider): string {
-  if (provider === 'email') {
-    return getDisplayableEmail(currentUser.value)
+  if (provider === "email") {
+    return getDisplayableEmail(currentUser.value);
   }
-  return ''
+  return "";
 }
 
 function bindingCountLabel(details: UserAuthBindingStatus | null): string {
-  if (!details || typeof details.bound_count !== 'number' || details.bound_count <= 1) {
-    return ''
+  if (
+    !details ||
+    typeof details.bound_count !== "number" ||
+    details.bound_count <= 1
+  ) {
+    return "";
   }
-  return t('profile.authBindings.boundCount', { count: details.bound_count })
+  return t("profile.authBindings.boundCount", { count: details.bound_count });
 }
 
 function bindingNote(details: UserAuthBindingStatus | null): string {
   if (!details) {
-    return ''
+    return "";
   }
 
-  const noteKey = details.note_key?.trim() || legacyBindingNoteKeys[details.note?.trim() || ''] || ''
+  const noteKey =
+    details.note_key?.trim() ||
+    legacyBindingNoteKeys[details.note?.trim() || ""] ||
+    "";
   if (noteKey) {
-    const translated = t(noteKey)
+    const translated = t(noteKey);
     if (translated !== noteKey) {
-      return translated
+      return translated;
     }
   }
 
-  return details.note?.trim() || ''
+  return details.note?.trim() || "";
 }
 
 function hasBindingDetails(
   provider: UserAuthProvider,
-  details: UserAuthBindingStatus | null
+  details: UserAuthBindingStatus | null,
 ): boolean {
   if (!details) {
-    return false
+    return false;
   }
 
   const showsProviderIdentityDetails =
-    provider !== 'email' && Boolean(details.display_name || details.subject_hint)
+    provider !== "email" &&
+    Boolean(details.display_name || details.subject_hint);
 
-  return Boolean(showsProviderIdentityDetails || bindingCountLabel(details) || bindingNote(details))
+  return Boolean(
+    showsProviderIdentityDetails ||
+    bindingCountLabel(details) ||
+    bindingNote(details),
+  );
 }
 
 function toggleEmailForm(): void {
-  isEmailFormExpanded.value = !isEmailFormExpanded.value
+  isEmailFormExpanded.value = !isEmailFormExpanded.value;
 }
 
 function startBinding(provider: UserAuthProvider): void {
-  if (provider === 'email') {
-    return
+  if (provider === "email") {
+    return;
   }
   startOAuthBinding(provider, {
-    redirectTo: route.fullPath || '/profile',
-    wechatOAuthSettings: provider === 'wechat' ? wechatOAuthSettings.value : null,
-  })
+    redirectTo: route.fullPath || "/profile",
+    wechatOAuthSettings:
+      provider === "wechat" ? wechatOAuthSettings.value : null,
+  });
 }
 
 function applyUpdatedUser(user: User): void {
-  localUser.value = user
-  authStore.user = user
+  localUser.value = user;
+  authStore.user = user;
 }
 
-async function handleUnbind(provider: BindableProvider, providerLabel: string): Promise<void> {
-  unbindingProvider.value = provider
+async function handleUnbind(
+  provider: BindableProvider,
+  providerLabel: string,
+): Promise<void> {
+  unbindingProvider.value = provider;
   try {
-    const user = await unbindAuthIdentity(provider)
-    applyUpdatedUser(user)
-    appStore.showSuccess(t('profile.authBindings.unbindSuccess', { providerName: providerLabel }))
+    const user = await unbindAuthIdentity(provider);
+    applyUpdatedUser(user);
+    appStore.showSuccess(
+      t("profile.authBindings.unbindSuccess", { providerName: providerLabel }),
+    );
   } catch (error) {
-    appStore.showError((error as { message?: string }).message || t('common.tryAgain'))
+    appStore.showError(
+      (error as { message?: string }).message || t("common.tryAgain"),
+    );
   } finally {
-    unbindingProvider.value = null
+    unbindingProvider.value = null;
   }
 }
 
-function handleUnbindForItem(provider: UserAuthProvider, providerLabel: string): void {
-  if (provider === 'email') {
-    return
+function handleUnbindForItem(
+  provider: UserAuthProvider,
+  providerLabel: string,
+): void {
+  if (provider === "email") {
+    return;
   }
-  void handleUnbind(provider, providerLabel)
+  void handleUnbind(provider, providerLabel);
 }
 
 function validateEmailBindingForm(requireCode: boolean): boolean {
   if (!emailBindingForm.email) {
-    appStore.showError(t('auth.emailRequired'))
-    return false
+    appStore.showError(t("auth.emailRequired"));
+    return false;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailBindingForm.email)) {
-    appStore.showError(t('auth.invalidEmail'))
-    return false
+    appStore.showError(t("auth.invalidEmail"));
+    return false;
   }
   if (requireCode && !emailBindingForm.verifyCode) {
-    appStore.showError(t('auth.codeRequired'))
-    return false
+    appStore.showError(t("auth.codeRequired"));
+    return false;
   }
   if (requireCode && !emailBindingForm.password) {
-    appStore.showError(t('auth.passwordRequired'))
-    return false
+    appStore.showError(t("auth.passwordRequired"));
+    return false;
   }
-  if (requireCode && !emailBound.value && emailBindingForm.password.length < 6) {
-    appStore.showError(t('auth.passwordMinLength'))
-    return false
+  if (
+    requireCode &&
+    !emailBound.value &&
+    emailBindingForm.password.length < 6
+  ) {
+    appStore.showError(t("auth.passwordMinLength"));
+    return false;
   }
-  return true
+  return true;
 }
 
 async function sendEmailCode(): Promise<void> {
   if (!validateEmailBindingForm(false)) {
-    return
+    return;
   }
 
-  isSendingEmailCode.value = true
+  isSendingEmailCode.value = true;
   try {
-    await sendEmailBindingCode(emailBindingForm.email)
-    appStore.showSuccess(t('profile.authBindings.codeSentTo', { email: emailBindingForm.email }))
+    await sendEmailBindingCode(emailBindingForm.email);
+    appStore.showSuccess(
+      t("profile.authBindings.codeSentTo", { email: emailBindingForm.email }),
+    );
   } catch (error) {
-    appStore.showError((error as { message?: string }).message || t('auth.sendCodeFailed'))
+    appStore.showError(
+      (error as { message?: string }).message || t("auth.sendCodeFailed"),
+    );
   } finally {
-    isSendingEmailCode.value = false
+    isSendingEmailCode.value = false;
   }
 }
 
 async function bindEmail(): Promise<void> {
   if (!validateEmailBindingForm(true)) {
-    return
+    return;
   }
 
-  isBindingEmail.value = true
+  isBindingEmail.value = true;
   try {
     const user = await bindEmailIdentity({
       email: emailBindingForm.email,
       verify_code: emailBindingForm.verifyCode,
       password: emailBindingForm.password,
-    })
-    const replacingBoundEmail = emailBound.value
-    applyUpdatedUser(user)
-    emailBindingForm.verifyCode = ''
-    emailBindingForm.password = ''
+    });
+    const replacingBoundEmail = emailBound.value;
+    applyUpdatedUser(user);
+    emailBindingForm.verifyCode = "";
+    emailBindingForm.password = "";
     if (compact.value) {
-      isEmailFormExpanded.value = false
+      isEmailFormExpanded.value = false;
     }
     appStore.showSuccess(
       replacingBoundEmail
-        ? t('profile.authBindings.replaceSuccess')
-        : t('profile.authBindings.bindSuccess')
-    )
+        ? t("profile.authBindings.replaceSuccess")
+        : t("profile.authBindings.bindSuccess"),
+    );
   } catch (error) {
-    appStore.showError((error as { message?: string }).message || t('common.tryAgain'))
+    appStore.showError(
+      (error as { message?: string }).message || t("common.tryAgain"),
+    );
   } finally {
-    isBindingEmail.value = false
+    isBindingEmail.value = false;
   }
 }
 </script>

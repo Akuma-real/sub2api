@@ -6,7 +6,7 @@
         <Icon
           name="search"
           size="md"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-soft"
         />
         <input
           v-model="search"
@@ -35,7 +35,9 @@
     </div>
 
     <!-- Right: Actions -->
-    <div class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-3 lg:w-auto">
+    <div
+      class="flex w-full flex-shrink-0 flex-wrap items-center justify-end gap-3 lg:w-auto"
+    >
       <button
         @click="$emit('reload')"
         :disabled="loading"
@@ -50,55 +52,57 @@
         :title="t('admin.channelMonitor.template.manageButton')"
       >
         <Icon name="cog" size="md" class="mr-2" />
-        {{ t('admin.channelMonitor.template.manageButton') }}
+        {{ t("admin.channelMonitor.template.manageButton") }}
       </button>
       <button @click="$emit('create')" class="btn btn-primary">
         <Icon name="plus" size="md" class="mr-2" />
-        {{ t('admin.channelMonitor.createButton') }}
+        {{ t("admin.channelMonitor.createButton") }}
       </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import type { Provider } from '@/api/admin/channelMonitor'
-import Select from '@/components/common/Select.vue'
-import Icon from '@/components/icons/Icon.vue'
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import type { Provider } from "@/api/admin/channelMonitor";
+import Select from "@/components/common/Select.vue";
+import Icon from "@/components/icons/Icon.vue";
 import {
   PROVIDER_OPENAI,
   PROVIDER_ANTHROPIC,
   PROVIDER_GEMINI,
-} from '@/constants/channelMonitor'
+} from "@/constants/channelMonitor";
 
 defineProps<{
-  loading: boolean
-}>()
+  loading: boolean;
+}>();
 
 defineEmits<{
-  (e: 'reload'): void
-  (e: 'create'): void
-  (e: 'manage-templates'): void
-  (e: 'search-input'): void
-}>()
+  (e: "reload"): void;
+  (e: "create"): void;
+  (e: "manage-templates"): void;
+  (e: "search-input"): void;
+}>();
 
-const search = defineModel<string>('search', { required: true })
-const provider = defineModel<Provider | ''>('provider', { required: true })
-const enabled = defineModel<'' | 'true' | 'false'>('enabled', { required: true })
+const search = defineModel<string>("search", { required: true });
+const provider = defineModel<Provider | "">("provider", { required: true });
+const enabled = defineModel<"" | "true" | "false">("enabled", {
+  required: true,
+});
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const providerFilterOptions = computed(() => [
-  { value: '', label: t('admin.channelMonitor.allProviders') },
-  { value: PROVIDER_OPENAI, label: t('monitorCommon.providers.openai') },
-  { value: PROVIDER_ANTHROPIC, label: t('monitorCommon.providers.anthropic') },
-  { value: PROVIDER_GEMINI, label: t('monitorCommon.providers.gemini') },
-])
+  { value: "", label: t("admin.channelMonitor.allProviders") },
+  { value: PROVIDER_OPENAI, label: t("monitorCommon.providers.openai") },
+  { value: PROVIDER_ANTHROPIC, label: t("monitorCommon.providers.anthropic") },
+  { value: PROVIDER_GEMINI, label: t("monitorCommon.providers.gemini") },
+]);
 
 const enabledFilterOptions = computed(() => [
-  { value: '', label: t('admin.channelMonitor.allStatus') },
-  { value: 'true', label: t('admin.channelMonitor.onlyEnabled') },
-  { value: 'false', label: t('admin.channelMonitor.onlyDisabled') },
-])
+  { value: "", label: t("admin.channelMonitor.allStatus") },
+  { value: "true", label: t("admin.channelMonitor.onlyEnabled") },
+  { value: "false", label: t("admin.channelMonitor.onlyDisabled") },
+]);
 </script>

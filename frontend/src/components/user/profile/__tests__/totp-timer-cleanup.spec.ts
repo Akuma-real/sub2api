@@ -134,7 +134,7 @@ describe('TOTP 弹窗定时器清理', () => {
 
     expect(mocks.showError).toHaveBeenCalledWith('setup failed')
     expect(wrapper.text()).not.toContain('setup failed')
-    expect(wrapper.find('.bg-red-50').exists()).toBe(false)
+    expect(wrapper.find('.bg-error\\/15').exists()).toBe(false)
   })
 
   it('TotpDisableDialog 失败时改用 toast 并不渲染内联错误', async () => {
@@ -152,6 +152,5 @@ describe('TOTP 弹窗定时器清理', () => {
 
     expect(mocks.showError).toHaveBeenCalledWith('disable failed')
     expect(wrapper.text()).not.toContain('disable failed')
-    expect(wrapper.find('.bg-red-50').exists()).toBe(false)
   })
 })

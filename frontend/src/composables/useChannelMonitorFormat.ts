@@ -2,16 +2,16 @@
  * Shared formatting helpers for channel monitor views (admin + user).
  *
  * Centralises:
- *  - status / provider label + badge class lookups
- *  - latency / availability / percent number formatting
- *  - dashboard-style helpers (HSL for availability, provider gradient, relative time)
+ * - status / provider label + badge class lookups
+ * - latency / availability / percent number formatting
+ * - dashboard-style helpers (HSL for availability, provider gradient, relative time)
  *
  * i18n keys live under `monitorCommon.*` so admin and user views share the
  * same translation source.
  */
 
-import { useI18n } from 'vue-i18n'
-import type { MonitorStatus, Provider } from '@/api/admin/channelMonitor'
+import { useI18n } from "vue-i18n";
+import type { MonitorStatus, Provider } from "@/api/admin/channelMonitor";
 import {
   PROVIDER_OPENAI,
   PROVIDER_ANTHROPIC,
@@ -20,59 +20,63 @@ import {
   STATUS_DEGRADED,
   STATUS_FAILED,
   STATUS_ERROR,
-} from '@/constants/channelMonitor'
+} from "@/constants/channelMonitor";
 
-const NEUTRAL_BADGE = 'bg-gray-100 text-gray-800 dark:bg-dark-700 dark:text-gray-300'
+const NEUTRAL_BADGE = "bg-surface-card text-body-strong ";
 
 /** Availability HSL hue multiplier: 0%=red(0) / 50%=yellow(60) / 100%=green(120). */
-const HSL_HUE_PER_PERCENT = 1.2
-const HSL_SATURATION = 72
-const HSL_LIGHTNESS = 42
+const HSL_HUE_PER_PERCENT = 1.2;
+const HSL_SATURATION = 72;
+const HSL_LIGHTNESS = 42;
 
 export interface AvailabilityRow {
-  primary_status: MonitorStatus | ''
-  availability_7d: number | null | undefined
+  primary_status: MonitorStatus | "";
+  availability_7d: number | null | undefined;
 }
 
 export function useChannelMonitorFormat() {
-  const { t } = useI18n()
+  const { t } = useI18n();
 
-  function statusLabel(s: MonitorStatus | ''): string {
-    if (!s) return t('monitorCommon.status.unknown')
-    return t(`monitorCommon.status.${s}`)
+  function statusLabel(s: MonitorStatus | ""): string {
+    if (!s) return t("monitorCommon.status.unknown");
+    return t(`monitorCommon.status.${s}`);
   }
 
-  function statusBadgeClass(s: MonitorStatus | ''): string {
+  function statusBadgeClass(s: MonitorStatus | ""): string {
     switch (s) {
       case STATUS_OPERATIONAL:
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+        return "bg-success/15 text-success ";
       case STATUS_DEGRADED:
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+        return "bg-accent-amber/15 text-warning ";
       case STATUS_FAILED:
-        return 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300'
+        return "bg-error/15 text-error ";
       case STATUS_ERROR:
       default:
-        return NEUTRAL_BADGE
+        return NEUTRAL_BADGE;
     }
   }
 
   function providerLabel(p: Provider | string): string {
-    if (p === PROVIDER_OPENAI || p === PROVIDER_ANTHROPIC || p === PROVIDER_GEMINI) {
-      return t(`monitorCommon.providers.${p}`)
+    if (
+      p === PROVIDER_OPENAI ||
+      p === PROVIDER_ANTHROPIC ||
+      p === PROVIDER_GEMINI
+    ) {
+      return t(`monitorCommon.providers.${p}`);
     }
-    return p || '-'
+    return p || "-";
   }
 
   function providerBadgeClass(p: Provider | string): string {
     switch (p) {
       case PROVIDER_OPENAI:
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+        return "bg-success/15 text-success ";
       case PROVIDER_ANTHROPIC:
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300'
+        return "bg-accent-amber/15 text-warning ";
       case PROVIDER_GEMINI:
-        return 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300'
+        return "bg-accent-teal/15 text-accent-teal ";
       default:
-        return NEUTRAL_BADGE
+        return NEUTRAL_BADGE;
     }
   }
 
@@ -85,50 +89,53 @@ export function useChannelMonitorFormat() {
     switch (p) {
       case PROVIDER_OPENAI:
         return active
-          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-400'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-emerald-500/50'
+          ? "border-success bg-success/15 text-success "
+          : "border-hairline bg-canvas text-body hover:border-success/25 hover:text-success ";
       case PROVIDER_ANTHROPIC:
         return active
-          ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-400'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-orange-300 hover:text-orange-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-orange-500/50'
+          ? "border-accent-amber bg-accent-amber/15 text-warning "
+          : "border-hairline bg-canvas text-body hover:border-accent-amber/30 hover:text-warning ";
       case PROVIDER_GEMINI:
         return active
-          ? 'border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-400'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-sky-300 hover:text-sky-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-sky-500/50'
+          ? "border-accent-teal bg-accent-teal/15 text-accent-teal "
+          : "border-hairline bg-canvas text-body hover:border-accent-teal/30 hover:text-accent-teal ";
       default:
         return active
-          ? 'border-gray-400 bg-gray-50 text-gray-700 dark:border-dark-500 dark:bg-dark-700 dark:text-gray-200'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400'
+          ? "border-muted-soft bg-surface-soft text-body "
+          : "border-hairline bg-canvas text-body hover:border-hairline ";
     }
   }
 
   function formatLatency(ms: number | null | undefined): string {
-    if (ms == null) return t('monitorCommon.latencyEmpty')
-    return String(Math.round(ms))
+    if (ms == null) return t("monitorCommon.latencyEmpty");
+    return String(Math.round(ms));
   }
 
   function formatPercent(v: number | null | undefined): string {
-    if (v == null || Number.isNaN(v)) return '-'
-    return `${v.toFixed(2)}%`
+    if (v == null || Number.isNaN(v)) return "-";
+    return `${v.toFixed(2)}%`;
   }
 
   function formatAvailability(row: AvailabilityRow): string {
-    if (!row.primary_status) return '-'
-    return formatPercent(row.availability_7d)
+    if (!row.primary_status) return "-";
+    return formatPercent(row.availability_7d);
   }
 
   function formatRelativeTime(iso: string | null | undefined): string {
-    if (!iso) return t('monitorCommon.latencyEmpty')
-    const ts = Date.parse(iso)
-    if (Number.isNaN(ts)) return t('monitorCommon.latencyEmpty')
-    const diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000))
-    if (diffSec < 60) return t('monitorCommon.relativeSecondsAgo', { n: diffSec })
-    const diffMin = Math.floor(diffSec / 60)
-    if (diffMin < 60) return t('monitorCommon.relativeMinutesAgo', { n: diffMin })
-    const diffHour = Math.floor(diffMin / 60)
-    if (diffHour < 24) return t('monitorCommon.relativeHoursAgo', { n: diffHour })
-    const diffDay = Math.floor(diffHour / 24)
-    return t('monitorCommon.relativeDaysAgo', { n: diffDay })
+    if (!iso) return t("monitorCommon.latencyEmpty");
+    const ts = Date.parse(iso);
+    if (Number.isNaN(ts)) return t("monitorCommon.latencyEmpty");
+    const diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (diffSec < 60)
+      return t("monitorCommon.relativeSecondsAgo", { n: diffSec });
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60)
+      return t("monitorCommon.relativeMinutesAgo", { n: diffMin });
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24)
+      return t("monitorCommon.relativeHoursAgo", { n: diffHour });
+    const diffDay = Math.floor(diffHour / 24);
+    return t("monitorCommon.relativeDaysAgo", { n: diffDay });
   }
 
   return {
@@ -141,7 +148,7 @@ export function useChannelMonitorFormat() {
     formatPercent,
     formatAvailability,
     formatRelativeTime,
-  }
+  };
 }
 
 /**
@@ -149,10 +156,10 @@ export function useChannelMonitorFormat() {
  * Returns undefined for null/NaN so callers can fall back to a neutral colour.
  */
 export function hslForPct(pct: number | null | undefined): string | undefined {
-  if (pct === null || pct === undefined || Number.isNaN(pct)) return undefined
-  const clamped = Math.max(0, Math.min(100, pct))
-  const hue = clamped * HSL_HUE_PER_PERCENT
-  return `hsl(${hue} ${HSL_SATURATION}% ${HSL_LIGHTNESS}%)`
+  if (pct === null || pct === undefined || Number.isNaN(pct)) return undefined;
+  const clamped = Math.max(0, Math.min(100, pct));
+  const hue = clamped * HSL_HUE_PER_PERCENT;
+  return `hsl(${hue} ${HSL_SATURATION}% ${HSL_LIGHTNESS}%)`;
 }
 
 /**
@@ -161,12 +168,12 @@ export function hslForPct(pct: number | null | undefined): string | undefined {
 export function providerGradient(provider: string): string {
   switch (provider) {
     case PROVIDER_OPENAI:
-      return 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-500/20'
+      return "bg-success/15 ";
     case PROVIDER_ANTHROPIC:
-      return 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-500/10 dark:to-amber-500/20'
+      return "bg-accent-amber/15 ";
     case PROVIDER_GEMINI:
-      return 'bg-gradient-to-br from-sky-50 to-indigo-100 dark:from-sky-500/10 dark:to-indigo-500/20'
+      return "bg-accent-teal/15 ";
     default:
-      return 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-dark-700 dark:to-dark-600'
+      return "bg-surface-soft ";
   }
 }

@@ -9,18 +9,23 @@
       <!-- Account Info Header -->
       <div
         v-if="account"
-        class="flex items-center justify-between rounded-xl border border-primary-200 bg-gradient-to-r from-primary-50 to-primary-100 p-3 dark:border-primary-700/50 dark:from-primary-900/20 dark:to-primary-800/20"
+        class="flex items-center justify-between rounded-xl border border-primary-200 bg-primary-100 p-3"
       >
         <div class="flex items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-600"
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500"
           >
-            <Icon name="chartBar" size="md" class="text-white" :stroke-width="2" />
+            <Icon
+              name="chartBar"
+              size="md"
+              class="text-on-primary"
+              :stroke-width="2"
+            />
           </div>
           <div>
-            <div class="font-semibold text-gray-900 dark:text-gray-100">{{ account.name }}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.accounts.last30DaysUsage') }}
+            <div class="font-semibold text-ink">{{ account.name }}</div>
+            <div class="text-xs text-muted">
+              {{ t("admin.accounts.last30DaysUsage") }}
             </div>
           </div>
         </div>
@@ -28,8 +33,8 @@
           :class="[
             'rounded-full px-2.5 py-1 text-xs font-semibold',
             account.status === 'active'
-              ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+              ? 'bg-success/15 text-success '
+              : 'bg-surface-card text-body ',
           ]"
         >
           {{ account.status }}
@@ -46,15 +51,15 @@
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <!-- 30-Day Total Cost -->
           <div
-            class="card border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4 dark:border-emerald-800/30 dark:from-emerald-900/10 dark:to-dark-700"
+            class="card border-success/25 bg-success/15 p-4"
           >
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{
-                t('admin.accounts.stats.totalCost')
+              <span class="text-xs font-medium text-muted">{{
+                t("admin.accounts.stats.totalCost")
               }}</span>
-              <div class="rounded-lg bg-emerald-100 p-1.5 dark:bg-emerald-900/30">
+              <div class="rounded-lg bg-success/15 p-1.5">
                 <svg
-                  class="h-4 w-4 text-emerald-600 dark:text-emerald-400"
+                  class="h-4 w-4 text-success"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -68,14 +73,16 @@
                 </svg>
               </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+            <p class="text-2xl font-bold text-ink">
               ${{ formatCost(stats.summary.total_cost) }}
             </p>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.accounts.stats.accumulatedCost') }}
-              <span class="text-gray-400 dark:text-gray-500">
-                ({{ t('usage.userBilled') }}: ${{ formatCost(stats.summary.total_user_cost) }} ·
-                {{ t('admin.accounts.stats.standardCost') }}: ${{
+            <p class="mt-1 text-xs text-muted">
+              {{ t("admin.accounts.stats.accumulatedCost") }}
+              <span class="text-muted-soft">
+                ({{ t("usage.userBilled") }}: ${{
+                  formatCost(stats.summary.total_user_cost)
+                }}
+                · {{ t("admin.accounts.stats.standardCost") }}: ${{
                   formatCost(stats.summary.total_standard_cost)
                 }})
               </span>
@@ -84,67 +91,74 @@
 
           <!-- 30-Day Total Requests -->
           <div
-            class="card border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4 dark:border-blue-800/30 dark:from-blue-900/10 dark:to-dark-700"
+            class="card border-accent-teal/30 bg-surface-soft p-4"
           >
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{
-                t('admin.accounts.stats.totalRequests')
+              <span class="text-xs font-medium text-muted">{{
+                t("admin.accounts.stats.totalRequests")
               }}</span>
-              <div class="rounded-lg bg-blue-100 p-1.5 dark:bg-blue-900/30">
-                <Icon name="bolt" size="sm" class="text-blue-600 dark:text-blue-400" :stroke-width="2" />
+              <div class="rounded-lg bg-accent-teal/15 p-1.5">
+                <Icon
+                  name="bolt"
+                  size="sm"
+                  class="text-primary-700"
+                  :stroke-width="2"
+                />
               </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+            <p class="text-2xl font-bold text-ink">
               {{ formatNumber(stats.summary.total_requests) }}
             </p>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.accounts.stats.totalCalls') }}
+            <p class="mt-1 text-xs text-muted">
+              {{ t("admin.accounts.stats.totalCalls") }}
             </p>
           </div>
 
           <!-- Daily Average Cost -->
           <div
-            class="card border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 dark:border-amber-800/30 dark:from-amber-900/10 dark:to-dark-700"
+            class="card border-accent-amber/30 bg-accent-amber/15 p-4"
           >
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{
-                t('admin.accounts.stats.avgDailyCost')
+              <span class="text-xs font-medium text-muted">{{
+                t("admin.accounts.stats.avgDailyCost")
               }}</span>
-              <div class="rounded-lg bg-amber-100 p-1.5 dark:bg-amber-900/30">
+              <div class="rounded-lg bg-accent-amber/15 p-1.5">
                 <Icon
                   name="calculator"
                   size="sm"
-                  class="text-amber-600 dark:text-amber-400"
+                  class="text-warning"
                   :stroke-width="2"
                 />
               </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+            <p class="text-2xl font-bold text-ink">
               ${{ formatCost(stats.summary.avg_daily_cost) }}
             </p>
-             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{
-                t('admin.accounts.stats.basedOnActualDays', {
-                  days: stats.summary.actual_days_used
+                t("admin.accounts.stats.basedOnActualDays", {
+                  days: stats.summary.actual_days_used,
                 })
               }}
-              <span class="text-gray-400 dark:text-gray-500">
-                ({{ t('usage.userBilled') }}: ${{ formatCost(stats.summary.avg_daily_user_cost) }})
+              <span class="text-muted-soft">
+                ({{ t("usage.userBilled") }}: ${{
+                  formatCost(stats.summary.avg_daily_user_cost)
+                }})
               </span>
             </p>
           </div>
 
           <!-- Daily Average Requests -->
           <div
-            class="card border-purple-200 bg-gradient-to-br from-purple-50 to-white p-4 dark:border-purple-800/30 dark:from-purple-900/10 dark:to-dark-700"
+            class="card border-primary-200 bg-primary-100 p-4"
           >
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{
-                t('admin.accounts.stats.avgDailyRequests')
+              <span class="text-xs font-medium text-muted">{{
+                t("admin.accounts.stats.avgDailyRequests")
               }}</span>
-              <div class="rounded-lg bg-purple-100 p-1.5 dark:bg-purple-900/30">
+              <div class="rounded-lg bg-primary-100 p-1.5">
                 <svg
-                  class="h-4 w-4 text-purple-600 dark:text-purple-400"
+                  class="h-4 w-4 text-primary-700"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -158,11 +172,11 @@
                 </svg>
               </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+            <p class="text-2xl font-bold text-ink">
               {{ formatNumber(Math.round(stats.summary.avg_daily_requests)) }}
             </p>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.accounts.stats.avgDailyUsage') }}
+            <p class="mt-1 text-xs text-muted">
+              {{ t("admin.accounts.stats.avgDailyUsage") }}
             </p>
           </div>
         </div>
@@ -172,9 +186,9 @@
           <!-- Today Overview -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-lg bg-cyan-100 p-1.5 dark:bg-cyan-900/30">
+              <div class="rounded-lg bg-accent-teal/15 p-1.5">
                 <svg
-                  class="h-4 w-4 text-cyan-600 dark:text-cyan-400"
+                  class="h-4 w-4 text-accent-teal"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -187,36 +201,40 @@
                   />
                 </svg>
               </div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                t('admin.accounts.stats.todayOverview')
+              <span class="text-sm font-semibold text-ink">{{
+                t("admin.accounts.stats.todayOverview")
               }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.accountBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
+                <span class="text-xs text-muted">{{
+                  t("usage.accountBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
                   >${{ formatCost(stats.summary.today?.cost || 0) }}</span
                 >
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.userBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
+                <span class="text-xs text-muted">{{
+                  t("usage.userBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
                   >${{ formatCost(stats.summary.today?.user_cost || 0) }}</span
                 >
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.requests')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.requests")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatNumber(stats.summary.today?.requests || 0)
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.tokens')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.tokens")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatTokens(stats.summary.today?.tokens || 0)
                 }}</span>
               </div>
@@ -226,44 +244,52 @@
           <!-- Highest Cost Day -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-lg bg-orange-100 p-1.5 dark:bg-orange-900/30">
+              <div class="rounded-lg bg-accent-amber/15 p-1.5">
                 <Icon
                   name="fire"
                   size="sm"
-                  class="text-orange-600 dark:text-orange-400"
+                  class="text-warning"
                   :stroke-width="2"
                 />
               </div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                t('admin.accounts.stats.highestCostDay')
+              <span class="text-sm font-semibold text-ink">{{
+                t("admin.accounts.stats.highestCostDay")
               }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.date')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.date")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                  stats.summary.highest_cost_day?.label || '-'
+                <span class="text-sm font-semibold text-ink">{{
+                  stats.summary.highest_cost_day?.label || "-"
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.accountBilled') }}</span>
-                <span class="text-sm font-semibold text-orange-600 dark:text-orange-400"
-                  >${{ formatCost(stats.summary.highest_cost_day?.cost || 0) }}</span
+                <span class="text-xs text-muted">{{
+                  t("usage.accountBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-warning"
+                  >${{
+                    formatCost(stats.summary.highest_cost_day?.cost || 0)
+                  }}</span
                 >
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.userBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
-                  >${{ formatCost(stats.summary.highest_cost_day?.user_cost || 0) }}</span
+                <span class="text-xs text-muted">{{
+                  t("usage.userBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
+                  >${{
+                    formatCost(stats.summary.highest_cost_day?.user_cost || 0)
+                  }}</span
                 >
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.requests')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.requests")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatNumber(stats.summary.highest_cost_day?.requests || 0)
                 }}</span>
               </div>
@@ -273,45 +299,55 @@
           <!-- Highest Request Day -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-lg bg-indigo-100 p-1.5 dark:bg-indigo-900/30">
+              <div class="rounded-lg bg-primary-100 p-1.5">
                 <Icon
                   name="trendingUp"
                   size="sm"
-                  class="text-indigo-600 dark:text-indigo-400"
+                  class="text-primary-600"
                   :stroke-width="2"
                 />
               </div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                t('admin.accounts.stats.highestRequestDay')
+              <span class="text-sm font-semibold text-ink">{{
+                t("admin.accounts.stats.highestRequestDay")
               }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.date')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.date")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                  stats.summary.highest_request_day?.label || '-'
+                <span class="text-sm font-semibold text-ink">{{
+                  stats.summary.highest_request_day?.label || "-"
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.requests')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.requests")
                 }}</span>
-                <span class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{{
+                <span class="text-sm font-semibold text-primary-600">{{
                   formatNumber(stats.summary.highest_request_day?.requests || 0)
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.accountBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
-                  >${{ formatCost(stats.summary.highest_request_day?.cost || 0) }}</span
+                <span class="text-xs text-muted">{{
+                  t("usage.accountBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
+                  >${{
+                    formatCost(stats.summary.highest_request_day?.cost || 0)
+                  }}</span
                 >
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.userBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
-                  >${{ formatCost(stats.summary.highest_request_day?.user_cost || 0) }}</span
+                <span class="text-xs text-muted">{{
+                  t("usage.userBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
+                  >${{
+                    formatCost(
+                      stats.summary.highest_request_day?.user_cost || 0,
+                    )
+                  }}</span
                 >
               </div>
             </div>
@@ -323,27 +359,32 @@
           <!-- Accumulated Tokens -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-lg bg-teal-100 p-1.5 dark:bg-teal-900/30">
-                <Icon name="cube" size="sm" class="text-teal-600 dark:text-teal-400" :stroke-width="2" />
+              <div class="rounded-lg bg-accent-teal/15 p-1.5">
+                <Icon
+                  name="cube"
+                  size="sm"
+                  class="text-accent-teal"
+                  :stroke-width="2"
+                />
               </div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                t('admin.accounts.stats.accumulatedTokens')
+              <span class="text-sm font-semibold text-ink">{{
+                t("admin.accounts.stats.accumulatedTokens")
               }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.totalTokens')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.totalTokens")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatTokens(stats.summary.total_tokens)
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.dailyAvgTokens')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.dailyAvgTokens")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatTokens(Math.round(stats.summary.avg_daily_tokens))
                 }}</span>
               </div>
@@ -353,28 +394,34 @@
           <!-- Performance -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-lg bg-rose-100 p-1.5 dark:bg-rose-900/30">
-                <Icon name="bolt" size="sm" class="text-rose-600 dark:text-rose-400" :stroke-width="2" />
+              <div class="rounded-lg bg-error/15 p-1.5">
+                <Icon
+                  name="bolt"
+                  size="sm"
+                  class="text-error"
+                  :stroke-width="2"
+                />
               </div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                t('admin.accounts.stats.performance')
+              <span class="text-sm font-semibold text-ink">{{
+                t("admin.accounts.stats.performance")
               }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.avgResponseTime')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.avgResponseTime")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatDuration(stats.summary.avg_duration_ms)
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.daysActive')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.daysActive")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
-                  >{{ stats.summary.actual_days_used }} / {{ stats.summary.days }}</span
+                <span class="text-sm font-semibold text-ink"
+                  >{{ stats.summary.actual_days_used }} /
+                  {{ stats.summary.days }}</span
                 >
               </div>
             </div>
@@ -383,44 +430,48 @@
           <!-- Recent Activity -->
           <div class="card p-4">
             <div class="mb-3 flex items-center gap-2">
-              <div class="rounded-lg bg-lime-100 p-1.5 dark:bg-lime-900/30">
+              <div class="rounded-lg bg-success/15 p-1.5">
                 <Icon
                   name="clipboard"
                   size="sm"
-                  class="text-lime-600 dark:text-lime-400"
+                  class="text-success"
                   :stroke-width="2"
                 />
               </div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-                t('admin.accounts.stats.recentActivity')
+              <span class="text-sm font-semibold text-ink">{{
+                t("admin.accounts.stats.recentActivity")
               }}</span>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.todayRequests')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.todayRequests")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatNumber(stats.summary.today?.requests || 0)
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{
-                  t('admin.accounts.stats.todayTokens')
+                <span class="text-xs text-muted">{{
+                  t("admin.accounts.stats.todayTokens")
                 }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
+                <span class="text-sm font-semibold text-ink">{{
                   formatTokens(stats.summary.today?.tokens || 0)
                 }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.accountBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
+                <span class="text-xs text-muted">{{
+                  t("usage.accountBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
                   >${{ formatCost(stats.summary.today?.cost || 0) }}</span
                 >
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.userBilled') }}</span>
-                <span class="text-sm font-semibold text-gray-900 dark:text-white"
+                <span class="text-xs text-muted">{{
+                  t("usage.userBilled")
+                }}</span>
+                <span class="text-sm font-semibold text-ink"
                   >${{ formatCost(stats.summary.today?.user_cost || 0) }}</span
                 >
               </div>
@@ -430,16 +481,20 @@
 
         <!-- Usage Trend Chart -->
         <div class="card p-4">
-          <h3 class="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
-            {{ t('admin.accounts.stats.usageTrend') }}
+          <h3 class="mb-4 text-sm font-semibold text-ink">
+            {{ t("admin.accounts.stats.usageTrend") }}
           </h3>
           <div class="h-64">
-            <Line v-if="trendChartData" :data="trendChartData" :options="lineChartOptions" />
+            <Line
+              v-if="trendChartData"
+              :data="trendChartData"
+              :options="lineChartOptions"
+            />
             <div
               v-else
-              class="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400"
+              class="flex h-full items-center justify-center text-sm text-muted"
             >
-              {{ t('admin.dashboard.noDataAvailable') }}
+              {{ t("admin.dashboard.noDataAvailable") }}
             </div>
           </div>
         </div>
@@ -463,10 +518,15 @@
       <!-- No Data State -->
       <div
         v-else-if="!loading"
-        class="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400"
+        class="flex flex-col items-center justify-center py-12 text-muted"
       >
-        <Icon name="chartBar" size="xl" class="mb-4 h-12 w-12" :stroke-width="1.5" />
-        <p class="text-sm">{{ t('admin.accounts.stats.noData') }}</p>
+        <Icon
+          name="chartBar"
+          size="xl"
+          class="mb-4 h-12 w-12"
+          :stroke-width="1.5"
+        />
+        <p class="text-sm">{{ t("admin.accounts.stats.noData") }}</p>
       </div>
     </div>
 
@@ -474,9 +534,9 @@
       <div class="flex justify-end">
         <button
           @click="handleClose"
-          class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-300 dark:hover:bg-dark-500"
+          class="rounded-lg bg-surface-card px-4 py-2 text-sm font-medium text-body transition-colors hover:bg-hairline"
         >
-          {{ t('common.close') }}
+          {{ t("common.close") }}
         </button>
       </div>
     </template>
@@ -484,8 +544,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, watch, computed } from "vue";
+import { useI18n } from "vue-i18n";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -495,16 +555,16 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js'
-import { Line } from 'vue-chartjs'
-import BaseDialog from '@/components/common/BaseDialog.vue'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import ModelDistributionChart from '@/components/charts/ModelDistributionChart.vue'
-import EndpointDistributionChart from '@/components/charts/EndpointDistributionChart.vue'
-import Icon from '@/components/icons/Icon.vue'
-import { adminAPI } from '@/api/admin'
-import type { Account, AccountUsageStatsResponse } from '@/types'
+  Filler,
+} from "chart.js";
+import { Line } from "vue-chartjs";
+import BaseDialog from "@/components/common/BaseDialog.vue";
+import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
+import ModelDistributionChart from "@/components/charts/ModelDistributionChart.vue";
+import EndpointDistributionChart from "@/components/charts/EndpointDistributionChart.vue";
+import Icon from "@/components/icons/Icon.vue";
+import { adminAPI } from "@/api/admin";
+import type { Account, AccountUsageStatsResponse } from "@/types";
 
 ChartJS.register(
   CategoryScale,
@@ -514,72 +574,67 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
-)
+  Filler,
+);
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const props = defineProps<{
-  show: boolean
-  account: Account | null
-}>()
+  show: boolean;
+  account: Account | null;
+}>();
 
 const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+  (e: "close"): void;
+}>();
 
-const loading = ref(false)
-const stats = ref<AccountUsageStatsResponse | null>(null)
-
-// Dark mode detection
-const isDarkMode = computed(() => {
-  return document.documentElement.classList.contains('dark')
-})
+const loading = ref(false);
+const stats = ref<AccountUsageStatsResponse | null>(null);
 
 // Chart colors
-const chartColors = computed(() => ({
-  text: isDarkMode.value ? '#e5e7eb' : '#374151',
-  grid: isDarkMode.value ? '#374151' : '#e5e7eb'
-}))
+const chartColors = {
+  text: "#3d3d3a",
+  grid: "#e6dfd8",
+};
 
 // Line chart data
 const trendChartData = computed(() => {
-  if (!stats.value?.history?.length) return null
+  if (!stats.value?.history?.length) return null;
 
   return {
     labels: stats.value.history.map((h) => h.label),
     datasets: [
       {
-        label: t('usage.accountBilled') + ' (USD)',
+        label: t("usage.accountBilled") + " (USD)",
         data: stats.value.history.map((h) => h.actual_cost),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: "#cc785c",
+        backgroundColor: "rgba(204, 120, 92, 0.1)",
         fill: true,
         tension: 0.3,
-        yAxisID: 'y'
+        yAxisID: "y",
       },
       {
-        label: t('usage.userBilled') + ' (USD)',
+        label: t("usage.userBilled") + " (USD)",
         data: stats.value.history.map((h) => h.user_cost),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+        borderColor: "#5db872",
+        backgroundColor: "rgba(93, 184, 114, 0.12)",
         fill: false,
         tension: 0.3,
         borderDash: [5, 5],
-        yAxisID: 'y'
+        yAxisID: "y",
       },
       {
-        label: t('admin.accounts.stats.requests'),
+        label: t("admin.accounts.stats.requests"),
         data: stats.value.history.map((h) => h.requests),
-        borderColor: '#f97316',
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        borderColor: "#e8a55a",
+        backgroundColor: "rgba(232, 165, 90, 0.14)",
         fill: false,
         tension: 0.3,
-        yAxisID: 'y1'
-      }
-    ]
-  }
-})
+        yAxisID: "y1",
+      },
+    ],
+  };
+});
 
 // Line chart options with dual Y-axis
 const lineChartOptions = computed(() => ({
@@ -587,163 +642,163 @@ const lineChartOptions = computed(() => ({
   maintainAspectRatio: false,
   interaction: {
     intersect: false,
-    mode: 'index' as const
+    mode: "index" as const,
   },
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: "top" as const,
       labels: {
-        color: chartColors.value.text,
+        color: chartColors.text,
         usePointStyle: true,
-        pointStyle: 'circle',
+        pointStyle: "circle",
         padding: 15,
         font: {
-          size: 11
-        }
-      }
+          size: 11,
+        },
+      },
     },
     tooltip: {
       callbacks: {
         label: (context: any) => {
-          const label = context.dataset.label || ''
-          const value = context.raw
-          if (label.includes('USD')) {
-            return `${label}: $${formatCost(value)}`
+          const label = context.dataset.label || "";
+          const value = context.raw;
+          if (label.includes("USD")) {
+            return `${label}: $${formatCost(value)}`;
           }
-          return `${label}: ${formatNumber(value)}`
-        }
-      }
-    }
+          return `${label}: ${formatNumber(value)}`;
+        },
+      },
+    },
   },
   scales: {
     x: {
       grid: {
-        color: chartColors.value.grid
+        color: chartColors.grid,
       },
       ticks: {
-        color: chartColors.value.text,
+        color: chartColors.text,
         font: {
-          size: 10
+          size: 10,
         },
         maxRotation: 45,
-        minRotation: 0
-      }
+        minRotation: 0,
+      },
     },
     y: {
-      type: 'linear' as const,
+      type: "linear" as const,
       display: true,
-      position: 'left' as const,
+      position: "left" as const,
       grid: {
-        color: chartColors.value.grid
+        color: chartColors.grid,
       },
       ticks: {
-        color: '#3b82f6',
+        color: "#cc785c",
         font: {
-          size: 10
+          size: 10,
         },
-        callback: (value: string | number) => '$' + formatCost(Number(value))
+        callback: (value: string | number) => "$" + formatCost(Number(value)),
       },
       title: {
         display: true,
-        text: t('usage.accountBilled') + ' (USD)',
-        color: '#3b82f6',
+        text: t("usage.accountBilled") + " (USD)",
+        color: "#cc785c",
         font: {
-          size: 11
-        }
-      }
+          size: 11,
+        },
+      },
     },
     y1: {
-      type: 'linear' as const,
+      type: "linear" as const,
       display: true,
-      position: 'right' as const,
+      position: "right" as const,
       grid: {
-        drawOnChartArea: false
+        drawOnChartArea: false,
       },
       ticks: {
-        color: '#f97316',
+        color: "#e8a55a",
         font: {
-          size: 10
+          size: 10,
         },
-        callback: (value: string | number) => formatNumber(Number(value))
+        callback: (value: string | number) => formatNumber(Number(value)),
       },
       title: {
         display: true,
-        text: t('admin.accounts.stats.requests'),
-        color: '#f97316',
+        text: t("admin.accounts.stats.requests"),
+        color: "#e8a55a",
         font: {
-          size: 11
-        }
-      }
-    }
-  }
-}))
+          size: 11,
+        },
+      },
+    },
+  },
+}));
 
 // Load stats when modal opens
 watch(
   () => props.show,
   async (newVal) => {
     if (newVal && props.account) {
-      await loadStats()
+      await loadStats();
     } else {
-      stats.value = null
+      stats.value = null;
     }
-  }
-)
+  },
+);
 
 const loadStats = async () => {
-  if (!props.account) return
+  if (!props.account) return;
 
-  loading.value = true
+  loading.value = true;
   try {
-    stats.value = await adminAPI.accounts.getStats(props.account.id, 30)
+    stats.value = await adminAPI.accounts.getStats(props.account.id, 30);
   } catch (error) {
-    console.error('Failed to load account stats:', error)
-    stats.value = null
+    console.error("Failed to load account stats: ", error);
+    stats.value = null;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleClose = () => {
-  emit('close')
-}
+  emit("close");
+};
 
 // Format helpers
 const formatCost = (value: number): string => {
   if (value >= 1000) {
-    return (value / 1000).toFixed(2) + 'K'
+    return (value / 1000).toFixed(2) + "K";
   } else if (value >= 1) {
-    return value.toFixed(2)
+    return value.toFixed(2);
   } else if (value >= 0.01) {
-    return value.toFixed(3)
+    return value.toFixed(3);
   }
-  return value.toFixed(4)
-}
+  return value.toFixed(4);
+};
 
 const formatNumber = (value: number): string => {
   if (value >= 1_000_000) {
-    return (value / 1_000_000).toFixed(2) + 'M'
+    return (value / 1_000_000).toFixed(2) + "M";
   } else if (value >= 1_000) {
-    return (value / 1_000).toFixed(2) + 'K'
+    return (value / 1_000).toFixed(2) + "K";
   }
-  return value.toLocaleString()
-}
+  return value.toLocaleString();
+};
 
 const formatTokens = (value: number): string => {
   if (value >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toFixed(2)}B`
+    return `${(value / 1_000_000_000).toFixed(2)}B`;
   } else if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(2)}M`
+    return `${(value / 1_000_000).toFixed(2)}M`;
   } else if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(2)}K`
+    return `${(value / 1_000).toFixed(2)}K`;
   }
-  return value.toLocaleString()
-}
+  return value.toLocaleString();
+};
 
 const formatDuration = (ms: number): string => {
   if (ms >= 1000) {
-    return `${(ms / 1000).toFixed(2)}s`
+    return `${(ms / 1000).toFixed(2)}s`;
   }
-  return `${Math.round(ms)}ms`
-}
+  return `${Math.round(ms)}ms`;
+};
 </script>

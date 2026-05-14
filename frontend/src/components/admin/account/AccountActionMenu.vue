@@ -4,46 +4,107 @@
       <!-- Backdrop: click anywhere outside to close -->
       <div class="fixed inset-0 z-[9998]" @click="emit('close')"></div>
       <div
-        class="action-menu-content fixed z-[9999] w-52 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-dark-800"
+        class="action-menu-content fixed z-[9999] w-52 overflow-hidden rounded-xl bg-canvas shadow-card ring-1 ring-ink/5"
         :style="{ top: position.top + 'px', left: position.left + 'px' }"
         @click.stop
       >
         <div class="py-1">
           <template v-if="account">
-            <button @click="$emit('test', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-700">
-              <Icon name="play" size="sm" class="text-green-500" :stroke-width="2" />
-              {{ t('admin.accounts.testConnection') }}
+            <button
+              @click="
+                $emit('test', account);
+                $emit('close');
+              "
+              class="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-surface-card"
+            >
+              <Icon
+                name="play"
+                size="sm"
+                class="text-success"
+                :stroke-width="2"
+              />
+              {{ t("admin.accounts.testConnection") }}
             </button>
-            <button @click="$emit('stats', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-700">
-              <Icon name="chart" size="sm" class="text-indigo-500" />
-              {{ t('admin.accounts.viewStats') }}
+            <button
+              @click="
+                $emit('stats', account);
+                $emit('close');
+              "
+              class="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-surface-card"
+            >
+              <Icon name="chart" size="sm" class="text-primary-600" />
+              {{ t("admin.accounts.viewStats") }}
             </button>
-            <button @click="$emit('schedule', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-dark-700">
-              <Icon name="clock" size="sm" class="text-orange-500" />
-              {{ t('admin.scheduledTests.schedule') }}
+            <button
+              @click="
+                $emit('schedule', account);
+                $emit('close');
+              "
+              class="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-surface-card"
+            >
+              <Icon name="clock" size="sm" class="text-warning" />
+              {{ t("admin.scheduledTests.schedule") }}
             </button>
-            <template v-if="account.type === 'oauth' || account.type === 'setup-token'">
-              <button @click="$emit('reauth', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 dark:hover:bg-dark-700">
+            <template
+              v-if="account.type === 'oauth' || account.type === 'setup-token'"
+            >
+              <button
+                @click="
+                  $emit('reauth', account);
+                  $emit('close');
+                "
+                class="flex w-full items-center gap-2 px-4 py-2 text-sm text-primary-700 hover:bg-surface-card"
+              >
                 <Icon name="link" size="sm" />
-                {{ t('admin.accounts.reAuthorize') }}
+                {{ t("admin.accounts.reAuthorize") }}
               </button>
-              <button @click="$emit('refresh-token', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-purple-600 hover:bg-gray-100 dark:hover:bg-dark-700">
+              <button
+                @click="
+                  $emit('refresh-token', account);
+                  $emit('close');
+                "
+                class="flex w-full items-center gap-2 px-4 py-2 text-sm text-primary-700 hover:bg-surface-card"
+              >
                 <Icon name="refresh" size="sm" />
-                {{ t('admin.accounts.refreshToken') }}
+                {{ t("admin.accounts.refreshToken") }}
               </button>
             </template>
-            <button v-if="supportsPrivacy" @click="$emit('set-privacy', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-emerald-600 hover:bg-gray-100 dark:hover:bg-dark-700">
+            <button
+              v-if="supportsPrivacy"
+              @click="
+                $emit('set-privacy', account);
+                $emit('close');
+              "
+              class="flex w-full items-center gap-2 px-4 py-2 text-sm text-success hover:bg-surface-card"
+            >
               <Icon name="shield" size="sm" />
-              {{ t('admin.accounts.setPrivacy') }}
+              {{ t("admin.accounts.setPrivacy") }}
             </button>
-            <div v-if="hasRecoverableState" class="my-1 border-t border-gray-100 dark:border-dark-700"></div>
-            <button v-if="hasRecoverableState" @click="$emit('recover-state', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-emerald-600 hover:bg-gray-100 dark:hover:bg-dark-700">
+            <div
+              v-if="hasRecoverableState"
+              class="my-1 border-t border-hairline-soft"
+            ></div>
+            <button
+              v-if="hasRecoverableState"
+              @click="
+                $emit('recover-state', account);
+                $emit('close');
+              "
+              class="flex w-full items-center gap-2 px-4 py-2 text-sm text-success hover:bg-surface-card"
+            >
               <Icon name="sync" size="sm" />
-              {{ t('admin.accounts.recoverState') }}
+              {{ t("admin.accounts.recoverState") }}
             </button>
-            <button v-if="hasQuotaLimit" @click="$emit('reset-quota', account); $emit('close')" class="flex w-full items-center gap-2 px-4 py-2 text-sm text-teal-600 hover:bg-gray-100 dark:hover:bg-dark-700">
+            <button
+              v-if="hasQuotaLimit"
+              @click="
+                $emit('reset-quota', account);
+                $emit('close');
+              "
+              class="flex w-full items-center gap-2 px-4 py-2 text-sm text-accent-teal hover:bg-surface-card"
+            >
               <Icon name="refresh" size="sm" />
-              {{ t('admin.accounts.resetQuota') }}
+              {{ t("admin.accounts.resetQuota") }}
             </button>
           </template>
         </div>
@@ -53,60 +114,103 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Icon } from '@/components/icons'
-import type { Account } from '@/types'
+import { computed, watch, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { Icon } from "@/components/icons";
+import type { Account } from "@/types";
 
-const props = defineProps<{ show: boolean; account: Account | null; position: { top: number; left: number } | null }>()
-const emit = defineEmits(['close', 'test', 'stats', 'schedule', 'reauth', 'refresh-token', 'recover-state', 'reset-quota', 'set-privacy'])
-const { t } = useI18n()
+const props = defineProps<{
+  show: boolean;
+  account: Account | null;
+  position: { top: number; left: number } | null;
+}>();
+const emit = defineEmits([
+  "close",
+  "test",
+  "stats",
+  "schedule",
+  "reauth",
+  "refresh-token",
+  "recover-state",
+  "reset-quota",
+  "set-privacy",
+]);
+const { t } = useI18n();
 const isRateLimited = computed(() => {
-  if (props.account?.rate_limit_reset_at && new Date(props.account.rate_limit_reset_at) > new Date()) {
-    return true
+  if (
+    props.account?.rate_limit_reset_at &&
+    new Date(props.account.rate_limit_reset_at) > new Date()
+  ) {
+    return true;
   }
-  const modelLimits = (props.account?.extra as Record<string, unknown> | undefined)?.model_rate_limits as
+  const modelLimits = (
+    props.account?.extra as Record<string, unknown> | undefined
+  )?.model_rate_limits as
     | Record<string, { rate_limit_reset_at: string }>
-    | undefined
+    | undefined;
   if (modelLimits) {
-    const now = new Date()
-    return Object.values(modelLimits).some(info => new Date(info.rate_limit_reset_at) > now)
+    const now = new Date();
+    return Object.values(modelLimits).some(
+      (info) => new Date(info.rate_limit_reset_at) > now,
+    );
   }
-  return false
-})
-const isOverloaded = computed(() => props.account?.overload_until && new Date(props.account.overload_until) > new Date())
-const isTempUnschedulable = computed(() => props.account?.temp_unschedulable_until && new Date(props.account.temp_unschedulable_until) > new Date())
+  return false;
+});
+const isOverloaded = computed(
+  () =>
+    props.account?.overload_until &&
+    new Date(props.account.overload_until) > new Date(),
+);
+const isTempUnschedulable = computed(
+  () =>
+    props.account?.temp_unschedulable_until &&
+    new Date(props.account.temp_unschedulable_until) > new Date(),
+);
 const hasRecoverableState = computed(() => {
-  return props.account?.status === 'error' || Boolean(isRateLimited.value) || Boolean(isOverloaded.value) || Boolean(isTempUnschedulable.value)
-})
-const isAntigravityOAuth = computed(() => props.account?.platform === 'antigravity' && props.account?.type === 'oauth')
-const isOpenAIOAuth = computed(() => props.account?.platform === 'openai' && props.account?.type === 'oauth')
-const supportsPrivacy = computed(() => isAntigravityOAuth.value || isOpenAIOAuth.value)
+  return (
+    props.account?.status === "error" ||
+    Boolean(isRateLimited.value) ||
+    Boolean(isOverloaded.value) ||
+    Boolean(isTempUnschedulable.value)
+  );
+});
+const isAntigravityOAuth = computed(
+  () =>
+    props.account?.platform === "antigravity" &&
+    props.account?.type === "oauth",
+);
+const isOpenAIOAuth = computed(
+  () => props.account?.platform === "openai" && props.account?.type === "oauth",
+);
+const supportsPrivacy = computed(
+  () => isAntigravityOAuth.value || isOpenAIOAuth.value,
+);
 const hasQuotaLimit = computed(() => {
-  return (props.account?.type === 'apikey' || props.account?.type === 'bedrock') && (
-    (props.account?.quota_limit ?? 0) > 0 ||
-    (props.account?.quota_daily_limit ?? 0) > 0 ||
-    (props.account?.quota_weekly_limit ?? 0) > 0
-  )
-})
+  return (
+    (props.account?.type === "apikey" || props.account?.type === "bedrock") &&
+    ((props.account?.quota_limit ?? 0) > 0 ||
+      (props.account?.quota_daily_limit ?? 0) > 0 ||
+      (props.account?.quota_weekly_limit ?? 0) > 0)
+  );
+});
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') emit('close')
-}
+  if (event.key === "Escape") emit("close");
+};
 
 watch(
   () => props.show,
   (visible) => {
     if (visible) {
-      window.addEventListener('keydown', handleKeydown)
+      window.addEventListener("keydown", handleKeydown);
     } else {
-      window.removeEventListener('keydown', handleKeydown)
+      window.removeEventListener("keydown", handleKeydown);
     }
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-})
+  window.removeEventListener("keydown", handleKeydown);
+});
 </script>

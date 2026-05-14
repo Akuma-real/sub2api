@@ -2,7 +2,10 @@
   <AppLayout>
     <div class="custom-page-layout">
       <div class="card flex-1 min-h-0 overflow-hidden">
-        <div v-if="loading" class="flex h-full items-center justify-center py-12">
+        <div
+          v-if="loading"
+          class="flex h-full items-center justify-center py-12"
+        >
           <div
             class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
           ></div>
@@ -14,15 +17,15 @@
         >
           <div class="max-w-md">
             <div
-              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-dark-700"
+              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-card"
             >
-              <Icon name="link" size="lg" class="text-gray-400" />
+              <Icon name="link" size="lg" class="text-muted-soft" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('customPage.notFoundTitle') }}
+            <h3 class="text-lg font-semibold text-ink">
+              {{ t("customPage.notFoundTitle") }}
             </h3>
-            <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-              {{ t('customPage.notFoundDesc') }}
+            <p class="mt-2 text-sm text-muted">
+              {{ t("customPage.notFoundDesc") }}
             </p>
           </div>
         </div>
@@ -30,14 +33,23 @@
         <!-- Markdown mode with TOC -->
         <div v-else-if="isMarkdownMode" class="flex h-full overflow-hidden">
           <!-- TOC Sidebar -->
-          <aside
-            v-show="tocVisible"
-            class="toc-sidebar"
-          >
+          <aside v-show="tocVisible" class="toc-sidebar">
             <div class="toc-header">
               <span class="toc-title">目录</span>
               <button class="toc-close-btn" @click="tocVisible = false">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
               </button>
             </div>
             <nav class="toc-nav">
@@ -48,7 +60,7 @@
                 class="toc-item"
                 :class="[
                   `toc-level-${item.level}`,
-                  { 'toc-active': activeHeadingId === item.id }
+                  { 'toc-active': activeHeadingId === item.id },
                 ]"
                 @click.prevent="scrollToHeading(item.id)"
               >
@@ -63,7 +75,19 @@
             class="toc-toggle-btn"
             @click="tocVisible = true"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 12h18M3 6h18M3 18h18" />
+            </svg>
             <span class="ml-1 text-xs">目录</span>
           </button>
 
@@ -77,18 +101,21 @@
         </div>
 
         <!-- URL not configured -->
-        <div v-else-if="!isValidUrl" class="flex h-full items-center justify-center p-10 text-center">
+        <div
+          v-else-if="!isValidUrl"
+          class="flex h-full items-center justify-center p-10 text-center"
+        >
           <div class="max-w-md">
             <div
-              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-dark-700"
+              class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-card"
             >
-              <Icon name="link" size="lg" class="text-gray-400" />
+              <Icon name="link" size="lg" class="text-muted-soft" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('customPage.notConfiguredTitle') }}
+            <h3 class="text-lg font-semibold text-ink">
+              {{ t("customPage.notConfiguredTitle") }}
             </h3>
-            <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-              {{ t('customPage.notConfiguredDesc') }}
+            <p class="mt-2 text-sm text-muted">
+              {{ t("customPage.notConfiguredDesc") }}
             </p>
           </div>
         </div>
@@ -101,8 +128,13 @@
             rel="noopener noreferrer"
             class="btn btn-secondary btn-sm custom-open-fab"
           >
-            <Icon name="externalLink" size="sm" class="mr-1.5" :stroke-width="2" />
-            {{ t('customPage.openInNewTab') }}
+            <Icon
+              name="externalLink"
+              size="sm"
+              class="mr-1.5"
+              :stroke-width="2"
+            />
+            {{ t("customPage.openInNewTab") }}
           </a>
           <iframe
             :src="embeddedUrl"
@@ -116,260 +148,262 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { useAppStore } from '@/stores'
-import { useAuthStore } from '@/stores/auth'
-import { useAdminSettingsStore } from '@/stores/adminSettings'
-import AppLayout from '@/components/layout/AppLayout.vue'
-import Icon from '@/components/icons/Icon.vue'
-import { buildEmbeddedUrl, detectTheme } from '@/utils/embedded-url'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
+import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
+import { useAppStore } from "@/stores";
+import { useAuthStore } from "@/stores/auth";
+import { useAdminSettingsStore } from "@/stores/adminSettings";
+import AppLayout from "@/components/layout/AppLayout.vue";
+import Icon from "@/components/icons/Icon.vue";
+import { buildEmbeddedUrl } from "@/utils/embedded-url";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 interface TocItem {
-  id: string
-  text: string
-  level: number
+  id: string;
+  text: string;
+  level: number;
 }
 
-const { t, locale } = useI18n()
-const route = useRoute()
-const appStore = useAppStore()
-const authStore = useAuthStore()
-const adminSettingsStore = useAdminSettingsStore()
+const { t, locale } = useI18n();
+const route = useRoute();
+const appStore = useAppStore();
+const authStore = useAuthStore();
+const adminSettingsStore = useAdminSettingsStore();
 
-const loading = ref(false)
-const pageTheme = ref<'light' | 'dark'>('light')
-const renderedHtml = ref('')
-const markdownContainer = ref<HTMLElement | null>(null)
-const tocItems = ref<TocItem[]>([])
-const tocVisible = ref(typeof window !== 'undefined' ? window.innerWidth > 768 : true)
-const activeHeadingId = ref('')
-let themeObserver: MutationObserver | null = null
+const loading = ref(false);
+const renderedHtml = ref("");
+const markdownContainer = ref<HTMLElement | null>(null);
+const tocItems = ref<TocItem[]>([]);
+const tocVisible = ref(
+  typeof window !== "undefined" ? window.innerWidth > 768 : true,
+);
+const activeHeadingId = ref("");
 
-const menuItemId = computed(() => route.params.id as string)
+const menuItemId = computed(() => route.params.id as string);
 
 const menuItem = computed(() => {
-  const id = menuItemId.value
-  const publicItems = appStore.cachedPublicSettings?.custom_menu_items ?? []
-  const found = publicItems.find((item) => item.id === id) ?? null
-  if (found) return found
+  const id = menuItemId.value;
+  const publicItems = appStore.cachedPublicSettings?.custom_menu_items ?? [];
+  const found = publicItems.find((item) => item.id === id) ?? null;
+  if (found) return found;
   if (authStore.isAdmin) {
-    return adminSettingsStore.customMenuItems.find((item) => item.id === id) ?? null
+    return (
+      adminSettingsStore.customMenuItems.find((item) => item.id === id) ?? null
+    );
   }
-  return null
-})
+  return null;
+});
 
 const markdownSlug = computed(() => {
-  const item = menuItem.value
-  if (!item) return ''
-  if (item.page_slug) return item.page_slug
-  if (item.url?.startsWith('md:')) return item.url.slice(3)
-  return ''
-})
+  const item = menuItem.value;
+  if (!item) return "";
+  if (item.page_slug) return item.page_slug;
+  if (item.url?.startsWith("md: ")) return item.url.slice(3);
+  return "";
+});
 
-const isMarkdownMode = computed(() => !!markdownSlug.value)
+const isMarkdownMode = computed(() => !!markdownSlug.value);
 
 const embeddedUrl = computed(() => {
-  if (!menuItem.value || isMarkdownMode.value) return ''
+  if (!menuItem.value || isMarkdownMode.value) return "";
   return buildEmbeddedUrl(
     menuItem.value.url,
     authStore.user?.id,
     authStore.token,
-    pageTheme.value,
+    "light",
     locale.value,
-  )
-})
+  );
+});
 
 const isValidUrl = computed(() => {
-  if (isMarkdownMode.value) return false
-  const url = embeddedUrl.value
-  return url.startsWith('http://') || url.startsWith('https://')
-})
+  if (isMarkdownMode.value) return false;
+  const url = embeddedUrl.value;
+  return url.startsWith("http://") || url.startsWith("https://");
+});
 
 function generateHeadingId(text: string, index: number): string {
   const base = text
     .toLowerCase()
-    .replace(/[^\w一-鿿]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return base ? `${base}-${index}` : `heading-${index}`
+    .replace(/[^\w一-鿿]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return base ? `${base}-${index}` : `heading-${index}`;
 }
 
 function isRelativeMarkdownAsset(src: string): boolean {
-  const trimmed = src.trim()
-  if (!trimmed || /^[a-z][a-z0-9+.-]*:/i.test(trimmed) || trimmed.startsWith('//') || trimmed.startsWith('/')) {
-    return false
+  const trimmed = src.trim();
+  if (
+    !trimmed ||
+    /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ||
+    trimmed.startsWith("//") ||
+    trimmed.startsWith("/")
+  ) {
+    return false;
   }
-  const [pathPart] = trimmed.split(/([?#].*)/, 2)
+  const [pathPart] = trimmed.split(/([?#].*)/, 2);
   return pathPart
-    .split('/')
-    .filter((part) => part && part !== '.')
-    .every((part) => part !== '..' && !part.includes('\\'))
+    .split("/")
+    .filter((part) => part && part !== ".")
+    .every((part) => part !== ".." && !part.includes("\\"));
 }
 
 function buildPageImageUrl(slug: string, src: string): string {
-  const trimmed = src.trim()
-  const [pathPart, suffix = ''] = trimmed.split(/([?#].*)/, 2)
+  const trimmed = src.trim();
+  const [pathPart, suffix = ""] = trimmed.split(/([?#].*)/, 2);
   const encodedPath = pathPart
-    .split('/')
-    .filter((part) => part && part !== '.')
+    .split("/")
+    .filter((part) => part && part !== ".")
     .map((part) => encodeURIComponent(part))
-    .join('/')
-  return `/api/v1/pages/${encodeURIComponent(slug)}/images/${encodedPath}${suffix}`
+    .join("/");
+  return `/api/v1/pages/${encodeURIComponent(slug)}/images/${encodedPath}${suffix}`;
 }
 
 async function fetchAndRenderMarkdown(slug: string) {
-  loading.value = true
-  tocItems.value = []
-  activeHeadingId.value = ''
+  loading.value = true;
+  tocItems.value = [];
+  activeHeadingId.value = "";
   try {
     const resp = await fetch(`/api/v1/pages/${encodeURIComponent(slug)}`, {
-      headers: authStore.token ? { Authorization: `Bearer ${authStore.token}` } : {},
-    })
+      headers: authStore.token
+        ? { Authorization: `Bearer ${authStore.token}` }
+        : {},
+    });
     if (!resp.ok) {
-      renderedHtml.value = '<p class="text-red-500">Page not found</p>'
-      return
+      renderedHtml.value = '<p class="text-error">Page not found</p>';
+      return;
     }
-    let raw = await resp.text()
+    let raw = await resp.text();
 
-    raw = raw.replace(
-      /!\[([^\]]*)\]\(([^)]+)\)/g,
-      (match, alt, src) => isRelativeMarkdownAsset(src) ? `![${alt}](${buildPageImageUrl(slug, src)})` : match
-    )
+    raw = raw.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) =>
+      isRelativeMarkdownAsset(src)
+        ? `![${alt}](${buildPageImageUrl(slug, src)})`
+        : match,
+    );
 
-    const html = marked.parse(raw) as string
+    const html = marked.parse(raw) as string;
     const sanitized = DOMPurify.sanitize(html, {
-      ADD_TAGS: ['iframe'],
-      ADD_ATTR: ['allowfullscreen', 'frameborder', 'src'],
-    })
+      ADD_TAGS: ["iframe"],
+      ADD_ATTR: ["allowfullscreen", "frameborder", "src"],
+    });
 
     // Inject IDs into headings and build TOC
-    const toc: TocItem[] = []
-    let headingIndex = 0
+    const toc: TocItem[] = [];
+    let headingIndex = 0;
     const withIds = sanitized.replace(
       /<(h[1-4])[^>]*>(.*?)<\/h[1-4]>/gi,
       (_, tag: string, content: string) => {
-        const level = parseInt(tag[1])
-        const text = content.replace(/<[^>]+>/g, '').trim()
-        const id = generateHeadingId(text, headingIndex++)
-        toc.push({ id, text, level })
-        return `<${tag} id="${id}">${content}</${tag}>`
-      }
-    )
+        const level = parseInt(tag[1]);
+        const text = content.replace(/<[^>]+>/g, "").trim();
+        const id = generateHeadingId(text, headingIndex++);
+        toc.push({ id, text, level });
+        return `<${tag} id="${id}">${content}</${tag}>`;
+      },
+    );
 
-    renderedHtml.value = withIds
-    tocItems.value = toc
+    renderedHtml.value = withIds;
+    tocItems.value = toc;
   } catch {
-    renderedHtml.value = '<p class="text-red-500">Failed to load page</p>'
+    renderedHtml.value = '<p class="text-error">Failed to load page</p>';
   } finally {
-    loading.value = false
-    await nextTick()
-    await nextTick()
-    injectCopyButtons()
+    loading.value = false;
+    await nextTick();
+    await nextTick();
+    injectCopyButtons();
   }
 }
 
 function scrollToHeading(id: string) {
-  const container = markdownContainer.value
-  if (!container) return
-  const el = container.querySelector(`#${CSS.escape(id)}`)
+  const container = markdownContainer.value;
+  if (!container) return;
+  const el = container.querySelector(`#${CSS.escape(id)}`);
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    activeHeadingId.value = id
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    activeHeadingId.value = id;
     if (window.innerWidth <= 640) {
-      tocVisible.value = false
+      tocVisible.value = false;
     }
   }
 }
 
-let scrollRafId = 0
+let scrollRafId = 0;
 function onContentScroll() {
-  if (scrollRafId) return
+  if (scrollRafId) return;
   scrollRafId = requestAnimationFrame(() => {
-    scrollRafId = 0
-    const container = markdownContainer.value
-    if (!container || tocItems.value.length === 0) return
+    scrollRafId = 0;
+    const container = markdownContainer.value;
+    if (!container || tocItems.value.length === 0) return;
 
-    const containerRect = container.getBoundingClientRect()
-    let current = ''
+    const containerRect = container.getBoundingClientRect();
+    let current = "";
 
     for (const item of tocItems.value) {
-      const el = container.querySelector(`#${CSS.escape(item.id)}`) as HTMLElement | null
+      const el = container.querySelector(
+        `#${CSS.escape(item.id)}`,
+      ) as HTMLElement | null;
       if (el) {
-        const elRect = el.getBoundingClientRect()
+        const elRect = el.getBoundingClientRect();
         if (elRect.top - containerRect.top <= 100) {
-          current = item.id
+          current = item.id;
         }
       }
     }
-    activeHeadingId.value = current
-  })
+    activeHeadingId.value = current;
+  });
 }
 
 function injectCopyButtons() {
-  const container = markdownContainer.value
-  if (!container) return
+  const container = markdownContainer.value;
+  if (!container) return;
 
-  container.querySelectorAll('pre').forEach((pre) => {
-    if (pre.querySelector('.copy-btn')) return
-    const btn = document.createElement('button')
-    btn.className = 'copy-btn'
-    btn.textContent = '复制'
-    btn.addEventListener('click', async () => {
-      const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? ''
+  container.querySelectorAll("pre").forEach((pre) => {
+    if (pre.querySelector(".copy-btn")) return;
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "复制";
+    btn.addEventListener("click", async () => {
+      const code =
+        pre.querySelector("code")?.textContent ?? pre.textContent ?? "";
       try {
-        await navigator.clipboard.writeText(code)
-        btn.textContent = '已复制 ✓'
-        setTimeout(() => { btn.textContent = '复制' }, 2000)
+        await navigator.clipboard.writeText(code);
+        btn.textContent = "已复制 ✓";
+        setTimeout(() => {
+          btn.textContent = "复制";
+        }, 2000);
       } catch {
-        btn.textContent = '失败'
-        setTimeout(() => { btn.textContent = '复制' }, 2000)
+        btn.textContent = "失败";
+        setTimeout(() => {
+          btn.textContent = "复制";
+        }, 2000);
       }
-    })
-    pre.style.position = 'relative'
-    pre.appendChild(btn)
-  })
+    });
+    pre.style.position = "relative";
+    pre.appendChild(btn);
+  });
 }
 
-watch(markdownSlug, (slug) => {
-  if (slug) {
-    fetchAndRenderMarkdown(slug)
-  } else {
-    renderedHtml.value = ''
-    tocItems.value = []
-  }
-}, { immediate: true })
+watch(
+  markdownSlug,
+  (slug) => {
+    if (slug) {
+      fetchAndRenderMarkdown(slug);
+    } else {
+      renderedHtml.value = "";
+      tocItems.value = [];
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(async () => {
-  pageTheme.value = detectTheme()
-
-  if (typeof document !== 'undefined') {
-    themeObserver = new MutationObserver(() => {
-      pageTheme.value = detectTheme()
-    })
-    themeObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    })
-  }
-
-  if (appStore.publicSettingsLoaded) return
-  loading.value = true
+  if (appStore.publicSettingsLoaded) return;
+  loading.value = true;
   try {
-    await appStore.fetchPublicSettings()
+    await appStore.fetchPublicSettings();
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
-
-onUnmounted(() => {
-  if (themeObserver) {
-    themeObserver.disconnect()
-    themeObserver = null
-  }
-})
+});
 </script>
 
 <style scoped>
@@ -379,7 +413,7 @@ onUnmounted(() => {
 }
 
 .toc-sidebar {
-  @apply flex flex-col h-full border-r border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-800;
+  @apply flex flex-col h-full border-r border-hairline bg-surface-soft;
   width: min(240px, 30%);
   min-width: 160px;
   max-width: 280px;
@@ -395,20 +429,20 @@ onUnmounted(() => {
     width: 70%;
     max-width: 240px;
     height: 100%;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 8px rgba(20, 20, 19, 0.08);
   }
 }
 
 .toc-header {
-  @apply flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-dark-600;
+  @apply flex items-center justify-between px-4 py-3 border-b border-hairline;
 }
 
 .toc-title {
-  @apply text-sm font-semibold text-gray-700 dark:text-dark-200;
+  @apply text-sm font-semibold text-body;
 }
 
 .toc-close-btn {
-  @apply p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-dark-200 hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors;
+  @apply p-1 rounded text-muted-soft hover:text-body hover:bg-hairline transition-colors;
 }
 
 .toc-nav {
@@ -417,35 +451,43 @@ onUnmounted(() => {
 
 .toc-item {
   @apply block px-2 py-1.5 text-sm rounded transition-colors truncate;
-  @apply text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-dark-600;
+  @apply text-body hover:text-ink hover:bg-hairline;
 }
 
 .toc-item.toc-active {
-  @apply text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 font-medium;
+  @apply text-primary-600 bg-primary-50 font-medium;
 }
 
-.toc-level-1 { padding-left: 8px; }
-.toc-level-2 { padding-left: 20px; }
-.toc-level-3 { padding-left: 32px; }
-.toc-level-4 { padding-left: 44px; }
+.toc-level-1 {
+  padding-left: 8px;
+}
+.toc-level-2 {
+  padding-left: 20px;
+}
+.toc-level-3 {
+  padding-left: 32px;
+}
+.toc-level-4 {
+  padding-left: 44px;
+}
 
 .toc-toggle-btn {
   @apply absolute left-2 top-2 z-10 flex items-center px-2 py-1.5 rounded-md text-sm;
-  @apply bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-500;
-  @apply text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-600;
+  @apply bg-canvas border border-hairline;
+  @apply text-body hover:bg-surface-card;
   @apply shadow-sm transition-colors cursor-pointer;
 }
 
 .custom-embed-shell {
   @apply relative;
-  @apply h-full w-full overflow-hidden rounded-2xl;
-  @apply bg-gradient-to-b from-gray-50 to-white dark:from-dark-900 dark:to-dark-950;
+  @apply h-full w-full overflow-hidden rounded-lg;
+  @apply bg-surface-soft;
   @apply p-0;
 }
 
 .custom-open-fab {
   @apply absolute right-3 top-3 z-10;
-  @apply shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-dark-800/80;
+  @apply shadow-sm  ;
 }
 
 .custom-embed-frame {
@@ -465,24 +507,60 @@ onUnmounted(() => {
   line-height: 1.7;
   color: inherit;
 }
-.markdown-page-content h1 { @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b border-gray-200 dark:border-dark-600; }
-.markdown-page-content h2 { @apply text-2xl font-bold mt-6 mb-3; }
-.markdown-page-content h3 { @apply text-xl font-semibold mt-5 mb-2; }
-.markdown-page-content h4 { @apply text-lg font-semibold mt-4 mb-2; }
-.markdown-page-content p { @apply mb-4; }
-.markdown-page-content ul { @apply list-disc pl-6 mb-4; }
-.markdown-page-content ol { @apply list-decimal pl-6 mb-4; }
-.markdown-page-content li { @apply mb-1; }
-.markdown-page-content a { @apply text-primary-500 hover:text-primary-600 underline; }
-.markdown-page-content blockquote { @apply border-l-4 border-gray-300 dark:border-dark-500 pl-4 italic text-gray-600 dark:text-dark-300 my-4; }
-.markdown-page-content img { @apply max-w-full h-auto rounded-lg my-4; }
-.markdown-page-content table { @apply w-full border-collapse my-4; }
-.markdown-page-content th { @apply border border-gray-300 dark:border-dark-500 px-3 py-2 bg-gray-50 dark:bg-dark-700 font-semibold text-left; }
-.markdown-page-content td { @apply border border-gray-300 dark:border-dark-500 px-3 py-2; }
-.markdown-page-content code { @apply bg-gray-100 dark:bg-dark-700 px-1.5 py-0.5 rounded text-sm font-mono; }
-.markdown-page-content pre { @apply bg-gray-900 dark:bg-dark-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4 relative; }
-.markdown-page-content pre code { @apply bg-transparent p-0 text-inherit; }
-.markdown-page-content hr { @apply my-6 border-gray-200 dark:border-dark-600; }
+.markdown-page-content h1 {
+  @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b border-hairline;
+}
+.markdown-page-content h2 {
+  @apply text-2xl font-bold mt-6 mb-3;
+}
+.markdown-page-content h3 {
+  @apply text-xl font-semibold mt-5 mb-2;
+}
+.markdown-page-content h4 {
+  @apply text-lg font-semibold mt-4 mb-2;
+}
+.markdown-page-content p {
+  @apply mb-4;
+}
+.markdown-page-content ul {
+  @apply list-disc pl-6 mb-4;
+}
+.markdown-page-content ol {
+  @apply list-decimal pl-6 mb-4;
+}
+.markdown-page-content li {
+  @apply mb-1;
+}
+.markdown-page-content a {
+  @apply text-primary-500 hover:text-primary-600 underline;
+}
+.markdown-page-content blockquote {
+  @apply border-l-4 border-hairline pl-4 italic text-body my-4;
+}
+.markdown-page-content img {
+  @apply max-w-full h-auto rounded-lg my-4;
+}
+.markdown-page-content table {
+  @apply w-full border-collapse my-4;
+}
+.markdown-page-content th {
+  @apply border border-hairline px-3 py-2 bg-surface-soft font-semibold text-left;
+}
+.markdown-page-content td {
+  @apply border border-hairline px-3 py-2;
+}
+.markdown-page-content code {
+  @apply bg-surface-card px-1.5 py-0.5 rounded text-sm font-mono;
+}
+.markdown-page-content pre {
+  @apply bg-surface-dark text-canvas p-4 rounded-lg overflow-x-auto my-4 relative;
+}
+.markdown-page-content pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+.markdown-page-content hr {
+  @apply my-6 border-hairline;
+}
 
 .copy-btn {
   position: absolute;
@@ -496,9 +574,15 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s, background 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
   font-family: inherit;
 }
-.copy-btn:hover { background: rgba(255, 255, 255, 0.25); }
-pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+pre:hover .copy-btn {
+  opacity: 1;
+}
 </style>

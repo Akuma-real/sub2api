@@ -86,8 +86,12 @@ export default defineConfig(({ mode }) => {
               return 'vendor-ui'
             }
 
-            // 图表库
-            if (id.includes('/chart.js/') || id.includes('/vue-chartjs/')) {
+            // 图表库（连同 @kurkle/color 子依赖一起）
+            if (
+              id.includes('/chart.js/') ||
+              id.includes('/vue-chartjs/') ||
+              id.includes('/@kurkle/')
+            ) {
               return 'vendor-chart'
             }
 
@@ -95,6 +99,20 @@ export default defineConfig(({ mode }) => {
             if (id.includes('/vue-i18n/') || id.includes('/@intlify/')) {
               return 'vendor-i18n'
             }
+
+            // 支付 SDK：仅在 dynamic import 时使用，让 Vite 自动按需拆分
+            if (id.includes('/@stripe/') || id.includes('/@airwallex/')) {
+              return
+            }
+
+            // 大型按需依赖（仅在特定路由使用，独立成 chunk 避免被 main preload 拖累）
+            if (id.includes('/@lobehub/icons/')) return 'vendor-icons'
+            if (id.includes('/@tanstack/')) return 'vendor-tanstack'
+            if (id.includes('/dompurify/') || id.includes('/marked/')) return 'vendor-markdown'
+            if (id.includes('/qrcode/')) return 'vendor-qrcode'
+            if (id.includes('/driver.js/')) return 'vendor-driver'
+            if (id.includes('/vue-draggable-plus/')) return 'vendor-draggable'
+            if (id.includes('/file-saver/')) return 'vendor-filesaver'
 
             // 其他小型第三方库合并
             return 'vendor-misc'

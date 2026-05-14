@@ -2,7 +2,7 @@
   <div class="w-full">
     <label v-if="label" :for="id" class="input-label mb-1.5 block">
       {{ label }}
-      <span v-if="required" class="text-red-500">*</span>
+      <span v-if="required" class="text-error">*</span>
     </label>
     <div class="relative">
       <textarea
@@ -16,8 +16,8 @@
         :rows="rows"
         :class="[
           'input w-full min-h-[80px] transition-all duration-200 resize-y',
-          error ? 'input-error ring-2 ring-red-500/20' : '',
-          disabled ? 'cursor-not-allowed bg-gray-100 opacity-60 dark:bg-dark-900' : ''
+          error ? 'input-error ring-2 ring-error/20' : '',
+          disabled ? 'cursor-not-allowed bg-surface-card opacity-60 ' : '',
         ]"
         @input="onInput"
         @change="$emit('change', ($event.target as HTMLTextAreaElement).value)"
@@ -36,46 +36,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref } from "vue";
 
 interface Props {
-  modelValue: string | null | undefined
-  label?: string
-  placeholder?: string
-  disabled?: boolean
-  required?: boolean
-  readonly?: boolean
-  error?: string
-  hint?: string
-  id?: string
-  rows?: number | string
+  modelValue: string | null | undefined;
+  label?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  readonly?: boolean;
+  error?: string;
+  hint?: string;
+  id?: string;
+  rows?: number | string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   required: false,
   readonly: false,
-  rows: 3
-})
+  rows: 3,
+});
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-  (e: 'change', value: string): void
-  (e: 'blur', event: FocusEvent): void
-  (e: 'focus', event: FocusEvent): void
-}>()
+  (e: "update:modelValue", value: string): void;
+  (e: "change", value: string): void;
+  (e: "blur", event: FocusEvent): void;
+  (e: "focus", event: FocusEvent): void;
+}>();
 
-const textAreaRef = ref<HTMLTextAreaElement | null>(null)
-const placeholderText = computed(() => props.placeholder || '')
+const textAreaRef = ref<HTMLTextAreaElement | null>(null);
+const placeholderText = computed(() => props.placeholder || "");
 
 const onInput = (event: Event) => {
-  const value = (event.target as HTMLTextAreaElement).value
-  emit('update:modelValue', value)
-}
+  const value = (event.target as HTMLTextAreaElement).value;
+  emit("update:modelValue", value);
+};
 
 // Expose focus method
 defineExpose({
   focus: () => textAreaRef.value?.focus(),
-  select: () => textAreaRef.value?.select()
-})
+  select: () => textAreaRef.value?.select(),
+});
 </script>

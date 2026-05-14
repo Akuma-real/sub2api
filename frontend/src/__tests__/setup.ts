@@ -3,7 +3,7 @@
  * 提供全局 mock 和测试工具
  */
 import { config } from '@vue/test-utils'
-import { vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
 
 // Mock requestIdleCallback (Safari < 15 不支持)
 if (typeof globalThis.requestIdleCallback === 'undefined') {
@@ -38,8 +38,61 @@ globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserv
 
 // Vue Test Utils 全局配置
 config.global.stubs = {
-  // 可以在这里添加全局 stub
+  RouterLink: { template: '<a><slot /></a>' },
+  'router-link': { template: '<a><slot /></a>' },
 }
+
+const originalConsole = {
+  error: console.error,
+  warn: console.warn,
+  debug: console.debug,
+}
+
+const expectedConsolePrefixes = [
+  'Failed to parse saved user data:',
+  'Failed to fetch active subscriptions:',
+  'Table load error:',
+  '[OpsOpenAITokenStatsCard] Failed to load data',
+]
+
+function isExpectedTestConsole(args: unknown[]): boolean {
+  const first = args[0]
+  return (
+    typeof first === 'string' &&
+    expectedConsolePrefixes.some((prefix) => first.startsWith(prefix))
+  )
+}
+
+let errorSpy: ReturnType<typeof vi.spyOn> | null = null
+let warnSpy: ReturnType<typeof vi.spyOn> | null = null
+let debugSpy: ReturnType<typeof vi.spyOn> | null = null
+
+beforeEach(() => {
+  errorSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+    if (!isExpectedTestConsole(args)) {
+      originalConsole.error(...args)
+    }
+  })
+  warnSpy = vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+    if (!isExpectedTestConsole(args)) {
+      originalConsole.warn(...args)
+    }
+  })
+  debugSpy = vi.spyOn(console, 'debug').mockImplementation((...args: unknown[]) => {
+    if (!isExpectedTestConsole(args)) {
+      originalConsole.debug(...args)
+    }
+  })
+})
+
+afterEach(() => {
+  errorSpy?.mockRestore()
+  warnSpy?.mockRestore()
+  debugSpy?.mockRestore()
+  errorSpy = null
+  warnSpy = null
+  debugSpy = null
+})
 
 // 设置全局测试超时
 vi.setConfig({ testTimeout: 10000 })

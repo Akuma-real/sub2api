@@ -48,28 +48,24 @@
         <div v-show="activeTab === 'security'" class="space-y-6">
           <!-- Admin API Key Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.adminApiKey.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.adminApiKey.description") }}
               </p>
             </div>
             <div class="space-y-4 p-6">
               <!-- Security Warning -->
-              <div
-                class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
-              >
+              <div class="rounded-lg border border-accent-amber/30 bg-accent-amber/15 p-4">
                 <div class="flex items-start">
                   <Icon
                     name="exclamationTriangle"
                     size="md"
-                    class="mt-0.5 flex-shrink-0 text-amber-500"
+                    class="mt-0.5 flex-shrink-0 text-warning"
                   />
-                  <p class="ml-3 text-sm text-amber-700 dark:text-amber-300">
+                  <p class="ml-3 text-sm text-warning">
                     {{ t("admin.settings.adminApiKey.securityWarning") }}
                   </p>
                 </div>
@@ -78,7 +74,7 @@
               <!-- Loading State -->
               <div
                 v-if="adminApiKeyLoading"
-                class="flex items-center gap-2 text-gray-500"
+                class="flex items-center gap-2 text-muted"
               >
                 <div
                   class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"
@@ -91,7 +87,7 @@
                 v-else-if="!adminApiKeyExists"
                 class="flex items-center justify-between"
               >
-                <span class="text-gray-500 dark:text-gray-400">
+                <span class="text-muted">
                   {{ t("admin.settings.adminApiKey.notConfigured") }}
                 </span>
                 <button
@@ -132,13 +128,11 @@
               <div v-else class="space-y-4">
                 <div class="flex items-center justify-between">
                   <div>
-                    <label
-                      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-1 block text-sm font-medium text-body">
                       {{ t("admin.settings.adminApiKey.currentKey") }}
                     </label>
                     <code
-                      class="rounded bg-gray-100 px-2 py-1 font-mono text-sm text-gray-900 dark:bg-dark-700 dark:text-gray-100"
+                      class="rounded bg-surface-card px-2 py-1 font-mono text-sm text-ink"
                     >
                       {{ adminApiKeyMasked }}
                     </code>
@@ -160,7 +154,7 @@
                       type="button"
                       @click="deleteAdminApiKey"
                       :disabled="adminApiKeyOperating"
-                      class="btn btn-secondary btn-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                      class="btn btn-secondary btn-sm text-error hover:text-error"
                     >
                       {{ t("admin.settings.adminApiKey.delete") }}
                     </button>
@@ -170,16 +164,14 @@
                 <!-- Newly Generated Key Display -->
                 <div
                   v-if="newAdminApiKey"
-                  class="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+                  class="space-y-3 rounded-lg border border-success/25 bg-success/15 p-4"
                 >
-                  <p
-                    class="text-sm font-medium text-green-700 dark:text-green-300"
-                  >
+                  <p class="text-sm font-medium text-success">
                     {{ t("admin.settings.adminApiKey.keyWarning") }}
                   </p>
                   <div class="flex items-center gap-2">
                     <code
-                      class="flex-1 select-all break-all rounded border border-green-300 bg-white px-3 py-2 font-mono text-sm dark:border-green-700 dark:bg-dark-800"
+                      class="flex-1 select-all break-all rounded border border-success/25 bg-canvas px-3 py-2 font-mono text-sm"
                     >
                       {{ newAdminApiKey }}
                     </code>
@@ -191,7 +183,7 @@
                       {{ t("admin.settings.adminApiKey.copyKey") }}
                     </button>
                   </div>
-                  <p class="text-xs text-green-600 dark:text-green-400">
+                  <p class="text-xs text-success">
                     {{ t("admin.settings.adminApiKey.usage") }}
                   </p>
                 </div>
@@ -205,20 +197,18 @@
         <div v-show="activeTab === 'gateway'" class="space-y-6">
           <!-- Overload Cooldown (529) Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.overloadCooldown.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.overloadCooldown.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div
                 v-if="overloadCooldownLoading"
-                class="flex items-center gap-2 text-gray-500"
+                class="flex items-center gap-2 text-muted"
               >
                 <div
                   class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"
@@ -229,10 +219,10 @@
               <template v-else>
                 <div class="flex items-center justify-between">
                   <div>
-                    <label class="font-medium text-gray-900 dark:text-white">{{
+                    <label class="font-medium text-ink">{{
                       t("admin.settings.overloadCooldown.enabled")
                     }}</label>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted">
                       {{ t("admin.settings.overloadCooldown.enabledHint") }}
                     </p>
                   </div>
@@ -241,12 +231,10 @@
 
                 <div
                   v-if="overloadCooldownForm.enabled"
-                  class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="space-y-4 border-t border-hairline-soft pt-4"
                 >
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.overloadCooldown.cooldownMinutes") }}
                     </label>
                     <input
@@ -256,7 +244,7 @@
                       max="120"
                       class="input w-32"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         t("admin.settings.overloadCooldown.cooldownMinutesHint")
                       }}
@@ -265,7 +253,7 @@
                 </div>
 
                 <div
-                  class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="flex justify-end border-t border-hairline-soft pt-4"
                 >
                   <button
                     type="button"
@@ -306,20 +294,18 @@
 
           <!-- Rate Limit Cooldown (429) Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.rateLimit429Cooldown.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.rateLimit429Cooldown.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div
                 v-if="rateLimit429CooldownLoading"
-                class="flex items-center gap-2 text-gray-500"
+                class="flex items-center gap-2 text-muted"
               >
                 <div
                   class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"
@@ -330,10 +316,10 @@
               <template v-else>
                 <div class="flex items-center justify-between">
                   <div>
-                    <label class="font-medium text-gray-900 dark:text-white">{{
+                    <label class="font-medium text-ink">{{
                       t("admin.settings.rateLimit429Cooldown.enabled")
                     }}</label>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted">
                       {{ t("admin.settings.rateLimit429Cooldown.enabledHint") }}
                     </p>
                   </div>
@@ -342,16 +328,12 @@
 
                 <div
                   v-if="rateLimit429CooldownForm.enabled"
-                  class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="space-y-4 border-t border-hairline-soft pt-4"
                 >
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{
-                        t(
-                          "admin.settings.rateLimit429Cooldown.cooldownSeconds",
-                        )
+                        t("admin.settings.rateLimit429Cooldown.cooldownSeconds")
                       }}
                     </label>
                     <input
@@ -361,7 +343,7 @@
                       max="7200"
                       class="input w-32"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         t(
                           "admin.settings.rateLimit429Cooldown.cooldownSecondsHint",
@@ -372,7 +354,7 @@
                 </div>
 
                 <div
-                  class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="flex justify-end border-t border-hairline-soft pt-4"
                 >
                   <button
                     type="button"
@@ -413,13 +395,11 @@
 
           <!-- Stream Timeout Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.streamTimeout.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.streamTimeout.description") }}
               </p>
             </div>
@@ -427,7 +407,7 @@
               <!-- Loading State -->
               <div
                 v-if="streamTimeoutLoading"
-                class="flex items-center gap-2 text-gray-500"
+                class="flex items-center gap-2 text-muted"
               >
                 <div
                   class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"
@@ -439,10 +419,10 @@
                 <!-- Enable Stream Timeout -->
                 <div class="flex items-center justify-between">
                   <div>
-                    <label class="font-medium text-gray-900 dark:text-white">{{
+                    <label class="font-medium text-ink">{{
                       t("admin.settings.streamTimeout.enabled")
                     }}</label>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted">
                       {{ t("admin.settings.streamTimeout.enabledHint") }}
                     </p>
                   </div>
@@ -452,13 +432,11 @@
                 <!-- Settings - Only show when enabled -->
                 <div
                   v-if="streamTimeoutForm.enabled"
-                  class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="space-y-4 border-t border-hairline-soft pt-4"
                 >
                   <!-- Action -->
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.streamTimeout.action") }}
                     </label>
                     <select
@@ -477,16 +455,14 @@
                         {{ t("admin.settings.streamTimeout.actionNone") }}
                       </option>
                     </select>
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.streamTimeout.actionHint") }}
                     </p>
                   </div>
 
                   <!-- Temp Unsched Minutes (only show when action is temp_unsched) -->
                   <div v-if="streamTimeoutForm.action === 'temp_unsched'">
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.streamTimeout.tempUnschedMinutes") }}
                     </label>
                     <input
@@ -496,7 +472,7 @@
                       max="60"
                       class="input w-32"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         t("admin.settings.streamTimeout.tempUnschedMinutesHint")
                       }}
@@ -505,9 +481,7 @@
 
                   <!-- Threshold Count -->
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.streamTimeout.thresholdCount") }}
                     </label>
                     <input
@@ -517,16 +491,14 @@
                       max="10"
                       class="input w-32"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.streamTimeout.thresholdCountHint") }}
                     </p>
                   </div>
 
                   <!-- Threshold Window Minutes -->
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{
                         t("admin.settings.streamTimeout.thresholdWindowMinutes")
                       }}
@@ -540,7 +512,7 @@
                       max="60"
                       class="input w-32"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         t(
                           "admin.settings.streamTimeout.thresholdWindowMinutesHint",
@@ -552,7 +524,7 @@
 
                 <!-- Save Button -->
                 <div
-                  class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="flex justify-end border-t border-hairline-soft pt-4"
                 >
                   <button
                     type="button"
@@ -593,13 +565,11 @@
 
           <!-- Request Rectifier Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.rectifier.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.rectifier.description") }}
               </p>
             </div>
@@ -607,7 +577,7 @@
               <!-- Loading State -->
               <div
                 v-if="rectifierLoading"
-                class="flex items-center gap-2 text-gray-500"
+                class="flex items-center gap-2 text-muted"
               >
                 <div
                   class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"
@@ -619,10 +589,10 @@
                 <!-- Master Toggle -->
                 <div class="flex items-center justify-between">
                   <div>
-                    <label class="font-medium text-gray-900 dark:text-white">{{
+                    <label class="font-medium text-ink">{{
                       t("admin.settings.rectifier.enabled")
                     }}</label>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted">
                       {{ t("admin.settings.rectifier.enabledHint") }}
                     </p>
                   </div>
@@ -632,18 +602,15 @@
                 <!-- Sub-toggles (only show when master is enabled) -->
                 <div
                   v-if="rectifierForm.enabled"
-                  class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="space-y-4 border-t border-hairline-soft pt-4"
                 >
                   <!-- Thinking Signature Rectifier -->
                   <div class="flex items-center justify-between">
                     <div>
-                      <label
-                        class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >{{
-                          t("admin.settings.rectifier.thinkingSignature")
-                        }}</label
-                      >
-                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                      <label class="text-sm font-medium text-body">{{
+                        t("admin.settings.rectifier.thinkingSignature")
+                      }}</label>
+                      <p class="text-xs text-muted">
                         {{
                           t("admin.settings.rectifier.thinkingSignatureHint")
                         }}
@@ -657,13 +624,10 @@
                   <!-- Thinking Budget Rectifier -->
                   <div class="flex items-center justify-between">
                     <div>
-                      <label
-                        class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >{{
-                          t("admin.settings.rectifier.thinkingBudget")
-                        }}</label
-                      >
-                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                      <label class="text-sm font-medium text-body">{{
+                        t("admin.settings.rectifier.thinkingBudget")
+                      }}</label>
+                      <p class="text-xs text-muted">
                         {{ t("admin.settings.rectifier.thinkingBudgetHint") }}
                       </p>
                     </div>
@@ -673,13 +637,10 @@
                   <!-- API Key Signature Rectifier -->
                   <div class="flex items-center justify-between">
                     <div>
-                      <label
-                        class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >{{
-                          t("admin.settings.rectifier.apikeySignature")
-                        }}</label
-                      >
-                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                      <label class="text-sm font-medium text-body">{{
+                        t("admin.settings.rectifier.apikeySignature")
+                      }}</label>
+                      <p class="text-xs text-muted">
                         {{ t("admin.settings.rectifier.apikeySignatureHint") }}
                       </p>
                     </div>
@@ -689,16 +650,13 @@
                   <!-- Custom Patterns (only when apikey_signature_enabled) -->
                   <div
                     v-if="rectifierForm.apikey_signature_enabled"
-                    class="ml-4 space-y-3 border-l-2 border-gray-200 pl-4 dark:border-dark-600"
+                    class="ml-4 space-y-3 border-l-2 border-hairline pl-4"
                   >
                     <div>
-                      <label
-                        class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >{{
-                          t("admin.settings.rectifier.apikeyPatterns")
-                        }}</label
-                      >
-                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                      <label class="text-sm font-medium text-body">{{
+                        t("admin.settings.rectifier.apikeyPatterns")
+                      }}</label>
+                      <p class="text-xs text-muted">
                         {{ t("admin.settings.rectifier.apikeyPatternsHint") }}
                       </p>
                     </div>
@@ -725,7 +683,7 @@
                             1,
                           )
                         "
-                        class="btn btn-ghost btn-xs text-red-500 hover:text-red-700"
+                        class="btn btn-ghost btn-xs text-error hover:text-error"
                       >
                         <svg
                           class="h-4 w-4"
@@ -745,7 +703,7 @@
                     <button
                       type="button"
                       @click="rectifierForm.apikey_signature_patterns.push('')"
-                      class="btn btn-ghost btn-xs text-primary-600 dark:text-primary-400"
+                      class="btn btn-ghost btn-xs text-primary-600"
                     >
                       + {{ t("admin.settings.rectifier.addPattern") }}
                     </button>
@@ -754,7 +712,7 @@
 
                 <!-- Save Button -->
                 <div
-                  class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="flex justify-end border-t border-hairline-soft pt-4"
                 >
                   <button
                     type="button"
@@ -792,13 +750,11 @@
           </div>
           <!-- Beta Policy Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.betaPolicy.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.betaPolicy.description") }}
               </p>
             </div>
@@ -806,7 +762,7 @@
               <!-- Loading State -->
               <div
                 v-if="betaPolicyLoading"
-                class="flex items-center gap-2 text-gray-500"
+                class="flex items-center gap-2 text-muted"
               >
                 <div
                   class="h-4 w-4 animate-spin rounded-full border-b-2 border-primary-600"
@@ -819,16 +775,14 @@
                 <div
                   v-for="rule in betaPolicyForm.rules"
                   :key="rule.beta_token"
-                  class="rounded-lg border border-gray-200 p-4 dark:border-dark-600"
+                  class="rounded-lg border border-hairline p-4"
                 >
                   <div class="mb-3 flex items-center gap-2">
-                    <span
-                      class="text-sm font-medium text-gray-900 dark:text-white"
-                    >
+                    <span class="text-sm font-medium text-ink">
                       {{ getBetaDisplayName(rule.beta_token) }}
                     </span>
                     <span
-                      class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-dark-700 dark:text-gray-400"
+                      class="rounded bg-surface-card px-2 py-0.5 text-xs text-muted"
                     >
                       {{ rule.beta_token }}
                     </span>
@@ -837,9 +791,7 @@
                   <div class="grid grid-cols-2 gap-4">
                     <!-- Action -->
                     <div>
-                      <label
-                        class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                      >
+                      <label class="mb-1 block text-xs font-medium text-body">
                         {{ t("admin.settings.betaPolicy.action") }}
                       </label>
                       <Select
@@ -851,9 +803,7 @@
 
                     <!-- Scope -->
                     <div>
-                      <label
-                        class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                      >
+                      <label class="mb-1 block text-xs font-medium text-body">
                         {{ t("admin.settings.betaPolicy.scope") }}
                       </label>
                       <Select
@@ -866,9 +816,7 @@
 
                   <!-- Error Message (only when action=block) -->
                   <div v-if="rule.action === 'block'" class="mt-3">
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.betaPolicy.errorMessage") }}
                     </label>
                     <input
@@ -879,16 +827,14 @@
                         t('admin.settings.betaPolicy.errorMessagePlaceholder')
                       "
                     />
-                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <p class="mt-1 text-xs text-muted-soft">
                       {{ t("admin.settings.betaPolicy.errorMessageHint") }}
                     </p>
                   </div>
 
                   <!-- Quick Presets (only for tokens with presets) -->
                   <div v-if="betaPresets[rule.beta_token]?.length" class="mt-3">
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.betaPolicy.quickPresets") }}
                     </label>
                     <div class="flex flex-wrap gap-2">
@@ -896,7 +842,7 @@
                         v-for="preset in betaPresets[rule.beta_token]"
                         :key="preset.label"
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-md border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-800 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50"
+                        class="inline-flex items-center gap-1 rounded-md border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition-colors hover:bg-primary-100"
                         @click="applyBetaPreset(rule, preset)"
                         :title="preset.description"
                       >
@@ -907,12 +853,10 @@
 
                   <!-- Model Whitelist -->
                   <div class="mt-3">
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.betaPolicy.modelWhitelist") }}
                     </label>
-                    <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">
+                    <p class="mb-2 text-xs text-muted-soft">
                       {{ t("admin.settings.betaPolicy.modelWhitelistHint") }}
                     </p>
                     <!-- Existing patterns -->
@@ -932,7 +876,7 @@
                       <button
                         type="button"
                         @click="rule.model_whitelist!.splice(index, 1)"
-                        class="shrink-0 rounded p-1 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                        class="shrink-0 rounded p-1 text-error transition-colors hover:bg-error/15 hover:text-error"
                       >
                         <svg
                           class="h-4 w-4"
@@ -956,7 +900,7 @@
                         if (!rule.model_whitelist) rule.model_whitelist = [];
                         rule.model_whitelist.push('');
                       "
-                      class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                      class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-700"
                     >
                       <svg
                         class="h-3.5 w-3.5"
@@ -975,7 +919,7 @@
                     </button>
                     <!-- Common pattern chips -->
                     <div class="flex flex-wrap items-center gap-1.5">
-                      <span class="text-xs text-gray-400 dark:text-gray-500"
+                      <span class="text-xs text-muted-soft"
                         >{{
                           t("admin.settings.betaPolicy.commonPatterns")
                         }}:</span
@@ -984,7 +928,7 @@
                         v-for="pattern in commonModelPatterns"
                         :key="pattern"
                         type="button"
-                        class="rounded border border-gray-200 px-2 py-0.5 text-xs text-gray-600 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-dark-600 dark:text-gray-400 dark:hover:border-primary-700 dark:hover:bg-primary-900/30 dark:hover:text-primary-300"
+                        class="rounded border border-hairline px-2 py-0.5 text-xs text-body transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
                         @click="addQuickPattern(rule, pattern)"
                       >
                         {{ pattern }}
@@ -999,9 +943,7 @@
                     "
                     class="mt-3"
                   >
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.betaPolicy.fallbackAction") }}
                     </label>
                     <Select
@@ -1009,7 +951,7 @@
                       @update:modelValue="rule.fallback_action = $event as any"
                       :options="betaPolicyActionOptions"
                     />
-                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <p class="mt-1 text-xs text-muted-soft">
                       {{ t("admin.settings.betaPolicy.fallbackActionHint") }}
                     </p>
                     <!-- Fallback Error Message (only when fallback_action=block) -->
@@ -1024,7 +966,7 @@
                           )
                         "
                       />
-                      <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      <p class="mt-1 text-xs text-muted-soft">
                         {{ t("admin.settings.betaPolicy.errorMessageHint") }}
                       </p>
                     </div>
@@ -1033,7 +975,7 @@
 
                 <!-- Save Button -->
                 <div
-                  class="flex justify-end border-t border-gray-100 pt-4 dark:border-dark-700"
+                  class="flex justify-end border-t border-hairline-soft pt-4"
                 >
                   <button
                     type="button"
@@ -1071,13 +1013,11 @@
           </div>
           <!-- OpenAI Fast/Flex Policy Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.openaiFastPolicy.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.openaiFastPolicy.description") }}
               </p>
             </div>
@@ -1085,7 +1025,7 @@
               <!-- Empty state -->
               <div
                 v-if="openaiFastPolicyForm.rules.length === 0"
-                class="rounded-lg border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-dark-600 dark:text-gray-400"
+                class="rounded-lg border border-dashed border-hairline p-6 text-center text-sm text-muted"
               >
                 {{ t("admin.settings.openaiFastPolicy.empty") }}
               </div>
@@ -1094,12 +1034,10 @@
               <div
                 v-for="(rule, ruleIndex) in openaiFastPolicyForm.rules"
                 :key="ruleIndex"
-                class="rounded-lg border border-gray-200 p-4 dark:border-dark-600"
+                class="rounded-lg border border-hairline p-4"
               >
                 <div class="mb-3 flex items-center justify-between">
-                  <span
-                    class="text-sm font-medium text-gray-900 dark:text-white"
-                  >
+                  <span class="text-sm font-medium text-ink">
                     {{
                       t("admin.settings.openaiFastPolicy.ruleHeader", {
                         index: ruleIndex + 1,
@@ -1109,7 +1047,7 @@
                   <button
                     type="button"
                     @click="removeOpenAIFastPolicyRule(ruleIndex)"
-                    class="rounded p-1 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                    class="rounded p-1 text-error transition-colors hover:bg-error/15 hover:text-error"
                     :title="t('admin.settings.openaiFastPolicy.removeRule')"
                   >
                     <svg
@@ -1131,9 +1069,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <!-- Service Tier -->
                   <div>
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.openaiFastPolicy.serviceTier") }}
                     </label>
                     <Select
@@ -1150,9 +1086,7 @@
 
                   <!-- Action -->
                   <div>
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.openaiFastPolicy.action") }}
                     </label>
                     <Select
@@ -1166,9 +1100,7 @@
 
                   <!-- Scope -->
                   <div>
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.openaiFastPolicy.scope") }}
                     </label>
                     <Select
@@ -1187,9 +1119,7 @@
 
                 <!-- Error Message (only when action=block) -->
                 <div v-if="rule.action === 'block'" class="mt-3">
-                  <label
-                    class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                  >
+                  <label class="mb-1 block text-xs font-medium text-body">
                     {{ t("admin.settings.openaiFastPolicy.errorMessage") }}
                   </label>
                   <input
@@ -1202,19 +1132,17 @@
                       )
                     "
                   />
-                  <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                  <p class="mt-1 text-xs text-muted-soft">
                     {{ t("admin.settings.openaiFastPolicy.errorMessageHint") }}
                   </p>
                 </div>
 
                 <!-- Model Whitelist -->
                 <div class="mt-3">
-                  <label
-                    class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                  >
+                  <label class="mb-1 block text-xs font-medium text-body">
                     {{ t("admin.settings.openaiFastPolicy.modelWhitelist") }}
                   </label>
-                  <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">
+                  <p class="mb-2 text-xs text-muted-soft">
                     {{
                       t("admin.settings.openaiFastPolicy.modelWhitelistHint")
                     }}
@@ -1239,7 +1167,7 @@
                       @click="
                         removeOpenAIFastPolicyModelPattern(rule, patternIdx)
                       "
-                      class="shrink-0 rounded p-1 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                      class="shrink-0 rounded p-1 text-error transition-colors hover:bg-error/15 hover:text-error"
                     >
                       <svg
                         class="h-4 w-4"
@@ -1259,7 +1187,7 @@
                   <button
                     type="button"
                     @click="addOpenAIFastPolicyModelPattern(rule)"
-                    class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                    class="mb-2 inline-flex items-center gap-1 text-xs text-primary-600 transition-colors hover:text-primary-700"
                   >
                     <svg
                       class="h-3.5 w-3.5"
@@ -1280,14 +1208,10 @@
 
                 <!-- Fallback Action (only when model_whitelist is non-empty) -->
                 <div
-                  v-if="
-                    rule.model_whitelist && rule.model_whitelist.length > 0
-                  "
+                  v-if="rule.model_whitelist && rule.model_whitelist.length > 0"
                   class="mt-3"
                 >
-                  <label
-                    class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                  >
+                  <label class="mb-1 block text-xs font-medium text-body">
                     {{ t("admin.settings.openaiFastPolicy.fallbackAction") }}
                   </label>
                   <Select
@@ -1300,7 +1224,7 @@
                     "
                     :options="openaiFastPolicyActionOptions"
                   />
-                  <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                  <p class="mt-1 text-xs text-muted-soft">
                     {{
                       t("admin.settings.openaiFastPolicy.fallbackActionHint")
                     }}
@@ -1342,7 +1266,7 @@
                   </svg>
                   {{ t("admin.settings.openaiFastPolicy.addRule") }}
                 </button>
-                <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                <p class="mt-2 text-xs text-muted-soft">
                   {{ t("admin.settings.openaiFastPolicy.saveHint") }}
                 </p>
               </div>
@@ -1355,13 +1279,11 @@
         <div v-show="activeTab === 'security'" class="space-y-6">
           <!-- Registration Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.registration.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.registration.description") }}
               </p>
             </div>
@@ -1369,10 +1291,10 @@
               <!-- Enable Registration -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.registration.enableRegistration")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{
                       t("admin.settings.registration.enableRegistrationHint")
                     }}
@@ -1383,13 +1305,13 @@
 
               <!-- Email Verification -->
               <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.registration.emailVerification")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.registration.emailVerificationHint") }}
                   </p>
                 </div>
@@ -1397,29 +1319,29 @@
               </div>
 
               <!-- Email Suffix Whitelist -->
-              <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
-                <label class="font-medium text-gray-900 dark:text-white">{{
+              <div class="border-t border-hairline-soft pt-4">
+                <label class="font-medium text-ink">{{
                   t("admin.settings.registration.emailSuffixWhitelist")
                 }}</label>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted">
                   {{
                     t("admin.settings.registration.emailSuffixWhitelistHint")
                   }}
                 </p>
                 <div
-                  class="mt-3 rounded-lg border border-gray-300 bg-white p-2 dark:border-dark-500 dark:bg-dark-700"
+                  class="mt-3 rounded-lg border border-hairline bg-canvas p-2"
                 >
                   <div class="flex flex-wrap items-center gap-2">
                     <span
                       v-for="suffix in registrationEmailSuffixWhitelistTags"
                       :key="suffix"
-                      class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs font-mono text-gray-700 dark:bg-dark-600 dark:text-gray-200"
+                      class="inline-flex items-center gap-1 rounded bg-surface-card px-2 py-1 text-xs font-mono text-body"
                     >
-                      <span class="text-gray-400 dark:text-gray-500">@</span>
+                      <span class="text-muted-soft">@</span>
                       <span>{{ suffix }}</span>
                       <button
                         type="button"
-                        class="rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-dark-500 dark:hover:text-white"
+                        class="rounded-full text-muted hover:bg-hairline hover:text-body"
                         @click="
                           removeRegistrationEmailSuffixWhitelistTag(suffix)
                         "
@@ -1434,16 +1356,13 @@
                     </span>
 
                     <div
-                      class="flex min-w-[220px] flex-1 items-center gap-1 rounded border border-transparent px-2 py-1 focus-within:border-primary-300 dark:focus-within:border-primary-700"
+                      class="flex min-w-[220px] flex-1 items-center gap-1 rounded border border-transparent px-2 py-1 focus-within:border-primary-300"
                     >
-                      <span
-                        class="font-mono text-sm text-gray-400 dark:text-gray-500"
-                        >@</span
-                      >
+                      <span class="font-mono text-sm text-muted-soft">@</span>
                       <input
                         v-model="registrationEmailSuffixWhitelistDraft"
                         type="text"
-                        class="w-full bg-transparent text-sm font-mono text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
+                        class="w-full bg-transparent text-sm font-mono text-ink outline-none placeholder:text-muted-soft"
                         :placeholder="
                           t(
                             'admin.settings.registration.emailSuffixWhitelistPlaceholder',
@@ -1461,7 +1380,7 @@
                     </div>
                   </div>
                 </div>
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-2 text-xs text-muted">
                   {{
                     t(
                       "admin.settings.registration.emailSuffixWhitelistInputHint",
@@ -1472,13 +1391,13 @@
 
               <!-- Promo Code -->
               <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.registration.promoCode")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.registration.promoCodeHint") }}
                   </p>
                 </div>
@@ -1487,13 +1406,13 @@
 
               <!-- Invitation Code -->
               <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.registration.invitationCode")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.registration.invitationCodeHint") }}
                   </p>
                 </div>
@@ -1502,13 +1421,13 @@
               <!-- Password Reset - Only show when email verification is enabled -->
               <div
                 v-if="form.email_verify_enabled"
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.registration.passwordReset")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.registration.passwordResetHint") }}
                   </p>
                 </div>
@@ -1517,11 +1436,9 @@
               <!-- Frontend URL - Only show when password reset is enabled -->
               <div
                 v-if="form.email_verify_enabled && form.password_reset_enabled"
-                class="border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="border-t border-hairline-soft pt-4"
               >
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.registration.frontendUrl") }}
                 </label>
                 <input
@@ -1532,26 +1449,26 @@
                     t('admin.settings.registration.frontendUrlPlaceholder')
                   "
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.registration.frontendUrlHint") }}
                 </p>
               </div>
 
               <!-- TOTP 2FA -->
               <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.registration.totp")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.registration.totpHint") }}
                   </p>
                   <!-- Warning when encryption key not configured -->
                   <p
                     v-if="!form.totp_encryption_key_configured"
-                    class="mt-2 text-sm text-amber-600 dark:text-amber-400"
+                    class="mt-2 text-sm text-warning"
                   >
                     {{ t("admin.settings.registration.totpKeyNotConfigured") }}
                   </p>
@@ -1566,13 +1483,11 @@
 
           <!-- Cloudflare Turnstile Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.turnstile.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.turnstile.description") }}
               </p>
             </div>
@@ -1580,10 +1495,10 @@
               <!-- Enable Turnstile -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.turnstile.enableTurnstile")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.turnstile.enableTurnstileHint") }}
                   </p>
                 </div>
@@ -1593,13 +1508,11 @@
               <!-- Turnstile Keys - Only show when enabled -->
               <div
                 v-if="form.turnstile_enabled"
-                class="border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="border-t border-hairline-soft pt-4"
               >
                 <div class="grid grid-cols-1 gap-6">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.turnstile.siteKey") }}
                     </label>
                     <input
@@ -1608,7 +1521,7 @@
                       class="input font-mono text-sm"
                       placeholder="0x4AAAAAAA..."
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.turnstile.siteKeyHint") }}
                       <a
                         href="https://dash.cloudflare.com/"
@@ -1621,9 +1534,7 @@
                     </p>
                   </div>
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.turnstile.secretKey") }}
                     </label>
                     <input
@@ -1632,7 +1543,7 @@
                       class="input font-mono text-sm"
                       placeholder="0x4AAAAAAA..."
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         form.turnstile_secret_key_configured
                           ? t(
@@ -1649,23 +1560,21 @@
 
           <!-- LinuxDo Connect OAuth 登录 -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.linuxdo.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.linuxdo.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.linuxdo.enable")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.linuxdo.enableHint") }}
                   </p>
                 </div>
@@ -1674,13 +1583,11 @@
 
               <div
                 v-if="form.linuxdo_connect_enabled"
-                class="border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="border-t border-hairline-soft pt-4"
               >
                 <div class="grid grid-cols-1 gap-6">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.linuxdo.clientId") }}
                     </label>
                     <input
@@ -1691,15 +1598,13 @@
                         t('admin.settings.linuxdo.clientIdPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.linuxdo.clientIdHint") }}
                     </p>
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.linuxdo.clientSecret") }}
                     </label>
                     <input
@@ -1714,7 +1619,7 @@
                           : t('admin.settings.linuxdo.clientSecretPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         form.linuxdo_connect_client_secret_configured
                           ? t(
@@ -1726,9 +1631,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.linuxdo.redirectUrl") }}
                     </label>
                     <input
@@ -1751,12 +1654,12 @@
                       </button>
                       <code
                         v-if="linuxdoRedirectUrlSuggestion"
-                        class="select-all break-all rounded bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300"
+                        class="select-all break-all rounded bg-surface-soft px-2 py-1 font-mono text-xs text-body"
                       >
                         {{ linuxdoRedirectUrlSuggestion }}
                       </code>
                     </div>
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.linuxdo.redirectUrlHint") }}
                     </p>
                   </div>
@@ -1767,13 +1670,11 @@
 
           <!-- GitHub / Google 邮箱快捷登录 -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ localText("邮箱快捷登录", "Email OAuth Sign-in") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{
                   localText(
                     "开启 GitHub 或 Google 邮箱授权登录后，系统会读取已验证邮箱，存在则直接登录，不存在则自动注册。",
@@ -1784,13 +1685,11 @@
             </div>
             <div class="space-y-6 p-6">
               <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-700">
+                <div class="rounded-lg border border-hairline p-4">
                   <div class="flex items-start justify-between gap-4">
                     <div>
-                      <h3 class="font-medium text-gray-900 dark:text-white">
-                        GitHub
-                      </h3>
-                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <h3 class="font-medium text-ink">GitHub</h3>
+                      <p class="mt-1 text-sm text-muted">
                         {{
                           localText(
                             "GitHub OAuth App 需要 read:user user:email 权限，回调地址填写下方后端地址。",
@@ -1803,7 +1702,9 @@
                   </div>
 
                   <div v-if="form.github_oauth_enabled" class="mt-4 space-y-4">
-                    <div class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300">
+                    <div
+                      class="rounded-lg bg-surface-soft px-3 py-2 text-xs text-body"
+                    >
                       <template v-if="isZhLocale">
                         开通引导：GitHub Settings → Developer settings →
                         <a
@@ -1811,9 +1712,11 @@
                           href="https://github.com/settings/developers"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="font-medium text-primary-600 hover:underline dark:text-primary-400"
-                        >OAuth Apps</a>
-                        → New OAuth App；Homepage URL 填站点域名，Authorization callback URL 填下面的后端回调地址。
+                          class="font-medium text-primary-600 hover:underline"
+                          >OAuth Apps</a
+                        >
+                        → New OAuth App；Homepage URL 填站点域名，Authorization
+                        callback URL 填下面的后端回调地址。
                       </template>
                       <template v-else>
                         Setup guide: GitHub Settings → Developer settings →
@@ -1822,15 +1725,20 @@
                           href="https://github.com/settings/developers"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="font-medium text-primary-600 hover:underline dark:text-primary-400"
-                        >OAuth Apps</a>
-                        → New OAuth App. Use your site origin as Homepage URL and the backend callback URL below as Authorization callback URL.
+                          class="font-medium text-primary-600 hover:underline"
+                          >OAuth Apps</a
+                        >
+                        → New OAuth App. Use your site origin as Homepage URL
+                        and the backend callback URL below as Authorization
+                        callback URL.
                       </template>
                     </div>
 
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                       <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Client ID</label>
+                        <label class="mb-2 block text-sm font-medium text-body"
+                          >Client ID</label
+                        >
                         <input
                           v-model="form.github_oauth_client_id"
                           type="text"
@@ -1839,14 +1747,19 @@
                         />
                       </div>
                       <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Client Secret</label>
+                        <label class="mb-2 block text-sm font-medium text-body"
+                          >Client Secret</label
+                        >
                         <input
                           v-model="form.github_oauth_client_secret"
                           type="password"
                           class="input font-mono text-sm"
                           :placeholder="
                             form.github_oauth_client_secret_configured
-                              ? localText('密钥已配置，留空以保留当前值。', 'Secret configured. Leave empty to keep the current value.')
+                              ? localText(
+                                  '密钥已配置，留空以保留当前值。',
+                                  'Secret configured. Leave empty to keep the current value.',
+                                )
                               : 'GitHub OAuth Client Secret'
                           "
                         />
@@ -1854,7 +1767,7 @@
                     </div>
 
                     <div>
-                      <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label class="mb-2 block text-sm font-medium text-body">
                         {{ localText("后端回调地址", "Backend Callback URL") }}
                       </label>
                       <input
@@ -1863,7 +1776,9 @@
                         class="input font-mono text-sm"
                         placeholder="https://your-domain.com/api/v1/auth/oauth/github/callback"
                       />
-                      <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <div
+                        class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+                      >
                         <button
                           type="button"
                           class="btn btn-secondary btn-sm w-fit"
@@ -1873,7 +1788,7 @@
                         </button>
                         <code
                           v-if="githubOAuthRedirectUrlSuggestion"
-                          class="select-all break-all rounded bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300"
+                          class="select-all break-all rounded bg-surface-soft px-2 py-1 font-mono text-xs text-body"
                         >
                           {{ githubOAuthRedirectUrlSuggestion }}
                         </code>
@@ -1881,7 +1796,7 @@
                     </div>
 
                     <div>
-                      <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label class="mb-2 block text-sm font-medium text-body">
                         {{ localText("前端回跳地址", "Frontend Callback URL") }}
                       </label>
                       <input
@@ -1894,13 +1809,11 @@
                   </div>
                 </div>
 
-                <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-700">
+                <div class="rounded-lg border border-hairline p-4">
                   <div class="flex items-start justify-between gap-4">
                     <div>
-                      <h3 class="font-medium text-gray-900 dark:text-white">
-                        Google
-                      </h3>
-                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <h3 class="font-medium text-ink">Google</h3>
+                      <p class="mt-1 text-sm text-muted">
                         {{
                           localText(
                             "Google OAuth 客户端需要 openid email profile 范围，并在凭据里登记后端回调地址。",
@@ -1913,7 +1826,9 @@
                   </div>
 
                   <div v-if="form.google_oauth_enabled" class="mt-4 space-y-4">
-                    <div class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300">
+                    <div
+                      class="rounded-lg bg-surface-soft px-3 py-2 text-xs text-body"
+                    >
                       {{
                         localText(
                           "开通引导：Google Cloud Console → APIs & Services → OAuth consent screen 完成同意屏幕；Credentials → Create Credentials → OAuth client ID，类型选择 Web application，并把下面地址加入 Authorized redirect URIs。",
@@ -1924,7 +1839,9 @@
 
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                       <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Client ID</label>
+                        <label class="mb-2 block text-sm font-medium text-body"
+                          >Client ID</label
+                        >
                         <input
                           v-model="form.google_oauth_client_id"
                           type="text"
@@ -1933,14 +1850,19 @@
                         />
                       </div>
                       <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Client Secret</label>
+                        <label class="mb-2 block text-sm font-medium text-body"
+                          >Client Secret</label
+                        >
                         <input
                           v-model="form.google_oauth_client_secret"
                           type="password"
                           class="input font-mono text-sm"
                           :placeholder="
                             form.google_oauth_client_secret_configured
-                              ? localText('密钥已配置，留空以保留当前值。', 'Secret configured. Leave empty to keep the current value.')
+                              ? localText(
+                                  '密钥已配置，留空以保留当前值。',
+                                  'Secret configured. Leave empty to keep the current value.',
+                                )
                               : 'Google OAuth Client Secret'
                           "
                         />
@@ -1948,7 +1870,7 @@
                     </div>
 
                     <div>
-                      <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label class="mb-2 block text-sm font-medium text-body">
                         {{ localText("后端回调地址", "Backend Callback URL") }}
                       </label>
                       <input
@@ -1957,7 +1879,9 @@
                         class="input font-mono text-sm"
                         placeholder="https://your-domain.com/api/v1/auth/oauth/google/callback"
                       />
-                      <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <div
+                        class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+                      >
                         <button
                           type="button"
                           class="btn btn-secondary btn-sm w-fit"
@@ -1967,7 +1891,7 @@
                         </button>
                         <code
                           v-if="googleOAuthRedirectUrlSuggestion"
-                          class="select-all break-all rounded bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300"
+                          class="select-all break-all rounded bg-surface-soft px-2 py-1 font-mono text-xs text-body"
                         >
                           {{ googleOAuthRedirectUrlSuggestion }}
                         </code>
@@ -1975,7 +1899,7 @@
                     </div>
 
                     <div>
-                      <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label class="mb-2 block text-sm font-medium text-body">
                         {{ localText("前端回跳地址", "Frontend Callback URL") }}
                       </label>
                       <input
@@ -1993,23 +1917,21 @@
 
           <!-- WeChat Connect OAuth 登录 -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.wechatConnect.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.wechatConnect.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.wechatConnect.enabledLabel")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.wechatConnect.enabledHint") }}
                   </p>
                 </div>
@@ -2021,18 +1943,16 @@
 
               <div
                 v-if="form.wechat_connect_enabled"
-                class="space-y-6 border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="space-y-6 border-t border-hairline-soft pt-4"
               >
                 <div class="space-y-4">
-                  <div
-                    class="rounded-lg border border-gray-200 p-4 dark:border-dark-700"
-                  >
+                  <div class="rounded-lg border border-hairline p-4">
                     <div class="flex items-start justify-between gap-4">
                       <div>
-                        <h3 class="font-medium text-gray-900 dark:text-white">
+                        <h3 class="font-medium text-ink">
                           {{ localText("PC 应用", "PC App") }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted">
                           {{
                             localText(
                               "桌面浏览器通过微信开放平台扫码登录。可与公众号或移动应用同时存在。",
@@ -2052,9 +1972,7 @@
                       class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2"
                     >
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-body">
                           {{ localText("PC AppID", "PC App ID") }}
                         </label>
                         <input
@@ -2071,9 +1989,7 @@
                         />
                       </div>
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-body">
                           {{ localText("PC AppSecret", "PC App Secret") }}
                         </label>
                         <input
@@ -2097,15 +2013,13 @@
                     </div>
                   </div>
 
-                  <div
-                    class="rounded-lg border border-gray-200 p-4 dark:border-dark-700"
-                  >
+                  <div class="rounded-lg border border-hairline p-4">
                     <div class="flex items-start justify-between gap-4">
                       <div>
-                        <h3 class="font-medium text-gray-900 dark:text-white">
+                        <h3 class="font-medium text-ink">
                           {{ localText("公众号", "Official Account") }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted">
                           {{
                             localText(
                               "仅在微信内浏览器可用；非微信环境下会显示不可用。",
@@ -2125,10 +2039,10 @@
                       class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2"
                     >
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          {{ localText("公众号 AppID", "Official Account App ID") }}
+                        <label class="mb-2 block text-sm font-medium text-body">
+                          {{
+                            localText("公众号 AppID", "Official Account App ID")
+                          }}
                         </label>
                         <input
                           v-model="form.wechat_connect_mp_app_id"
@@ -2136,17 +2050,12 @@
                           type="text"
                           class="input font-mono text-sm"
                           :placeholder="
-                            localText(
-                              '公众号 AppID',
-                              'Official Account App ID',
-                            )
+                            localText('公众号 AppID', 'Official Account App ID')
                           "
                         />
                       </div>
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-body">
                           {{
                             localText(
                               "公众号 AppSecret",
@@ -2175,15 +2084,13 @@
                     </div>
                   </div>
 
-                  <div
-                    class="rounded-lg border border-gray-200 p-4 dark:border-dark-700"
-                  >
+                  <div class="rounded-lg border border-hairline p-4">
                     <div class="flex items-start justify-between gap-4">
                       <div>
-                        <h3 class="font-medium text-gray-900 dark:text-white">
+                        <h3 class="font-medium text-ink">
                           {{ localText("移动应用", "Mobile App") }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted">
                           {{
                             localText(
                               "原生移动端通过微信 SDK 唤起授权，网页端不会直接发起该流程。",
@@ -2203,9 +2110,7 @@
                       class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2"
                     >
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-body">
                           {{ localText("移动应用 AppID", "Mobile App ID") }}
                         </label>
                         <input
@@ -2214,18 +2119,15 @@
                           type="text"
                           class="input font-mono text-sm"
                           :placeholder="
-                            localText(
-                              '移动应用 AppID',
-                              'Mobile App ID',
-                            )
+                            localText('移动应用 AppID', 'Mobile App ID')
                           "
                         />
                       </div>
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          {{ localText("移动应用 AppSecret", "Mobile App Secret") }}
+                        <label class="mb-2 block text-sm font-medium text-body">
+                          {{
+                            localText("移动应用 AppSecret", "Mobile App Secret")
+                          }}
                         </label>
                         <input
                           v-model="form.wechat_connect_mobile_app_secret"
@@ -2255,7 +2157,7 @@
                     (form.wechat_connect_mp_enabled ||
                       form.wechat_connect_mobile_enabled)
                   "
-                  class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/10 dark:text-amber-300"
+                  class="rounded-lg border border-accent-amber/30 bg-accent-amber/15 px-4 py-3 text-sm text-warning"
                 >
                   {{
                     localText(
@@ -2267,24 +2169,19 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      {{
-                        localText(
-                          "浏览器回调地址",
-                          "Browser Redirect URL",
-                        )
-                      }}
+                    <label class="mb-2 block text-sm font-medium text-body">
+                      {{ localText("浏览器回调地址", "Browser Redirect URL") }}
                     </label>
                     <input
                       data-testid="wechat-connect-redirect-url"
                       v-model="form.wechat_connect_redirect_url"
                       type="url"
                       class="input font-mono text-sm"
-                      :placeholder="t('admin.settings.wechatConnect.redirectUrlPlaceholder')"
+                      :placeholder="
+                        t('admin.settings.wechatConnect.redirectUrlPlaceholder')
+                      "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         localText(
                           "用于 PC 应用和公众号的网页回调。移动应用走原生 SDK 时不直接使用这个浏览器回调。",
@@ -2304,7 +2201,7 @@
                       </button>
                       <code
                         v-if="wechatRedirectUrlSuggestion"
-                        class="select-all break-all rounded bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300"
+                        class="select-all break-all rounded bg-surface-soft px-2 py-1 font-mono text-xs text-body"
                       >
                         {{ wechatRedirectUrlSuggestion }}
                       </code>
@@ -2313,20 +2210,26 @@
                 </div>
 
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    {{ t("admin.settings.wechatConnect.frontendRedirectUrlLabel") }}
+                  <label class="mb-2 block text-sm font-medium text-body">
+                    {{
+                      t("admin.settings.wechatConnect.frontendRedirectUrlLabel")
+                    }}
                   </label>
                   <input
                     data-testid="wechat-connect-frontend-redirect-url"
                     v-model="form.wechat_connect_frontend_redirect_url"
                     type="text"
                     class="input font-mono text-sm"
-                    :placeholder="t('admin.settings.wechatConnect.frontendRedirectUrlPlaceholder')"
+                    :placeholder="
+                      t(
+                        'admin.settings.wechatConnect.frontendRedirectUrlPlaceholder',
+                      )
+                    "
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {{ t("admin.settings.wechatConnect.frontendRedirectUrlHint") }}
+                  <p class="mt-1.5 text-xs text-muted">
+                    {{
+                      t("admin.settings.wechatConnect.frontendRedirectUrlHint")
+                    }}
                   </p>
                 </div>
               </div>
@@ -2335,23 +2238,21 @@
 
           <!-- Generic OIDC OAuth 登录 -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.oidc.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.oidc.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.oidc.enable")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.oidc.enableHint") }}
                   </p>
                 </div>
@@ -2360,13 +2261,11 @@
 
               <div
                 v-if="form.oidc_connect_enabled"
-                class="space-y-6 border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="space-y-6 border-t border-hairline-soft pt-4"
               >
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.providerName") }}
                     </label>
                     <input
@@ -2380,9 +2279,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.clientId") }}
                     </label>
                     <input
@@ -2396,9 +2293,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.clientSecret") }}
                     </label>
                     <input
@@ -2413,7 +2308,7 @@
                           : t('admin.settings.oidc.clientSecretPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         form.oidc_connect_client_secret_configured
                           ? t("admin.settings.oidc.clientSecretConfiguredHint")
@@ -2425,9 +2320,7 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.issuerUrl") }}
                     </label>
                     <input
@@ -2441,9 +2334,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.discoveryUrl") }}
                     </label>
                     <input
@@ -2457,9 +2348,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.authorizeUrl") }}
                     </label>
                     <input
@@ -2473,9 +2362,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.tokenUrl") }}
                     </label>
                     <input
@@ -2489,9 +2376,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.userinfoUrl") }}
                     </label>
                     <input
@@ -2505,9 +2390,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.jwksUrl") }}
                     </label>
                     <input
@@ -2521,9 +2404,7 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.scopes") }}
                     </label>
                     <input
@@ -2532,15 +2413,13 @@
                       class="input font-mono text-sm"
                       :placeholder="t('admin.settings.oidc.scopesPlaceholder')"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.oidc.scopesHint") }}
                     </p>
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.redirectUrl") }}
                     </label>
                     <input
@@ -2563,20 +2442,18 @@
                       </button>
                       <code
                         v-if="oidcRedirectUrlSuggestion"
-                        class="select-all break-all rounded bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600 dark:bg-dark-800 dark:text-gray-300"
+                        class="select-all break-all rounded bg-surface-soft px-2 py-1 font-mono text-xs text-body"
                       >
                         {{ oidcRedirectUrlSuggestion }}
                       </code>
                     </div>
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.oidc.redirectUrlHint") }}
                     </p>
                   </div>
 
                   <div class="lg:col-span-2">
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.frontendRedirectUrl") }}
                     </label>
                     <input
@@ -2587,7 +2464,7 @@
                         t('admin.settings.oidc.frontendRedirectUrlPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.oidc.frontendRedirectUrlHint") }}
                     </p>
                   </div>
@@ -2595,9 +2472,7 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.tokenAuthMethod") }}
                     </label>
                     <select
@@ -2615,9 +2490,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.clockSkewSeconds") }}
                     </label>
                     <input
@@ -2630,9 +2503,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.allowedSigningAlgs") }}
                     </label>
                     <input
@@ -2648,10 +2519,10 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div
-                    class="flex items-center justify-between rounded border border-gray-200 px-4 py-3 dark:border-dark-700"
+                    class="flex items-center justify-between rounded border border-hairline px-4 py-3"
                   >
                     <div>
-                      <label class="font-medium text-gray-900 dark:text-white">
+                      <label class="font-medium text-ink">
                         {{ t("admin.settings.oidc.usePkce") }}
                       </label>
                     </div>
@@ -2662,10 +2533,10 @@
                   </div>
 
                   <div
-                    class="flex items-center justify-between rounded border border-gray-200 px-4 py-3 dark:border-dark-700"
+                    class="flex items-center justify-between rounded border border-hairline px-4 py-3"
                   >
                     <div>
-                      <label class="font-medium text-gray-900 dark:text-white">
+                      <label class="font-medium text-ink">
                         {{ t("admin.settings.oidc.validateIdToken") }}
                       </label>
                     </div>
@@ -2676,10 +2547,10 @@
                   </div>
 
                   <div
-                    class="flex items-center justify-between rounded border border-gray-200 px-4 py-3 dark:border-dark-700"
+                    class="flex items-center justify-between rounded border border-hairline px-4 py-3"
                   >
                     <div>
-                      <label class="font-medium text-gray-900 dark:text-white">
+                      <label class="font-medium text-ink">
                         {{ t("admin.settings.oidc.requireEmailVerified") }}
                       </label>
                     </div>
@@ -2691,9 +2562,7 @@
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.userinfoEmailPath") }}
                     </label>
                     <input
@@ -2707,9 +2576,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.userinfoIdPath") }}
                     </label>
                     <input
@@ -2723,9 +2590,7 @@
                   </div>
 
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.userinfoUsernamePath") }}
                     </label>
                     <input
@@ -2748,22 +2613,18 @@
         <div v-show="activeTab === 'users'" class="space-y-6">
           <!-- Default Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.defaults.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.defaults.description") }}
               </p>
             </div>
             <div class="space-y-6 p-6">
               <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.defaults.defaultBalance") }}
                   </label>
                   <input
@@ -2774,14 +2635,12 @@
                     class="input"
                     placeholder="0.00"
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{ t("admin.settings.defaults.defaultBalanceHint") }}
                   </p>
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.defaults.defaultConcurrency") }}
                   </label>
                   <input
@@ -2791,14 +2650,12 @@
                     class="input"
                     placeholder="1"
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{ t("admin.settings.defaults.defaultConcurrencyHint") }}
                   </p>
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.defaults.defaultUserRpmLimit") }}
                   </label>
                   <input
@@ -2809,19 +2666,19 @@
                     class="input"
                     placeholder="0"
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{ t("admin.settings.defaults.defaultUserRpmLimitHint") }}
                   </p>
                 </div>
               </div>
 
-              <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
+              <div class="border-t border-hairline-soft pt-4">
                 <div class="mb-3 flex items-center justify-between">
                   <div>
-                    <label class="font-medium text-gray-900 dark:text-white">
+                    <label class="font-medium text-ink">
                       {{ t("admin.settings.defaults.defaultSubscriptions") }}
                     </label>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted">
                       {{
                         t("admin.settings.defaults.defaultSubscriptionsHint")
                       }}
@@ -2839,7 +2696,7 @@
 
                 <div
                   v-if="form.default_subscriptions.length === 0"
-                  class="rounded border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500 dark:border-dark-600 dark:text-gray-400"
+                  class="rounded border border-dashed border-hairline px-4 py-3 text-sm text-muted"
                 >
                   {{ t("admin.settings.defaults.defaultSubscriptionsEmpty") }}
                 </div>
@@ -2848,12 +2705,10 @@
                   <div
                     v-for="(item, index) in form.default_subscriptions"
                     :key="`default-sub-${index}`"
-                    class="grid grid-cols-1 gap-3 rounded border border-gray-200 p-3 md:grid-cols-[1fr_160px_auto] dark:border-dark-600"
+                    class="grid grid-cols-1 gap-3 rounded border border-hairline p-3 md:grid-cols-[1fr_160px_auto]"
                   >
                     <div>
-                      <label
-                        class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                      >
+                      <label class="mb-1 block text-xs font-medium text-body">
                         {{ t("admin.settings.defaults.subscriptionGroup") }}
                       </label>
                       <Select
@@ -2888,7 +2743,7 @@
                               ).rate
                             "
                           />
-                          <span v-else class="text-gray-400">
+                          <span v-else class="text-muted-soft">
                             {{ t("admin.settings.defaults.subscriptionGroup") }}
                           </span>
                         </template>
@@ -2925,9 +2780,7 @@
                       </Select>
                     </div>
                     <div>
-                      <label
-                        class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                      >
+                      <label class="mb-1 block text-xs font-medium text-body">
                         {{
                           t("admin.settings.defaults.subscriptionValidityDays")
                         }}
@@ -2943,7 +2796,7 @@
                     <div class="flex items-end">
                       <button
                         type="button"
-                        class="btn btn-secondary default-sub-delete-btn w-full text-red-600 hover:text-red-700 dark:text-red-400"
+                        class="btn btn-secondary default-sub-delete-btn w-full text-error hover:text-error"
                         @click="removeDefaultSubscription(index)"
                       >
                         {{ t("common.delete") }}
@@ -2956,26 +2809,28 @@
           </div>
 
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.authSourceDefaults.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.authSourceDefaults.description") }}
               </p>
             </div>
             <div class="space-y-6 p-6">
               <div
-                class="flex items-center justify-between rounded border border-gray-200 px-4 py-3 dark:border-dark-700"
+                class="flex items-center justify-between rounded border border-hairline px-4 py-3"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">
-                    {{ t("admin.settings.authSourceDefaults.requireEmailLabel") }}
+                  <label class="font-medium text-ink">
+                    {{
+                      t("admin.settings.authSourceDefaults.requireEmailLabel")
+                    }}
                   </label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ t("admin.settings.authSourceDefaults.requireEmailHint") }}
+                  <p class="text-sm text-muted">
+                    {{
+                      t("admin.settings.authSourceDefaults.requireEmailHint")
+                    }}
                   </p>
                 </div>
                 <Toggle v-model="form.force_email_on_third_party_signup" />
@@ -2985,14 +2840,14 @@
                 <div
                   v-for="authSource in authSourceDefaultsMeta"
                   :key="authSource.source"
-                  class="rounded-xl border border-gray-200 p-4 dark:border-dark-700"
+                  class="rounded-xl border border-hairline p-4"
                 >
                   <div class="flex items-center justify-between gap-4">
                     <div>
-                      <div class="font-medium text-gray-900 dark:text-white">
+                      <div class="font-medium text-ink">
                         {{ authSource.title }}
                       </div>
-                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p class="mt-1 text-sm text-muted">
                         {{ authSource.description }}
                       </p>
                     </div>
@@ -3007,17 +2862,15 @@
                   <div
                     v-if="authSourceDefaults[authSource.source].grant_on_signup"
                     :data-testid="`auth-source-${authSource.source}-panel`"
-                    class="mt-4 space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700"
+                    class="mt-4 space-y-4 border-t border-hairline-soft pt-4"
                   >
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted">
                       {{ t("admin.settings.authSourceDefaults.enabledHint") }}
                     </p>
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-body">
                           {{ t("admin.settings.defaults.defaultBalance") }}
                         </label>
                         <input
@@ -3032,9 +2885,7 @@
                         />
                       </div>
                       <div>
-                        <label
-                          class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
+                        <label class="mb-2 block text-sm font-medium text-body">
                           {{ t("admin.settings.defaults.defaultConcurrency") }}
                         </label>
                         <input
@@ -3050,18 +2901,22 @@
                     </div>
 
                     <div
-                      class="flex items-center justify-between rounded border border-gray-200 px-4 py-3 dark:border-dark-700"
+                      class="flex items-center justify-between rounded border border-hairline px-4 py-3"
                     >
                       <div>
-                        <label
-                          class="font-medium text-gray-900 dark:text-white"
-                        >
-                          {{ t("admin.settings.authSourceDefaults.grantOnFirstBindLabel") }}
+                        <label class="font-medium text-ink">
+                          {{
+                            t(
+                              "admin.settings.authSourceDefaults.grantOnFirstBindLabel",
+                            )
+                          }}
                         </label>
-                        <p
-                          class="mt-0.5 text-xs text-gray-500 dark:text-gray-400"
-                        >
-                          {{ t("admin.settings.authSourceDefaults.grantOnFirstBindHint") }}
+                        <p class="mt-0.5 text-xs text-muted">
+                          {{
+                            t(
+                              "admin.settings.authSourceDefaults.grantOnFirstBindHint",
+                            )
+                          }}
                         </p>
                       </div>
                       <Toggle
@@ -3074,13 +2929,19 @@
 
                     <div class="mb-3 flex items-center justify-between">
                       <div>
-                        <label
-                          class="font-medium text-gray-900 dark:text-white"
-                        >
-                          {{ t("admin.settings.authSourceDefaults.defaultSubscriptionsLabel") }}
+                        <label class="font-medium text-ink">
+                          {{
+                            t(
+                              "admin.settings.authSourceDefaults.defaultSubscriptionsLabel",
+                            )
+                          }}
                         </label>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                          {{ t("admin.settings.authSourceDefaults.defaultSubscriptionsHint") }}
+                        <p class="text-sm text-muted">
+                          {{
+                            t(
+                              "admin.settings.authSourceDefaults.defaultSubscriptionsHint",
+                            )
+                          }}
                         </p>
                       </div>
                       <button
@@ -3102,9 +2963,13 @@
                         authSourceDefaults[authSource.source].subscriptions
                           .length === 0
                       "
-                      class="rounded border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500 dark:border-dark-600 dark:text-gray-400"
+                      class="rounded border border-dashed border-hairline px-4 py-3 text-sm text-muted"
                     >
-                      {{ t("admin.settings.authSourceDefaults.noSourceSubscriptions") }}
+                      {{
+                        t(
+                          "admin.settings.authSourceDefaults.noSourceSubscriptions",
+                        )
+                      }}
                     </div>
 
                     <div v-else class="space-y-3">
@@ -3113,11 +2978,11 @@
                           authSource.source
                         ].subscriptions"
                         :key="`${authSource.source}-sub-${index}`"
-                        class="grid grid-cols-1 gap-3 rounded border border-gray-200 p-3 md:grid-cols-[1fr_160px_auto] dark:border-dark-600"
+                        class="grid grid-cols-1 gap-3 rounded border border-hairline p-3 md:grid-cols-[1fr_160px_auto]"
                       >
                         <div>
                           <label
-                            class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                            class="mb-1 block text-xs font-medium text-body"
                           >
                             {{ t("admin.settings.defaults.subscriptionGroup") }}
                           </label>
@@ -3153,7 +3018,7 @@
                                   ).rate
                                 "
                               />
-                              <span v-else class="text-gray-400">
+                              <span v-else class="text-muted-soft">
                                 {{
                                   t("admin.settings.defaults.subscriptionGroup")
                                 }}
@@ -3193,7 +3058,7 @@
                         </div>
                         <div>
                           <label
-                            class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                            class="mb-1 block text-xs font-medium text-body"
                           >
                             {{
                               t(
@@ -3212,7 +3077,7 @@
                         <div class="flex items-end">
                           <button
                             type="button"
-                            class="btn btn-secondary w-full text-red-600 hover:text-red-700 dark:text-red-400"
+                            class="btn btn-secondary w-full text-error hover:text-error"
                             @click="
                               removeAuthSourceDefaultSubscription(
                                 authSource.source,
@@ -3237,21 +3102,17 @@
         <div v-show="activeTab === 'gateway'" class="space-y-6">
           <!-- Claude Code Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.claudeCode.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.claudeCode.description") }}
               </p>
             </div>
             <div class="p-6">
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.claudeCode.minVersion") }}
                 </label>
                 <input
@@ -3262,14 +3123,12 @@
                     t('admin.settings.claudeCode.minVersionPlaceholder')
                   "
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.claudeCode.minVersionHint") }}
                 </p>
               </div>
               <div class="mt-4">
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.claudeCode.maxVersion") }}
                 </label>
                 <input
@@ -3280,7 +3139,7 @@
                     t('admin.settings.claudeCode.maxVersionPlaceholder')
                   "
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.claudeCode.maxVersionHint") }}
                 </p>
               </div>
@@ -3289,25 +3148,21 @@
 
           <!-- Gateway Scheduling Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.scheduling.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.scheduling.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{ t("admin.settings.scheduling.allowUngroupedKey") }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{ t("admin.settings.scheduling.allowUngroupedKeyHint") }}
                   </p>
                 </div>
@@ -3316,14 +3171,14 @@
 
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{ t("admin.settings.openaiExperimentalScheduler.title") }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{
-                      t("admin.settings.openaiExperimentalScheduler.description")
+                      t(
+                        "admin.settings.openaiExperimentalScheduler.description",
+                      )
                     }}
                   </p>
                 </div>
@@ -3334,13 +3189,11 @@
 
           <!-- Gateway Forwarding Behavior -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.gatewayForwarding.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.gatewayForwarding.description") }}
               </p>
             </div>
@@ -3348,16 +3201,14 @@
               <!-- Fingerprint Unification -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.fingerprintUnification",
                       )
                     }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.fingerprintUnificationHint",
@@ -3371,14 +3222,12 @@
               <!-- Metadata Passthrough -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{
                       t("admin.settings.gatewayForwarding.metadataPassthrough")
                     }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.metadataPassthroughHint",
@@ -3392,12 +3241,10 @@
               <!-- CCH Signing -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{ t("admin.settings.gatewayForwarding.cchSigning") }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{ t("admin.settings.gatewayForwarding.cchSigningHint") }}
                   </p>
                 </div>
@@ -3407,16 +3254,14 @@
               <!-- Anthropic Cache TTL 1h Injection -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.anthropicCacheTTL1hInjection",
                       )
                     }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.anthropicCacheTTL1hInjectionHint",
@@ -3432,16 +3277,14 @@
               <!-- messages cache_control 改写 -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.rewriteMessageCacheControl",
                       )
                     }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{
                       t(
                         "admin.settings.gatewayForwarding.rewriteMessageCacheControlHint",
@@ -3454,9 +3297,7 @@
 
               <!-- Antigravity UA 版本 -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{
                     t(
                       "admin.settings.gatewayForwarding.antigravityUserAgentVersion",
@@ -3473,7 +3314,7 @@
                     )
                   "
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{
                     t(
                       "admin.settings.gatewayForwarding.antigravityUserAgentVersionHint",
@@ -3485,13 +3326,11 @@
           </div>
           <!-- Web Search Emulation -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.webSearchEmulation.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.webSearchEmulation.description") }}
               </p>
             </div>
@@ -3499,12 +3338,10 @@
               <!-- Global Toggle -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{ t("admin.settings.webSearchEmulation.enabled") }}
                   </label>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{ t("admin.settings.webSearchEmulation.enabledHint") }}
                   </p>
                 </div>
@@ -3514,9 +3351,7 @@
               <!-- Providers -->
               <div v-if="webSearchConfig.enabled" class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <label
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="text-sm font-medium text-body">
                     {{ t("admin.settings.webSearchEmulation.providers") }}
                   </label>
                   <button
@@ -3530,7 +3365,7 @@
 
                 <div
                   v-if="webSearchConfig.providers.length === 0"
-                  class="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-400 dark:border-dark-600"
+                  class="rounded-lg border border-dashed border-hairline p-4 text-center text-sm text-muted-soft"
                 >
                   {{ t("admin.settings.webSearchEmulation.noProviders") }}
                 </div>
@@ -3538,7 +3373,7 @@
                 <div
                   v-for="(provider, pIdx) in webSearchConfig.providers"
                   :key="pIdx"
-                  class="rounded-lg border border-gray-200 dark:border-dark-600"
+                  class="rounded-lg border border-hairline"
                 >
                   <!-- Collapsible header -->
                   <div
@@ -3547,7 +3382,7 @@
                   >
                     <div class="flex items-center gap-3">
                       <svg
-                        class="h-4 w-4 text-gray-400 transition-transform"
+                        class="h-4 w-4 text-muted-soft transition-transform"
                         :class="{ 'rotate-90': expandedProviders[pIdx] }"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -3570,7 +3405,7 @@
                         @click.stop
                       />
                       <!-- Quota summary (always visible) -->
-                      <span class="text-xs text-gray-400">
+                      <span class="text-xs text-muted-soft">
                         {{ provider.quota_used ?? 0 }} /
                         {{
                           provider.quota_limit != null &&
@@ -3584,7 +3419,7 @@
                           !expandedProviders[pIdx] &&
                           provider.api_key_configured
                         "
-                        class="text-xs text-green-500"
+                        class="text-xs text-success"
                       >
                         {{
                           t(
@@ -3595,7 +3430,7 @@
                     </div>
                     <button
                       type="button"
-                      class="text-red-500 hover:text-red-700 text-xs"
+                      class="text-error hover:text-error text-xs"
                       @click.stop="removeWebSearchProvider(pIdx)"
                     >
                       {{
@@ -3607,11 +3442,11 @@
                   <!-- Expanded content -->
                   <div
                     v-if="expandedProviders[pIdx]"
-                    class="space-y-3 border-t border-gray-100 px-4 pb-4 pt-3 dark:border-dark-700"
+                    class="space-y-3 border-t border-hairline-soft px-4 pb-4 pt-3"
                   >
                     <!-- API Key with inline show/copy -->
                     <div>
-                      <label class="text-xs text-gray-500">{{
+                      <label class="text-xs text-muted">{{
                         t("admin.settings.webSearchEmulation.apiKey")
                       }}</label>
                       <div class="relative">
@@ -3638,7 +3473,7 @@
                         >
                           <button
                             type="button"
-                            class="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            class="rounded p-1 text-muted-soft hover:text-body"
                             :title="
                               apiKeyVisible[pIdx]
                                 ? t(
@@ -3687,7 +3522,7 @@
                           </button>
                           <button
                             type="button"
-                            class="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            class="rounded p-1 text-muted-soft hover:text-body"
                             :class="{
                               'opacity-30 cursor-not-allowed':
                                 !provider.api_key,
@@ -3719,7 +3554,7 @@
                     <!-- Quota + Subscription in compact row -->
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="text-xs text-gray-500">{{
+                        <label class="text-xs text-muted">{{
                           t("admin.settings.webSearchEmulation.quotaLimit")
                         }}</label>
                         <input
@@ -3729,7 +3564,7 @@
                           class="input text-sm"
                           :placeholder="'∞'"
                         />
-                        <p class="mt-0.5 text-xs text-gray-400">
+                        <p class="mt-0.5 text-xs text-muted-soft">
                           {{
                             t(
                               "admin.settings.webSearchEmulation.quotaLimitHint",
@@ -3738,7 +3573,7 @@
                         </p>
                       </div>
                       <div>
-                        <label class="text-xs text-gray-500">{{
+                        <label class="text-xs text-muted">{{
                           t("admin.settings.webSearchEmulation.subscribedAt")
                         }}</label>
                         <input
@@ -3751,7 +3586,7 @@
                             )
                           "
                         />
-                        <p class="mt-0.5 text-xs text-gray-400">
+                        <p class="mt-0.5 text-xs text-muted-soft">
                           {{
                             t(
                               "admin.settings.webSearchEmulation.subscribedAtHint",
@@ -3763,7 +3598,7 @@
 
                     <!-- Usage display -->
                     <div class="flex items-center gap-2">
-                      <span class="text-xs text-gray-500"
+                      <span class="text-xs text-muted"
                         >{{
                           t("admin.settings.webSearchEmulation.quotaUsage")
                         }}:</span
@@ -3773,17 +3608,17 @@
                           provider.quota_limit != null &&
                           provider.quota_limit > 0
                         "
-                        class="flex-1 rounded-full bg-gray-200 dark:bg-dark-600"
+                        class="flex-1 rounded-full bg-hairline"
                         style="height: 6px"
                       >
                         <div
                           class="h-full rounded-full transition-all"
                           :class="
                             quotaPercentage(provider) > 90
-                              ? 'bg-red-500'
+                              ? 'bg-error'
                               : quotaPercentage(provider) > 70
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
+                                ? 'bg-accent-amber'
+                                : 'bg-success'
                           "
                           :style="{
                             width:
@@ -3792,7 +3627,7 @@
                         />
                       </div>
                       <div v-else class="flex-1" />
-                      <span class="text-xs text-gray-500"
+                      <span class="text-xs text-muted"
                         >{{ provider.quota_used ?? 0 }} /
                         {{
                           provider.quota_limit != null &&
@@ -3814,7 +3649,7 @@
                     <!-- Proxy + Test on same row -->
                     <div class="flex items-end gap-3">
                       <div class="flex-1">
-                        <label class="text-xs text-gray-500">{{
+                        <label class="text-xs text-muted">{{
                           t("admin.settings.webSearchEmulation.proxy")
                         }}</label>
                         <ProxySelector
@@ -3843,11 +3678,9 @@
             @click.self="wsTestDialogOpen = false"
           >
             <div
-              class="mx-4 w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800"
+              class="mx-4 w-full max-w-lg rounded-xl bg-canvas p-6 shadow-card"
             >
-              <h3
-                class="mb-4 text-lg font-semibold text-gray-900 dark:text-white"
-              >
+              <h3 class="mb-4 text-lg font-semibold text-ink">
                 {{ t("admin.settings.webSearchEmulation.testResultTitle") }}
               </h3>
               <div class="flex items-center gap-2">
@@ -3876,33 +3709,31 @@
               <!-- Test results -->
               <div
                 v-if="wsTestResult"
-                class="mt-4 max-h-80 overflow-y-auto rounded-lg bg-gray-50 p-4 dark:bg-dark-700"
+                class="mt-4 max-h-80 overflow-y-auto rounded-lg bg-surface-soft p-4"
               >
-                <p
-                  class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <p class="mb-2 text-sm font-medium text-body">
                   {{
                     t("admin.settings.webSearchEmulation.testResultProvider")
                   }}: {{ wsTestResult.provider }}
                 </p>
                 <div
                   v-if="wsTestResult.results.length === 0"
-                  class="text-sm text-gray-400"
+                  class="text-sm text-muted-soft"
                 >
                   {{ t("admin.settings.webSearchEmulation.testNoResults") }}
                 </div>
                 <div
                   v-for="(r, rIdx) in wsTestResult.results"
                   :key="rIdx"
-                  class="mt-2 border-t border-gray-200 pt-2 first:mt-0 first:border-0 first:pt-0 dark:border-dark-600"
+                  class="mt-2 border-t border-hairline pt-2 first:mt-0 first:border-0 first:pt-0"
                 >
                   <a
                     :href="r.url"
                     target="_blank"
-                    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    class="text-sm font-medium text-primary-700 hover:underline"
                     >{{ r.title }}</a
                   >
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 text-xs text-muted">
                     {{ r.snippet }}
                   </p>
                 </div>
@@ -3925,37 +3756,33 @@
         <div v-show="activeTab === 'general'" class="space-y-6">
           <!-- Site Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.site.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.site.description") }}
               </p>
             </div>
             <div class="space-y-6 p-6">
               <!-- Backend Mode -->
               <div
-                class="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+                class="flex items-center justify-between rounded-lg border border-accent-amber/30 bg-accent-amber/15 p-4"
               >
                 <div>
-                  <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                  <h3 class="text-sm font-medium text-ink">
                     {{ t("admin.settings.site.backendMode") }}
                   </h3>
-                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1 text-xs text-muted">
                     {{ t("admin.settings.site.backendModeDescription") }}
                   </p>
-	                </div>
-	                <Toggle v-model="form.backend_mode_enabled" />
-	              </div>
+                </div>
+                <Toggle v-model="form.backend_mode_enabled" />
+              </div>
 
-	              <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.site.siteName") }}
                   </label>
                   <input
@@ -3964,14 +3791,12 @@
                     class="input"
                     :placeholder="t('admin.settings.site.siteNamePlaceholder')"
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{ t("admin.settings.site.siteNameHint") }}
                   </p>
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.site.siteSubtitle") }}
                   </label>
                   <input
@@ -3982,7 +3807,7 @@
                       t('admin.settings.site.siteSubtitlePlaceholder')
                     "
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{ t("admin.settings.site.siteSubtitleHint") }}
                   </p>
                 </div>
@@ -3990,9 +3815,7 @@
 
               <!-- API Base URL -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.site.apiBaseUrl") }}
                 </label>
                 <input
@@ -4001,24 +3824,22 @@
                   class="input font-mono text-sm"
                   :placeholder="t('admin.settings.site.apiBaseUrlPlaceholder')"
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.site.apiBaseUrlHint") }}
                 </p>
               </div>
 
               <!-- Global Table Preferences -->
-              <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
-                <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+              <div class="border-t border-hairline-soft pt-4">
+                <h3 class="text-sm font-medium text-ink">
                   {{ t("admin.settings.site.tablePreferencesTitle") }}
                 </h3>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-xs text-muted">
                   {{ t("admin.settings.site.tablePreferencesDescription") }}
                 </p>
                 <div class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.site.tableDefaultPageSize") }}
                     </label>
                     <input
@@ -4029,14 +3850,12 @@
                       step="1"
                       class="input w-40"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.site.tableDefaultPageSizeHint") }}
                     </p>
                   </div>
                   <div>
-                    <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.site.tablePageSizeOptions") }}
                     </label>
                     <input
@@ -4047,7 +3866,7 @@
                         t('admin.settings.site.tablePageSizeOptionsPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.site.tablePageSizeOptionsHint") }}
                     </p>
                   </div>
@@ -4056,12 +3875,10 @@
 
               <!-- Custom Endpoints -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.site.customEndpoints.title") }}
                 </label>
-                <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mb-3 text-xs text-muted">
                   {{ t("admin.settings.site.customEndpoints.description") }}
                 </p>
 
@@ -4069,12 +3886,10 @@
                   <div
                     v-for="(ep, index) in form.custom_endpoints"
                     :key="index"
-                    class="rounded-lg border border-gray-200 p-4 dark:border-dark-600"
+                    class="rounded-lg border border-hairline p-4"
                   >
                     <div class="mb-3 flex items-center justify-between">
-                      <span
-                        class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                      >
+                      <span class="text-sm font-medium text-body">
                         {{
                           t("admin.settings.site.customEndpoints.itemLabel", {
                             n: index + 1,
@@ -4083,7 +3898,7 @@
                       </span>
                       <button
                         type="button"
-                        class="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                        class="rounded p-1 text-error hover:bg-error/15 hover:text-error"
                         @click="removeEndpoint(index)"
                       >
                         <svg
@@ -4103,9 +3918,7 @@
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
-                        <label
-                          class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <label class="mb-1 block text-xs font-medium text-body">
                           {{ t("admin.settings.site.customEndpoints.name") }}
                         </label>
                         <input
@@ -4120,9 +3933,7 @@
                         />
                       </div>
                       <div>
-                        <label
-                          class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <label class="mb-1 block text-xs font-medium text-body">
                           {{
                             t("admin.settings.site.customEndpoints.endpointUrl")
                           }}
@@ -4139,9 +3950,7 @@
                         />
                       </div>
                       <div class="sm:col-span-2">
-                        <label
-                          class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <label class="mb-1 block text-xs font-medium text-body">
                           {{
                             t(
                               "admin.settings.site.customEndpoints.descriptionLabel",
@@ -4165,7 +3974,7 @@
 
                 <button
                   type="button"
-                  class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-2.5 text-sm text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-dark-600 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-primary-400"
+                  class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-hairline px-4 py-2.5 text-sm text-muted transition-colors hover:border-primary-400 hover:text-primary-600"
                   @click="addEndpoint"
                 >
                   <svg
@@ -4187,9 +3996,7 @@
 
               <!-- Contact Info -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.site.contactInfo") }}
                 </label>
                 <input
@@ -4198,16 +4005,14 @@
                   class="input"
                   :placeholder="t('admin.settings.site.contactInfoPlaceholder')"
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.site.contactInfoHint") }}
                 </p>
               </div>
 
               <!-- Doc URL -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.site.docUrl") }}
                 </label>
                 <input
@@ -4216,16 +4021,14 @@
                   class="input font-mono text-sm"
                   :placeholder="t('admin.settings.site.docUrlPlaceholder')"
                 />
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.site.docUrlHint") }}
                 </p>
               </div>
 
               <!-- Site Logo Upload -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.site.siteLogo") }}
                 </label>
                 <ImageUpload
@@ -4240,9 +4043,7 @@
 
               <!-- Home Content -->
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label class="mb-2 block text-sm font-medium text-body">
                   {{ t("admin.settings.site.homeContent") }}
                 </label>
                 <textarea
@@ -4251,24 +4052,24 @@
                   class="input font-mono text-sm"
                   :placeholder="t('admin.settings.site.homeContentPlaceholder')"
                 ></textarea>
-                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1.5 text-xs text-muted">
                   {{ t("admin.settings.site.homeContentHint") }}
                 </p>
                 <!-- iframe CSP Warning -->
-                <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                <p class="mt-2 text-xs text-warning">
                   {{ t("admin.settings.site.homeContentIframeWarning") }}
                 </p>
               </div>
 
               <!-- Hide CCS Import Button -->
               <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.site.hideCcsImportButton")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.site.hideCcsImportButtonHint") }}
                   </p>
                 </div>
@@ -4279,13 +4080,11 @@
 
           <!-- Custom Menu Items -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.customMenu.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.customMenu.description") }}
               </p>
             </div>
@@ -4294,12 +4093,10 @@
               <div
                 v-for="(item, index) in form.custom_menu_items"
                 :key="item.id || index"
-                class="rounded-lg border border-gray-200 p-4 dark:border-dark-600"
+                class="rounded-lg border border-hairline p-4"
               >
                 <div class="mb-3 flex items-center justify-between">
-                  <span
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <span class="text-sm font-medium text-body">
                     {{
                       t("admin.settings.customMenu.itemLabel", { n: index + 1 })
                     }}
@@ -4309,7 +4106,7 @@
                     <button
                       v-if="index > 0"
                       type="button"
-                      class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700"
+                      class="rounded p-1 text-muted-soft hover:bg-surface-card hover:text-body"
                       :title="t('admin.settings.customMenu.moveUp')"
                       @click="moveMenuItem(index, -1)"
                     >
@@ -4331,7 +4128,7 @@
                     <button
                       v-if="index < form.custom_menu_items.length - 1"
                       type="button"
-                      class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700"
+                      class="rounded p-1 text-muted-soft hover:bg-surface-card hover:text-body"
                       :title="t('admin.settings.customMenu.moveDown')"
                       @click="moveMenuItem(index, 1)"
                     >
@@ -4352,7 +4149,7 @@
                     <!-- Delete -->
                     <button
                       type="button"
-                      class="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                      class="rounded p-1 text-error hover:bg-error/15 hover:text-error"
                       :title="t('admin.settings.customMenu.remove')"
                       @click="removeMenuItem(index)"
                     >
@@ -4376,9 +4173,7 @@
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <!-- Label -->
                   <div>
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.customMenu.name") }}
                     </label>
                     <input
@@ -4393,9 +4188,7 @@
 
                   <!-- Visibility -->
                   <div>
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.customMenu.visibility") }}
                     </label>
                     <select v-model="item.visibility" class="input text-sm">
@@ -4410,9 +4203,7 @@
 
                   <!-- URL (full width) -->
                   <div class="sm:col-span-2">
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.customMenu.url") }}
                     </label>
                     <input
@@ -4427,9 +4218,7 @@
 
                   <!-- SVG Icon (full width) -->
                   <div class="sm:col-span-2">
-                    <label
-                      class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                    >
+                    <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.customMenu.iconSvg") }}
                     </label>
                     <ImageUpload
@@ -4447,7 +4236,7 @@
               <!-- Add button -->
               <button
                 type="button"
-                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-3 text-sm text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-dark-600 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-primary-400"
+                class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-hairline py-3 text-sm text-muted transition-colors hover:border-primary-400 hover:text-primary-600"
                 @click="addMenuItem"
               >
                 <svg
@@ -4467,50 +4256,60 @@
               </button>
             </div>
           </div>
-	        </div>
-	        <!-- /Tab: General -->
+        </div>
+        <!-- /Tab: General -->
 
-	        <!-- Tab: Login Agreement -->
-	        <div v-show="activeTab === 'agreement'" class="space-y-6">
-	          <div class="card">
-	            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-	              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-	                <div>
-	                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-	                    {{ localText("登录条款确认", "Login agreement") }}
-	                  </h2>
-	                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-	                    {{
-	                      localText(
-	                        "控制登录页是否要求用户先阅读并同意服务条款、隐私政策或其他 Markdown 文档。",
-	                        "Control whether the login page requires users to accept Markdown policy documents first.",
-	                      )
-	                    }}
-	                  </p>
-	                </div>
-	                <div class="flex items-center gap-3">
-	                  <span class="text-sm text-gray-600 dark:text-gray-300">
-	                    {{ form.login_agreement_enabled ? localText("已启用", "Enabled") : localText("未启用", "Disabled") }}
-	                  </span>
-	                  <Toggle v-model="form.login_agreement_enabled" />
-	                </div>
-	              </div>
-	            </div>
+        <!-- Tab: Login Agreement -->
+        <div v-show="activeTab === 'agreement'" class="space-y-6">
+          <div class="card">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <div
+                class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+              >
+                <div>
+                  <h2 class="text-lg font-semibold text-ink">
+                    {{ localText("登录条款确认", "Login agreement") }}
+                  </h2>
+                  <p class="mt-1 text-sm text-muted">
+                    {{
+                      localText(
+                        "控制登录页是否要求用户先阅读并同意服务条款、隐私政策或其他 Markdown 文档。",
+                        "Control whether the login page requires users to accept Markdown policy documents first.",
+                      )
+                    }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm text-body">
+                    {{
+                      form.login_agreement_enabled
+                        ? localText("已启用", "Enabled")
+                        : localText("未启用", "Disabled")
+                    }}
+                  </span>
+                  <Toggle v-model="form.login_agreement_enabled" />
+                </div>
+              </div>
+            </div>
 
-	            <div class="space-y-6 p-6">
-	              <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
-	                <div>
-	                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-	                    {{ localText("展示形式", "Display mode") }}
-	                  </label>
-	                  <div class="grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1 dark:bg-dark-700">
+            <div class="space-y-6 p-6">
+              <div
+                class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_220px]"
+              >
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-body">
+                    {{ localText("展示形式", "Display mode") }}
+                  </label>
+                  <div
+                    class="grid grid-cols-2 gap-2 rounded-lg bg-surface-card p-1"
+                  >
                     <button
                       type="button"
                       class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
                       :class="
                         form.login_agreement_mode === 'modal'
-                          ? 'bg-white text-primary-700 shadow-sm dark:bg-dark-800 dark:text-primary-300'
-                          : 'text-gray-600 hover:text-gray-900 dark:text-dark-300 dark:hover:text-white'
+                          ? 'bg-canvas text-primary-700 shadow-sm '
+                          : 'text-body hover:text-ink '
                       "
                       @click="form.login_agreement_mode = 'modal'"
                     >
@@ -4522,8 +4321,8 @@
                       class="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition"
                       :class="
                         form.login_agreement_mode === 'checkbox'
-                          ? 'bg-white text-primary-700 shadow-sm dark:bg-dark-800 dark:text-primary-300'
-                          : 'text-gray-600 hover:text-gray-900 dark:text-dark-300 dark:hover:text-white'
+                          ? 'bg-canvas text-primary-700 shadow-sm '
+                          : 'text-body hover:text-ink '
                       "
                       @click="form.login_agreement_mode = 'checkbox'"
                     >
@@ -4531,17 +4330,23 @@
                       {{ localText("复选框", "Checkbox") }}
                     </button>
                   </div>
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{
                       form.login_agreement_mode === "checkbox"
-                        ? localText("复选框会显示在登录按钮下方，未勾选前所有登录入口禁用。", "The checkbox appears below the login button and gates all login actions.")
-                        : localText("弹窗会在登录页打开，用户拒绝后所有登录入口保持禁用。", "The modal opens on the login page and gates all login actions until accepted.")
+                        ? localText(
+                            "复选框会显示在登录按钮下方，未勾选前所有登录入口禁用。",
+                            "The checkbox appears below the login button and gates all login actions.",
+                          )
+                        : localText(
+                            "弹窗会在登录页打开，用户拒绝后所有登录入口保持禁用。",
+                            "The modal opens on the login page and gates all login actions until accepted.",
+                          )
                     }}
                   </p>
                 </div>
 
                 <div>
-                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ localText("条款更新日期", "Updated date") }}
                   </label>
                   <input
@@ -4549,19 +4354,26 @@
                     type="date"
                     class="input"
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    {{ localText("日期或文档内容变化后，用户需要重新同意。", "Changing the date or content requires fresh consent.") }}
+                  <p class="mt-1.5 text-xs text-muted">
+                    {{
+                      localText(
+                        "日期或文档内容变化后，用户需要重新同意。",
+                        "Changing the date or content requires fresh consent.",
+                      )
+                    }}
                   </p>
                 </div>
               </div>
 
               <div>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div>
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                    <h3 class="text-sm font-medium text-ink">
                       {{ localText("协议文档", "Agreement documents") }}
                     </h3>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1 text-xs text-muted">
                       {{
                         localText(
                           "文档名称可自定义，内容按 Markdown 保存。可参考：服务条款、使用政策、支持的国家和地区、服务特定条款。",
@@ -4584,11 +4396,13 @@
                   <div
                     v-for="(doc, index) in form.login_agreement_documents"
                     :key="doc.id || index"
-                    class="rounded-lg border border-gray-200 bg-white p-4 dark:border-dark-700 dark:bg-dark-800/60"
+                    class="rounded-lg border border-hairline bg-canvas p-4"
                   >
                     <div class="mb-3 flex items-center justify-between gap-3">
                       <div class="flex min-w-0 items-center gap-3">
-                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-200">
+                        <span
+                          class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-surface-card text-body"
+                        >
                           <Icon
                             :name="
                               index === 1
@@ -4603,17 +4417,20 @@
                           />
                         </span>
                         <div class="min-w-0">
-                          <p class="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                            {{ doc.title || localText("未命名文档", "Untitled document") }}
+                          <p class="truncate text-sm font-semibold text-ink">
+                            {{
+                              doc.title ||
+                              localText("未命名文档", "Untitled document")
+                            }}
                           </p>
-                          <p class="truncate text-xs text-gray-500 dark:text-gray-400">
+                          <p class="truncate text-xs text-muted">
                             {{ loginAgreementRoutePath(doc, index) }}
                           </p>
                         </div>
                       </div>
                       <button
                         type="button"
-                        class="rounded-md p-2 text-red-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-red-900/20"
+                        class="rounded-md p-2 text-error transition hover:bg-error/15 hover:text-error disabled:cursor-not-allowed disabled:opacity-40"
                         :disabled="
                           form.login_agreement_enabled &&
                           form.login_agreement_documents.length <= 1
@@ -4626,43 +4443,57 @@
 
                     <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
                       <div>
-                        <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                        <label class="mb-1 block text-xs font-medium text-body">
                           {{ localText("文档名称", "Document title") }}
                         </label>
                         <input
                           v-model="doc.title"
                           type="text"
                           class="input text-sm"
-                          :placeholder="localText('例如：服务条款', 'Example: Terms of Service')"
+                          :placeholder="
+                            localText(
+                              '例如：服务条款',
+                              'Example: Terms of Service',
+                            )
+                          "
                         />
                       </div>
                       <div>
-                        <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                        <label class="mb-1 block text-xs font-medium text-body">
                           {{ localText("路由标识", "Route slug") }}
                         </label>
-                        <div class="flex overflow-hidden rounded-lg border border-gray-300 bg-white focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500 dark:border-dark-600 dark:bg-dark-900">
-                          <span class="inline-flex flex-shrink-0 items-center border-r border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-400">
+                        <div
+                          class="flex overflow-hidden rounded-lg border border-hairline bg-canvas focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500"
+                        >
+                          <span
+                            class="inline-flex flex-shrink-0 items-center border-r border-hairline bg-surface-soft px-3 text-sm text-muted"
+                          >
                             /legal/
                           </span>
                           <input
                             v-model="doc.id"
                             type="text"
-                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-white dark:placeholder:text-dark-500"
+                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-muted-soft focus:ring-0"
                             placeholder="usage-policy"
                           />
                         </div>
                       </div>
                     </div>
                     <div class="mt-3">
-                      <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <label class="mb-1 block text-xs font-medium text-body">
                         {{ localText("Markdown 内容", "Markdown content") }}
                       </label>
-                        <textarea
-                          v-model="doc.content_md"
-                          rows="8"
-                          class="input font-mono text-sm"
-                          :placeholder="localText('在这里填写正式 Markdown 内容。', 'Write the final Markdown content here.')"
-                        ></textarea>
+                      <textarea
+                        v-model="doc.content_md"
+                        rows="8"
+                        class="input font-mono text-sm"
+                        :placeholder="
+                          localText(
+                            '在这里填写正式 Markdown 内容。',
+                            'Write the final Markdown content here.',
+                          )
+                        "
+                      ></textarea>
                     </div>
                   </div>
                 </div>
@@ -4672,545 +4503,756 @@
         </div>
         <!-- /Tab: Login Agreement -->
 
-	        <!-- Tab: Features (功能开关) -->
+        <!-- Tab: Features (功能开关) -->
         <div v-show="activeTab === 'features'" class="space-y-6">
-
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.features.channelMonitor.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.features.channelMonitor.description') }}
-            </p>
-            <p class="mt-1.5 text-xs">
-              <router-link
-                to="/admin/channels/monitor"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
-              >
-                {{ t('admin.settings.features.channelMonitor.configureLink') }}
-                <span aria-hidden="true">→</span>
-              </router-link>
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.features.channelMonitor.enabled') }}
-                </label>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.features.channelMonitor.enabledHint') }}
-                </p>
-              </div>
-              <Toggle v-model="form.channel_monitor_enabled" />
-            </div>
-
-            <div v-if="form.channel_monitor_enabled">
-              <label class="input-label">
-                {{ t('admin.settings.features.channelMonitor.defaultInterval') }}
-                <span class="text-red-500">*</span>
-              </label>
-              <input
-                v-model.number="form.channel_monitor_default_interval_seconds"
-                type="number"
-                min="15"
-                max="3600"
-                class="input"
-              />
-              <p class="mt-1 text-xs text-gray-400">
-                {{ t('admin.settings.features.channelMonitor.defaultIntervalHint') }}
+          <div class="card">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
+                {{ t("admin.settings.features.channelMonitor.title") }}
+              </h2>
+              <p class="mt-1 text-sm text-muted">
+                {{ t("admin.settings.features.channelMonitor.description") }}
+              </p>
+              <p class="mt-1.5 text-xs">
+                <router-link
+                  to="/admin/channels/monitor"
+                  class="inline-flex items-center gap-1 text-primary-600 hover:underline"
+                >
+                  {{
+                    t("admin.settings.features.channelMonitor.configureLink")
+                  }}
+                  <span aria-hidden="true">→</span>
+                </router-link>
               </p>
             </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.features.availableChannels.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.features.availableChannels.description') }}
-            </p>
-            <p class="mt-1.5 text-xs">
-              <router-link
-                to="/admin/channels/pricing"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
-              >
-                {{ t('admin.settings.features.availableChannels.configureLink') }}
-                <span aria-hidden="true">→</span>
-              </router-link>
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.features.availableChannels.enabled') }}
-                </label>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.features.availableChannels.enabledHint') }}
-                </p>
+            <div class="space-y-5 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-body">
+                    {{ t("admin.settings.features.channelMonitor.enabled") }}
+                  </label>
+                  <p class="mt-0.5 text-xs text-muted">
+                    {{
+                      t("admin.settings.features.channelMonitor.enabledHint")
+                    }}
+                  </p>
+                </div>
+                <Toggle v-model="form.channel_monitor_enabled" />
               </div>
-              <Toggle v-model="form.available_channels_enabled" />
-            </div>
-          </div>
-        </div>
 
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.features.riskControl.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.features.riskControl.description') }}
-            </p>
-            <p class="mt-1.5 text-xs">
-              <router-link
-                to="/admin/risk-control"
-                class="inline-flex items-center gap-1 text-primary-600 hover:underline dark:text-primary-400"
-              >
-                {{ t('admin.settings.features.riskControl.configureLink') }}
-                <span aria-hidden="true">→</span>
-              </router-link>
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.features.riskControl.enabled') }}
-                </label>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.features.riskControl.enabledHint') }}
-                </p>
-              </div>
-              <Toggle v-model="form.risk_control_enabled" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Affiliate (邀请返利) feature card -->
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.settings.features.affiliate.title') }}
-            </h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('admin.settings.features.affiliate.description') }}
-            </p>
-          </div>
-          <div class="space-y-5 p-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('admin.settings.features.affiliate.enabled') }}
-                </label>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('admin.settings.features.affiliate.enabledHint') }}
-                </p>
-              </div>
-              <Toggle v-model="form.affiliate_enabled" />
-            </div>
-
-            <div v-if="form.affiliate_enabled" class="space-y-6">
-              <div>
+              <div v-if="form.channel_monitor_enabled">
                 <label class="input-label">
-                  {{ t('admin.settings.features.affiliate.rebateRate') }}
+                  {{
+                    t("admin.settings.features.channelMonitor.defaultInterval")
+                  }}
+                  <span class="text-error">*</span>
                 </label>
-                <div class="relative">
+                <input
+                  v-model.number="form.channel_monitor_default_interval_seconds"
+                  type="number"
+                  min="15"
+                  max="3600"
+                  class="input"
+                />
+                <p class="mt-1 text-xs text-muted-soft">
+                  {{
+                    t(
+                      "admin.settings.features.channelMonitor.defaultIntervalHint",
+                    )
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
+                {{ t("admin.settings.features.availableChannels.title") }}
+              </h2>
+              <p class="mt-1 text-sm text-muted">
+                {{ t("admin.settings.features.availableChannels.description") }}
+              </p>
+              <p class="mt-1.5 text-xs">
+                <router-link
+                  to="/admin/channels/pricing"
+                  class="inline-flex items-center gap-1 text-primary-600 hover:underline"
+                >
+                  {{
+                    t("admin.settings.features.availableChannels.configureLink")
+                  }}
+                  <span aria-hidden="true">→</span>
+                </router-link>
+              </p>
+            </div>
+            <div class="space-y-5 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-body">
+                    {{ t("admin.settings.features.availableChannels.enabled") }}
+                  </label>
+                  <p class="mt-0.5 text-xs text-muted">
+                    {{
+                      t("admin.settings.features.availableChannels.enabledHint")
+                    }}
+                  </p>
+                </div>
+                <Toggle v-model="form.available_channels_enabled" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
+                {{ t("admin.settings.features.riskControl.title") }}
+              </h2>
+              <p class="mt-1 text-sm text-muted">
+                {{ t("admin.settings.features.riskControl.description") }}
+              </p>
+              <p class="mt-1.5 text-xs">
+                <router-link
+                  to="/admin/risk-control"
+                  class="inline-flex items-center gap-1 text-primary-600 hover:underline"
+                >
+                  {{ t("admin.settings.features.riskControl.configureLink") }}
+                  <span aria-hidden="true">→</span>
+                </router-link>
+              </p>
+            </div>
+            <div class="space-y-5 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-body">
+                    {{ t("admin.settings.features.riskControl.enabled") }}
+                  </label>
+                  <p class="mt-0.5 text-xs text-muted">
+                    {{ t("admin.settings.features.riskControl.enabledHint") }}
+                  </p>
+                </div>
+                <Toggle v-model="form.risk_control_enabled" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Affiliate (邀请返利) feature card -->
+          <div class="card">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
+                {{ t("admin.settings.features.affiliate.title") }}
+              </h2>
+              <p class="mt-1 text-sm text-muted">
+                {{ t("admin.settings.features.affiliate.description") }}
+              </p>
+            </div>
+            <div class="space-y-5 p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-body">
+                    {{ t("admin.settings.features.affiliate.enabled") }}
+                  </label>
+                  <p class="mt-0.5 text-xs text-muted">
+                    {{ t("admin.settings.features.affiliate.enabledHint") }}
+                  </p>
+                </div>
+                <Toggle v-model="form.affiliate_enabled" />
+              </div>
+
+              <div v-if="form.affiliate_enabled" class="space-y-6">
+                <div>
+                  <label class="input-label">
+                    {{ t("admin.settings.features.affiliate.rebateRate") }}
+                  </label>
+                  <div class="relative">
+                    <input
+                      v-model.number="form.affiliate_rebate_rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      class="input pr-8"
+                      placeholder="20"
+                    />
+                    <span
+                      class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-soft"
+                      >%</span
+                    >
+                  </div>
+                  <p class="mt-1 text-xs text-muted-soft">
+                    {{ t("admin.settings.features.affiliate.rebateRateHint") }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="input-label">
+                    {{ t("admin.settings.features.affiliate.freezeHours") }}
+                  </label>
                   <input
-                    v-model.number="form.affiliate_rebate_rate"
+                    v-model.number="form.affiliate_rebate_freeze_hours"
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="720"
+                    class="input"
+                  />
+                  <p class="mt-1 text-xs text-muted-soft">
+                    {{ t("admin.settings.features.affiliate.freezeHoursDesc") }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="input-label">
+                    {{ t("admin.settings.features.affiliate.durationDays") }}
+                  </label>
+                  <input
+                    v-model.number="form.affiliate_rebate_duration_days"
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="3650"
+                    class="input"
+                  />
+                  <p class="mt-1 text-xs text-muted-soft">
+                    {{
+                      t("admin.settings.features.affiliate.durationDaysDesc")
+                    }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="input-label">
+                    {{ t("admin.settings.features.affiliate.perInviteeCap") }}
+                  </label>
+                  <input
+                    v-model.number="form.affiliate_rebate_per_invitee_cap"
                     type="number"
                     step="0.01"
                     min="0"
-                    max="100"
-                    class="input pr-8"
-                    placeholder="20"
+                    class="input"
                   />
-                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
+                  <p class="mt-1 text-xs text-muted-soft">
+                    {{
+                      t("admin.settings.features.affiliate.perInviteeCapDesc")
+                    }}
+                  </p>
                 </div>
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.affiliate.rebateRateHint') }}
-                </p>
+
+                <!-- 专属用户管理 -->
+                <div class="border-t border-hairline-soft pt-6">
+                  <div class="mb-3 flex items-center justify-between">
+                    <div>
+                      <h3 class="text-sm font-semibold text-ink">
+                        {{
+                          t(
+                            "admin.settings.features.affiliate.customUsers.title",
+                          )
+                        }}
+                      </h3>
+                      <p class="mt-0.5 text-xs text-muted">
+                        {{
+                          t(
+                            "admin.settings.features.affiliate.customUsers.description",
+                          )
+                        }}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm"
+                      @click="openAffiliateModal(null)"
+                    >
+                      +
+                      {{
+                        t(
+                          "admin.settings.features.affiliate.customUsers.addButton",
+                        )
+                      }}
+                    </button>
+                  </div>
+
+                  <div class="mb-3 flex items-center gap-2">
+                    <input
+                      v-model="affiliateState.search"
+                      type="text"
+                      class="input flex-1"
+                      :placeholder="
+                        t(
+                          'admin.settings.features.affiliate.customUsers.searchPlaceholder',
+                        )
+                      "
+                      @input="onAffiliateSearchInput"
+                    />
+                    <button
+                      v-if="affiliateState.selected.length > 0"
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      @click="openAffiliateBatchModal"
+                    >
+                      {{
+                        t(
+                          "admin.settings.features.affiliate.customUsers.batchButton",
+                          { count: affiliateState.selected.length },
+                        )
+                      }}
+                    </button>
+                  </div>
+
+                  <div
+                    class="overflow-hidden rounded-lg border border-hairline"
+                  >
+                    <table class="min-w-full divide-y divide-hairline">
+                      <thead class="bg-surface-soft">
+                        <tr>
+                          <th class="px-3 py-2 text-left">
+                            <input
+                              type="checkbox"
+                              :checked="
+                                affiliateState.entries.length > 0 &&
+                                affiliateState.selected.length ===
+                                  affiliateState.entries.length
+                              "
+                              @change="toggleAffiliateSelectAll"
+                            />
+                          </th>
+                          <th
+                            class="px-3 py-2 text-left text-xs font-medium uppercase text-muted"
+                          >
+                            {{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.col.email",
+                              )
+                            }}
+                          </th>
+                          <th
+                            class="px-3 py-2 text-left text-xs font-medium uppercase text-muted"
+                          >
+                            {{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.col.username",
+                              )
+                            }}
+                          </th>
+                          <th
+                            class="px-3 py-2 text-left text-xs font-medium uppercase text-muted"
+                          >
+                            {{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.col.code",
+                              )
+                            }}
+                          </th>
+                          <th
+                            class="px-3 py-2 text-left text-xs font-medium uppercase text-muted"
+                          >
+                            {{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.col.rate",
+                              )
+                            }}
+                          </th>
+                          <th
+                            class="px-3 py-2 text-left text-xs font-medium uppercase text-muted"
+                          >
+                            {{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.col.actions",
+                              )
+                            }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-hairline bg-canvas">
+                        <tr v-if="affiliateState.loading">
+                          <td
+                            colspan="6"
+                            class="px-3 py-6 text-center text-sm text-muted"
+                          >
+                            {{ t("common.loading") }}
+                          </td>
+                        </tr>
+                        <tr v-else-if="affiliateState.entries.length === 0">
+                          <td
+                            colspan="6"
+                            class="px-3 py-6 text-center text-sm text-muted"
+                          >
+                            {{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.empty",
+                              )
+                            }}
+                          </td>
+                        </tr>
+                        <tr
+                          v-for="entry in affiliateState.entries"
+                          :key="entry.user_id"
+                        >
+                          <td class="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              :checked="
+                                affiliateState.selected.includes(entry.user_id)
+                              "
+                              @change="toggleAffiliateSelect(entry.user_id)"
+                            />
+                          </td>
+                          <td class="px-3 py-2 text-sm text-ink">
+                            {{ entry.email }}
+                          </td>
+                          <td class="px-3 py-2 text-sm text-body">
+                            {{ entry.username }}
+                          </td>
+                          <td class="px-3 py-2 text-sm font-mono">
+                            {{ entry.aff_code }}
+                            <span
+                              v-if="entry.aff_code_custom"
+                              class="ml-1 inline-block rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+                              >{{
+                                t(
+                                  "admin.settings.features.affiliate.customUsers.customBadge",
+                                )
+                              }}</span
+                            >
+                          </td>
+                          <td class="px-3 py-2 text-sm">
+                            <span v-if="entry.aff_rebate_rate_percent != null"
+                              >{{ entry.aff_rebate_rate_percent }}%</span
+                            >
+                            <span v-else class="text-muted-soft">{{
+                              t(
+                                "admin.settings.features.affiliate.customUsers.useGlobal",
+                              )
+                            }}</span>
+                          </td>
+                          <td class="px-3 py-2 text-sm">
+                            <div class="flex items-center gap-2">
+                              <button
+                                type="button"
+                                class="text-primary-600 hover:underline"
+                                @click="openAffiliateModal(entry)"
+                              >
+                                {{ t("common.edit") }}
+                              </button>
+                              <button
+                                type="button"
+                                class="text-error hover:underline"
+                                @click="askResetAffiliateUser(entry)"
+                              >
+                                {{ t("common.delete") }}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div
+                    v-if="affiliateState.total > affiliateState.pageSize"
+                    class="mt-3 flex items-center justify-between text-sm"
+                  >
+                    <span class="text-muted">
+                      {{
+                        t(
+                          "admin.settings.features.affiliate.customUsers.totalLabel",
+                          { total: affiliateState.total },
+                        )
+                      }}
+                    </span>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        :disabled="affiliateState.page <= 1"
+                        @click="changeAffiliatePage(affiliateState.page - 1)"
+                      >
+                        {{ t("pagination.previous") }}
+                      </button>
+                      <span class="text-muted"
+                        >{{ affiliateState.page }} /
+                        {{
+                          Math.max(
+                            1,
+                            Math.ceil(
+                              affiliateState.total / affiliateState.pageSize,
+                            ),
+                          )
+                        }}</span
+                      >
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        :disabled="
+                          affiliateState.page >=
+                          Math.ceil(
+                            affiliateState.total / affiliateState.pageSize,
+                          )
+                        "
+                        @click="changeAffiliatePage(affiliateState.page + 1)"
+                      >
+                        {{ t("pagination.next") }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Affiliate add/edit modal -->
+          <div
+            v-if="affiliateModal.open"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="closeAffiliateModal"
+          >
+            <div class="w-full max-w-md rounded-lg bg-canvas p-6 shadow-card">
+              <h3 class="mb-4 text-lg font-semibold">
+                {{
+                  affiliateModal.mode === "add"
+                    ? t("admin.settings.features.affiliate.modal.addTitle")
+                    : t("admin.settings.features.affiliate.modal.editTitle")
+                }}
+              </h3>
+              <div class="space-y-4">
+                <div v-if="affiliateModal.mode === 'add'">
+                  <label class="input-label">{{
+                    t("admin.settings.features.affiliate.modal.userLabel")
+                  }}</label>
+                  <!-- Chip showing the picked user; clicking it re-opens the search -->
+                  <div
+                    v-if="affiliateModal.selectedUser"
+                    class="flex items-center justify-between rounded-md border border-primary-200 bg-primary-50 px-3 py-2"
+                  >
+                    <div class="text-sm">
+                      <span class="font-medium text-ink">{{
+                        affiliateModal.selectedUser.email
+                      }}</span>
+                      <span class="ml-1 text-xs text-muted"
+                        >({{ affiliateModal.selectedUser.username }})</span
+                      >
+                    </div>
+                    <button
+                      type="button"
+                      class="text-lg leading-none text-muted-soft hover:text-error"
+                      :title="
+                        t('admin.settings.features.affiliate.modal.changeUser')
+                      "
+                      @click="clearSelectedAffiliateUser"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <!-- Search input + result dropdown — hidden once a selection is made -->
+                  <template v-else>
+                    <input
+                      v-model="affiliateModal.userQuery"
+                      type="text"
+                      class="input"
+                      :placeholder="
+                        t(
+                          'admin.settings.features.affiliate.modal.userPlaceholder',
+                        )
+                      "
+                      @input="onAffiliateUserSearchInput"
+                    />
+                    <div
+                      v-if="affiliateModal.userResults.length > 0"
+                      class="mt-1 max-h-40 overflow-y-auto rounded border border-hairline"
+                    >
+                      <button
+                        v-for="u in affiliateModal.userResults"
+                        :key="u.id"
+                        type="button"
+                        class="w-full px-3 py-1.5 text-left text-sm hover:bg-surface-card"
+                        @click="selectAffiliateUser(u)"
+                      >
+                        {{ u.email }}
+                        <span class="text-xs text-muted"
+                          >({{ u.username }})</span
+                        >
+                      </button>
+                    </div>
+                  </template>
+                </div>
+                <div v-else>
+                  <label class="input-label">{{
+                    t("admin.settings.features.affiliate.modal.userLabel")
+                  }}</label>
+                  <input
+                    type="text"
+                    class="input"
+                    :value="
+                      affiliateModal.editingEntry
+                        ? affiliateModal.editingEntry.email
+                        : ''
+                    "
+                    disabled
+                  />
+                </div>
+
+                <div>
+                  <label class="input-label">{{
+                    t("admin.settings.features.affiliate.modal.codeLabel")
+                  }}</label>
+                  <input
+                    v-model="affiliateModal.code"
+                    type="text"
+                    class="input font-mono"
+                    :placeholder="
+                      t(
+                        'admin.settings.features.affiliate.modal.codePlaceholder',
+                      )
+                    "
+                    maxlength="32"
+                  />
+                  <p class="mt-1 text-xs text-muted-soft">
+                    {{ t("admin.settings.features.affiliate.modal.codeHint") }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="input-label">{{
+                    t("admin.settings.features.affiliate.modal.rateLabel")
+                  }}</label>
+                  <div class="relative">
+                    <input
+                      v-model="affiliateModal.rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      class="input pr-8"
+                      :placeholder="
+                        t(
+                          'admin.settings.features.affiliate.modal.ratePlaceholder',
+                        )
+                      "
+                    />
+                    <span
+                      class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-soft"
+                      >%</span
+                    >
+                  </div>
+                  <p class="mt-1 text-xs text-muted-soft">
+                    {{ t("admin.settings.features.affiliate.modal.rateHint") }}
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <label class="input-label">
-                  {{ t('admin.settings.features.affiliate.freezeHours') }}
-                </label>
-                <input
-                  v-model.number="form.affiliate_rebate_freeze_hours"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="720"
-                  class="input"
-                />
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.affiliate.freezeHoursDesc') }}
+              <div class="mt-6 flex items-center justify-between gap-3">
+                <p v-if="!affiliateModalCanSubmit" class="text-xs text-muted">
+                  {{ t("admin.settings.features.affiliate.modal.errorEmpty") }}
                 </p>
+                <span v-else></span>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    @click="closeAffiliateModal"
+                  >
+                    {{ t("common.cancel") }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    :disabled="
+                      affiliateModal.saving || !affiliateModalCanSubmit
+                    "
+                    @click="submitAffiliateModal"
+                  >
+                    {{
+                      affiliateModal.saving
+                        ? t("common.saving")
+                        : t("common.save")
+                    }}
+                  </button>
+                </div>
               </div>
+            </div>
+          </div>
 
-              <div>
-                <label class="input-label">
-                  {{ t('admin.settings.features.affiliate.durationDays') }}
-                </label>
+          <!-- Affiliate batch rate modal -->
+          <div
+            v-if="affiliateBatchModal.open"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="affiliateBatchModal.open = false"
+          >
+            <div class="w-full max-w-md rounded-lg bg-canvas p-6 shadow-card">
+              <h3 class="mb-4 text-lg font-semibold">
+                {{
+                  t("admin.settings.features.affiliate.batchModal.title", {
+                    count: affiliateState.selected.length,
+                  })
+                }}
+              </h3>
+              <p class="mb-4 text-sm text-muted">
+                {{ t("admin.settings.features.affiliate.batchModal.hint") }}
+              </p>
+              <div class="relative">
                 <input
-                  v-model.number="form.affiliate_rebate_duration_days"
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="3650"
-                  class="input"
-                />
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.affiliate.durationDaysDesc') }}
-                </p>
-              </div>
-
-              <div>
-                <label class="input-label">
-                  {{ t('admin.settings.features.affiliate.perInviteeCap') }}
-                </label>
-                <input
-                  v-model.number="form.affiliate_rebate_per_invitee_cap"
+                  v-model="affiliateBatchModal.rate"
                   type="number"
                   step="0.01"
                   min="0"
-                  class="input"
+                  max="100"
+                  class="input pr-8"
+                  :placeholder="
+                    t(
+                      'admin.settings.features.affiliate.batchModal.placeholder',
+                    )
+                  "
                 />
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.affiliate.perInviteeCapDesc') }}
-                </p>
-              </div>
-
-              <!-- 专属用户管理 -->
-              <div class="border-t border-gray-100 pt-6 dark:border-dark-700">
-                <div class="mb-3 flex items-center justify-between">
-                  <div>
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-                      {{ t('admin.settings.features.affiliate.customUsers.title') }}
-                    </h3>
-                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('admin.settings.features.affiliate.customUsers.description') }}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    @click="openAffiliateModal(null)"
-                  >
-                    + {{ t('admin.settings.features.affiliate.customUsers.addButton') }}
-                  </button>
-                </div>
-
-                <div class="mb-3 flex items-center gap-2">
-                  <input
-                    v-model="affiliateState.search"
-                    type="text"
-                    class="input flex-1"
-                    :placeholder="t('admin.settings.features.affiliate.customUsers.searchPlaceholder')"
-                    @input="onAffiliateSearchInput"
-                  />
-                  <button
-                    v-if="affiliateState.selected.length > 0"
-                    type="button"
-                    class="btn btn-secondary btn-sm"
-                    @click="openAffiliateBatchModal"
-                  >
-                    {{ t('admin.settings.features.affiliate.customUsers.batchButton', { count: affiliateState.selected.length }) }}
-                  </button>
-                </div>
-
-                <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-dark-700">
-                  <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-700">
-                    <thead class="bg-gray-50 dark:bg-dark-800">
-                      <tr>
-                        <th class="px-3 py-2 text-left">
-                          <input
-                            type="checkbox"
-                            :checked="affiliateState.entries.length > 0 && affiliateState.selected.length === affiliateState.entries.length"
-                            @change="toggleAffiliateSelectAll"
-                          />
-                        </th>
-                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{{ t('admin.settings.features.affiliate.customUsers.col.email') }}</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{{ t('admin.settings.features.affiliate.customUsers.col.username') }}</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{{ t('admin.settings.features.affiliate.customUsers.col.code') }}</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{{ t('admin.settings.features.affiliate.customUsers.col.rate') }}</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">{{ t('admin.settings.features.affiliate.customUsers.col.actions') }}</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-dark-700 dark:bg-dark-900">
-                      <tr v-if="affiliateState.loading">
-                        <td colspan="6" class="px-3 py-6 text-center text-sm text-gray-500">
-                          {{ t('common.loading') }}
-                        </td>
-                      </tr>
-                      <tr v-else-if="affiliateState.entries.length === 0">
-                        <td colspan="6" class="px-3 py-6 text-center text-sm text-gray-500">
-                          {{ t('admin.settings.features.affiliate.customUsers.empty') }}
-                        </td>
-                      </tr>
-                      <tr v-for="entry in affiliateState.entries" :key="entry.user_id">
-                        <td class="px-3 py-2">
-                          <input
-                            type="checkbox"
-                            :checked="affiliateState.selected.includes(entry.user_id)"
-                            @change="toggleAffiliateSelect(entry.user_id)"
-                          />
-                        </td>
-                        <td class="px-3 py-2 text-sm text-gray-900 dark:text-white">{{ entry.email }}</td>
-                        <td class="px-3 py-2 text-sm text-gray-600 dark:text-gray-300">{{ entry.username }}</td>
-                        <td class="px-3 py-2 text-sm font-mono">
-                          {{ entry.aff_code }}
-                          <span
-                            v-if="entry.aff_code_custom"
-                            class="ml-1 inline-block rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300"
-                          >{{ t('admin.settings.features.affiliate.customUsers.customBadge') }}</span>
-                        </td>
-                        <td class="px-3 py-2 text-sm">
-                          <span v-if="entry.aff_rebate_rate_percent != null">{{ entry.aff_rebate_rate_percent }}%</span>
-                          <span v-else class="text-gray-400">{{ t('admin.settings.features.affiliate.customUsers.useGlobal') }}</span>
-                        </td>
-                        <td class="px-3 py-2 text-sm">
-                          <div class="flex items-center gap-2">
-                            <button type="button" class="text-primary-600 hover:underline" @click="openAffiliateModal(entry)">
-                              {{ t('common.edit') }}
-                            </button>
-                            <button
-                              type="button"
-                              class="text-red-600 hover:underline"
-                              @click="askResetAffiliateUser(entry)"
-                            >
-                              {{ t('common.delete') }}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div v-if="affiliateState.total > affiliateState.pageSize" class="mt-3 flex items-center justify-between text-sm">
-                  <span class="text-gray-500">
-                    {{ t('admin.settings.features.affiliate.customUsers.totalLabel', { total: affiliateState.total }) }}
-                  </span>
-                  <div class="flex items-center gap-2">
-                    <button
-                      type="button"
-                      class="btn btn-secondary btn-sm"
-                      :disabled="affiliateState.page <= 1"
-                      @click="changeAffiliatePage(affiliateState.page - 1)"
-                    >
-                      {{ t('pagination.previous') }}
-                    </button>
-                    <span class="text-gray-500">{{ affiliateState.page }} / {{ Math.max(1, Math.ceil(affiliateState.total / affiliateState.pageSize)) }}</span>
-                    <button
-                      type="button"
-                      class="btn btn-secondary btn-sm"
-                      :disabled="affiliateState.page >= Math.ceil(affiliateState.total / affiliateState.pageSize)"
-                      @click="changeAffiliatePage(affiliateState.page + 1)"
-                    >
-                      {{ t('pagination.next') }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Affiliate add/edit modal -->
-        <div
-          v-if="affiliateModal.open"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          @click.self="closeAffiliateModal"
-        >
-          <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-dark-900">
-            <h3 class="mb-4 text-lg font-semibold">
-              {{ affiliateModal.mode === 'add' ? t('admin.settings.features.affiliate.modal.addTitle') : t('admin.settings.features.affiliate.modal.editTitle') }}
-            </h3>
-            <div class="space-y-4">
-              <div v-if="affiliateModal.mode === 'add'">
-                <label class="input-label">{{ t('admin.settings.features.affiliate.modal.userLabel') }}</label>
-                <!-- Chip showing the picked user; clicking it re-opens the search -->
-                <div
-                  v-if="affiliateModal.selectedUser"
-                  class="flex items-center justify-between rounded-md border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-700/50 dark:bg-primary-900/20"
+                <span
+                  class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-soft"
+                  >%</span
                 >
-                  <div class="text-sm">
-                    <span class="font-medium text-gray-900 dark:text-white">{{ affiliateModal.selectedUser.email }}</span>
-                    <span class="ml-1 text-xs text-gray-500">({{ affiliateModal.selectedUser.username }})</span>
-                  </div>
-                  <button
-                    type="button"
-                    class="text-lg leading-none text-gray-400 hover:text-red-600"
-                    :title="t('admin.settings.features.affiliate.modal.changeUser')"
-                    @click="clearSelectedAffiliateUser"
-                  >
-                    ×
-                  </button>
-                </div>
-                <!-- Search input + result dropdown — hidden once a selection is made -->
-                <template v-else>
-                  <input
-                    v-model="affiliateModal.userQuery"
-                    type="text"
-                    class="input"
-                    :placeholder="t('admin.settings.features.affiliate.modal.userPlaceholder')"
-                    @input="onAffiliateUserSearchInput"
-                  />
-                  <div
-                    v-if="affiliateModal.userResults.length > 0"
-                    class="mt-1 max-h-40 overflow-y-auto rounded border border-gray-200 dark:border-dark-700"
-                  >
-                    <button
-                      v-for="u in affiliateModal.userResults"
-                      :key="u.id"
-                      type="button"
-                      class="w-full px-3 py-1.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-dark-800"
-                      @click="selectAffiliateUser(u)"
-                    >
-                      {{ u.email }} <span class="text-xs text-gray-500">({{ u.username }})</span>
-                    </button>
-                  </div>
-                </template>
               </div>
-              <div v-else>
-                <label class="input-label">{{ t('admin.settings.features.affiliate.modal.userLabel') }}</label>
-                <input
-                  type="text"
-                  class="input"
-                  :value="affiliateModal.editingEntry ? affiliateModal.editingEntry.email : ''"
-                  disabled
-                />
-              </div>
-
-              <div>
-                <label class="input-label">{{ t('admin.settings.features.affiliate.modal.codeLabel') }}</label>
-                <input
-                  v-model="affiliateModal.code"
-                  type="text"
-                  class="input font-mono"
-                  :placeholder="t('admin.settings.features.affiliate.modal.codePlaceholder')"
-                  maxlength="32"
-                />
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.affiliate.modal.codeHint') }}
-                </p>
-              </div>
-
-              <div>
-                <label class="input-label">{{ t('admin.settings.features.affiliate.modal.rateLabel') }}</label>
-                <div class="relative">
-                  <input
-                    v-model="affiliateModal.rate"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    class="input pr-8"
-                    :placeholder="t('admin.settings.features.affiliate.modal.ratePlaceholder')"
-                  />
-                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
-                </div>
-                <p class="mt-1 text-xs text-gray-400">
-                  {{ t('admin.settings.features.affiliate.modal.rateHint') }}
-                </p>
-              </div>
-            </div>
-
-            <div class="mt-6 flex items-center justify-between gap-3">
-              <p
-                v-if="!affiliateModalCanSubmit"
-                class="text-xs text-gray-500 dark:text-gray-400"
-              >
-                {{ t('admin.settings.features.affiliate.modal.errorEmpty') }}
+              <p class="mt-2 text-xs text-muted-soft">
+                {{
+                  t("admin.settings.features.affiliate.batchModal.clearHint")
+                }}
               </p>
-              <span v-else></span>
-              <div class="flex gap-2">
-                <button type="button" class="btn btn-secondary" @click="closeAffiliateModal">
-                  {{ t('common.cancel') }}
+              <div class="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  @click="affiliateBatchModal.open = false"
+                >
+                  {{ t("common.cancel") }}
                 </button>
                 <button
                   type="button"
                   class="btn btn-primary"
-                  :disabled="affiliateModal.saving || !affiliateModalCanSubmit"
-                  @click="submitAffiliateModal"
+                  :disabled="affiliateBatchModal.saving"
+                  @click="submitAffiliateBatchModal"
                 >
-                  {{ affiliateModal.saving ? t('common.saving') : t('common.save') }}
+                  {{
+                    affiliateBatchModal.saving
+                      ? t("common.saving")
+                      : t("common.save")
+                  }}
                 </button>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Affiliate batch rate modal -->
-        <div
-          v-if="affiliateBatchModal.open"
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          @click.self="affiliateBatchModal.open = false"
-        >
-          <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-dark-900">
-            <h3 class="mb-4 text-lg font-semibold">
-              {{ t('admin.settings.features.affiliate.batchModal.title', { count: affiliateState.selected.length }) }}
-            </h3>
-            <p class="mb-4 text-sm text-gray-500">
-              {{ t('admin.settings.features.affiliate.batchModal.hint') }}
-            </p>
-            <div class="relative">
-              <input
-                v-model="affiliateBatchModal.rate"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                class="input pr-8"
-                :placeholder="t('admin.settings.features.affiliate.batchModal.placeholder')"
-              />
-              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
-            </div>
-            <p class="mt-2 text-xs text-gray-400">
-              {{ t('admin.settings.features.affiliate.batchModal.clearHint') }}
-            </p>
-            <div class="mt-6 flex justify-end gap-2">
-              <button type="button" class="btn btn-secondary" @click="affiliateBatchModal.open = false">
-                {{ t('common.cancel') }}
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                :disabled="affiliateBatchModal.saving"
-                @click="submitAffiliateBatchModal"
-              >
-                {{ affiliateBatchModal.saving ? t('common.saving') : t('common.save') }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        </div><!-- /Tab: Features -->
+        <!-- /Tab: Features -->
 
         <!-- Tab: Email -->
         <!-- Tab: Payment -->
         <div v-show="activeTab === 'payment'" class="space-y-6">
           <!-- Payment System Settings -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.payment.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.payment.description") }}
                 <a
                   :href="paymentGuideHref"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="ml-2 inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                  class="ml-2 inline-flex items-center text-primary-600 hover:text-primary-700"
                 >
                   <svg
                     class="mr-0.5 h-3.5 w-3.5"
@@ -5233,10 +5275,10 @@
               <!-- Enable toggle -->
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.payment.enabled")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.payment.enabledHint") }}
                   </p>
                 </div>
@@ -5272,11 +5314,11 @@
                       t("admin.settings.payment.preview")
                     }}</label>
                     <div
-                      class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:border-dark-600 dark:bg-dark-800 dark:text-gray-300"
+                      class="rounded-lg border border-hairline bg-surface-soft px-3 py-2 text-sm text-body"
                     >
                       {{
                         (form.payment_product_name_prefix || "Sub2API") +
-                        " 100 " +
+                        " 100" +
                         (form.payment_product_name_suffix || "CNY")
                       }}
                     </div>
@@ -5358,16 +5400,14 @@
                       min="0.01"
                       class="input"
                     />
-                    <p class="mt-0.5 text-xs text-gray-400">
+                    <p class="mt-0.5 text-xs text-muted-soft">
                       {{
                         t(
                           "admin.settings.payment.balanceRechargeMultiplierHint",
                         )
                       }}
                     </p>
-                    <p
-                      class="mt-1 text-xs font-medium text-primary-600 dark:text-primary-400"
-                    >
+                    <p class="mt-1 text-xs font-medium text-primary-600">
                       {{
                         t("admin.settings.payment.balanceRechargePreview", {
                           usd: (
@@ -5406,16 +5446,16 @@
                         class="input pr-8"
                       />
                       <span
-                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400"
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-soft"
                         >%</span
                       >
                     </div>
-                    <p class="mt-0.5 text-xs text-gray-400">
+                    <p class="mt-0.5 text-xs text-muted-soft">
                       {{ t("admin.settings.payment.rechargeFeeRateHint") }}
                     </p>
                     <p
                       v-if="(Number(form.payment_recharge_fee_rate) || 0) > 0"
-                      class="mt-1 text-xs font-medium text-primary-600 dark:text-primary-400"
+                      class="mt-1 text-xs font-medium text-primary-600"
                     >
                       {{
                         t("admin.settings.payment.rechargeFeePreview", {
@@ -5429,7 +5469,7 @@
                   <div>
                     <label class="input-label"
                       >{{ t("admin.settings.payment.orderTimeout") }}
-                      <span class="text-red-500">*</span></label
+                      <span class="text-error">*</span></label
                     ><input
                       v-model.number="form.payment_order_timeout_minutes"
                       type="number"
@@ -5437,7 +5477,7 @@
                       class="input"
                       required
                     />
-                    <p class="mt-0.5 text-xs text-gray-400">
+                    <p class="mt-0.5 text-xs text-muted-soft">
                       {{ t("admin.settings.payment.orderTimeoutHint") }}
                     </p>
                   </div>
@@ -5476,7 +5516,7 @@
                           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
                           form.payment_cancel_rate_limit_enabled
                             ? 'bg-primary-500'
-                            : 'bg-gray-300 dark:bg-dark-600',
+                            : 'bg-surface-cream-strong ',
                         ]"
                         @click="
                           form.payment_cancel_rate_limit_enabled =
@@ -5485,7 +5525,7 @@
                       >
                         <span
                           :class="[
-                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                             form.payment_cancel_rate_limit_enabled
                               ? 'translate-x-5'
                               : 'translate-x-0',
@@ -5502,8 +5542,8 @@
                         :class="[
                           'text-sm whitespace-nowrap',
                           form.payment_cancel_rate_limit_enabled
-                            ? 'text-gray-700 dark:text-gray-300'
-                            : 'text-gray-400 dark:text-gray-600',
+                            ? 'text-body '
+                            : 'text-muted-soft ',
                         ]"
                         >{{
                           t("admin.settings.payment.cancelRateLimitEvery")
@@ -5527,8 +5567,8 @@
                         :class="[
                           'text-sm whitespace-nowrap',
                           form.payment_cancel_rate_limit_enabled
-                            ? 'text-gray-700 dark:text-gray-300'
-                            : 'text-gray-400 dark:text-gray-600',
+                            ? 'text-body '
+                            : 'text-muted-soft ',
                         ]"
                         >{{
                           t("admin.settings.payment.cancelRateLimitAllowMax")
@@ -5546,8 +5586,8 @@
                         :class="[
                           'text-sm whitespace-nowrap',
                           form.payment_cancel_rate_limit_enabled
-                            ? 'text-gray-700 dark:text-gray-300'
-                            : 'text-gray-400 dark:text-gray-600',
+                            ? 'text-body '
+                            : 'text-muted-soft ',
                         ]"
                         >{{
                           t("admin.settings.payment.cancelRateLimitTimes")
@@ -5570,20 +5610,20 @@
                       :class="[
                         'rounded-lg border px-3 py-1.5 text-sm font-medium transition-all',
                         isPaymentTypeEnabled(pt.value)
-                          ? 'border-primary-500 bg-primary-500 text-white shadow-sm'
-                          : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400 hover:bg-gray-50 dark:border-dark-600 dark:bg-dark-800 dark:text-gray-300 dark:hover:border-dark-500',
+                          ? 'border-primary-500 bg-primary-500 text-on-primary shadow-sm'
+                          : 'border-hairline bg-canvas text-body hover:border-muted-soft hover:bg-surface-soft ',
                       ]"
                     >
                       {{ pt.label }}
                     </button>
                   </div>
-                  <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                  <p class="mt-2 text-xs text-muted-soft">
                     {{ t("admin.settings.payment.enabledPaymentTypesHint") }}
                     <a
                       :href="paymentMethodsHref"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="ml-1 text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300"
+                      class="ml-1 text-primary-500 hover:text-primary-600"
                     >
                       {{ t("admin.settings.payment.findProvider") }}
                       <svg
@@ -5662,13 +5702,13 @@
                 <Icon
                   name="mail"
                   size="md"
-                  class="mt-0.5 flex-shrink-0 text-gray-400 dark:text-gray-500"
+                  class="mt-0.5 flex-shrink-0 text-muted-soft"
                 />
                 <div>
-                  <h3 class="font-medium text-gray-900 dark:text-white">
+                  <h3 class="font-medium text-ink">
                     {{ t("admin.settings.emailTabDisabledTitle") }}
                   </h3>
-                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  <p class="mt-1 text-sm text-muted">
                     {{ t("admin.settings.emailTabDisabledHint") }}
                   </p>
                 </div>
@@ -5679,13 +5719,13 @@
           <!-- SMTP Settings - Only show when email verification is enabled -->
           <div v-if="form.email_verify_enabled" class="card">
             <div
-              class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700"
+              class="flex items-center justify-between border-b border-hairline-soft px-6 py-4"
             >
               <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 class="text-lg font-semibold text-ink">
                   {{ t("admin.settings.smtp.title") }}
                 </h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted">
                   {{ t("admin.settings.smtp.description") }}
                 </p>
               </div>
@@ -5725,9 +5765,7 @@
             <div class="space-y-6 p-6">
               <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.smtp.host") }}
                   </label>
                   <input
@@ -5738,9 +5776,7 @@
                   />
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.smtp.port") }}
                   </label>
                   <input
@@ -5753,9 +5789,7 @@
                   />
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.smtp.username") }}
                   </label>
                   <input
@@ -5766,9 +5800,7 @@
                   />
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.smtp.password") }}
                   </label>
                   <input
@@ -5786,7 +5818,7 @@
                         : t('admin.settings.smtp.passwordPlaceholder')
                     "
                   />
-                  <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <p class="mt-1.5 text-xs text-muted">
                     {{
                       form.smtp_password_configured
                         ? t("admin.settings.smtp.passwordConfiguredHint")
@@ -5795,9 +5827,7 @@
                   </p>
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.smtp.fromEmail") }}
                   </label>
                   <input
@@ -5808,9 +5838,7 @@
                   />
                 </div>
                 <div>
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.smtp.fromName") }}
                   </label>
                   <input
@@ -5824,13 +5852,13 @@
 
               <!-- Use TLS Toggle -->
               <div
-                class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="flex items-center justify-between border-t border-hairline-soft pt-4"
               >
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.smtp.useTls")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.smtp.useTlsHint") }}
                   </p>
                 </div>
@@ -5841,22 +5869,18 @@
 
           <!-- Send Test Email - Only show when email verification is enabled -->
           <div v-if="form.email_verify_enabled" class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.testEmail.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.testEmail.description") }}
               </p>
             </div>
             <div class="p-6">
               <div class="flex items-end gap-4">
                 <div class="flex-1">
-                  <label
-                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label class="mb-2 block text-sm font-medium text-body">
                     {{ t("admin.settings.testEmail.recipientEmail") }}
                   </label>
                   <input
@@ -5907,32 +5931,28 @@
           </div>
           <!-- Balance Low Notification -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h3 class="text-base font-medium text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h3 class="text-base font-medium text-ink">
                 {{ t("admin.settings.balanceNotify.title") }}
               </h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.balanceNotify.description") }}
               </p>
             </div>
             <div class="px-6 py-6 space-y-4">
               <div class="flex items-center justify-between">
-                <label
-                  class="mb-0 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t("admin.settings.balanceNotify.enabled") }}</label
-                >
+                <label class="mb-0 block text-sm font-medium text-body">{{
+                  t("admin.settings.balanceNotify.enabled")
+                }}</label>
                 <Toggle v-model="form.balance_low_notify_enabled" />
               </div>
               <div v-if="form.balance_low_notify_enabled">
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t("admin.settings.balanceNotify.threshold") }}</label
-                >
+                <label class="mb-2 block text-sm font-medium text-body">{{
+                  t("admin.settings.balanceNotify.threshold")
+                }}</label>
                 <div class="relative">
                   <span
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-soft"
                     >$</span
                   >
                   <input
@@ -5943,22 +5963,21 @@
                     class="input pl-7"
                   />
                 </div>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-xs text-muted">
                   {{ t("admin.settings.balanceNotify.thresholdHint") }}
                 </p>
               </div>
               <div>
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t("admin.settings.balanceNotify.rechargeUrl") }}</label
-                >
+                <label class="mb-2 block text-sm font-medium text-body">{{
+                  t("admin.settings.balanceNotify.rechargeUrl")
+                }}</label>
                 <input
                   v-model="form.balance_low_notify_recharge_url"
                   type="url"
                   class="input"
                   :placeholder="currentOrigin"
                 />
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-xs text-muted">
                   {{ t("admin.settings.balanceNotify.rechargeUrlHint") }}
                 </p>
               </div>
@@ -5967,29 +5986,25 @@
 
           <!-- Account Quota Notification -->
           <div class="card">
-            <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
-            >
-              <h3 class="text-base font-medium text-gray-900 dark:text-white">
+            <div class="border-b border-hairline-soft px-6 py-4">
+              <h3 class="text-base font-medium text-ink">
                 {{ t("admin.settings.quotaNotify.title") }}
               </h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.quotaNotify.description") }}
               </p>
             </div>
             <div class="px-6 py-6 space-y-4">
               <div class="flex items-center justify-between">
-                <label
-                  class="mb-0 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t("admin.settings.quotaNotify.enabled") }}</label
-                >
+                <label class="mb-0 block text-sm font-medium text-body">{{
+                  t("admin.settings.quotaNotify.enabled")
+                }}</label>
                 <Toggle v-model="form.account_quota_notify_enabled" />
               </div>
               <div v-if="form.account_quota_notify_enabled">
-                <label
-                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t("admin.settings.quotaNotify.emails") }}</label
-                >
+                <label class="mb-2 block text-sm font-medium text-body">{{
+                  t("admin.settings.quotaNotify.emails")
+                }}</label>
                 <div class="space-y-2">
                   <div
                     v-for="(entry, index) in form.account_quota_notify_emails ||
@@ -6007,7 +6022,7 @@
                         class="sr-only peer"
                       />
                       <div
-                        class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-gray-500 peer-checked:bg-primary-600"
+                        class="w-9 h-5 bg-hairline peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-canvas after:border-hairline after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-600"
                       ></div>
                     </label>
                     <input
@@ -6034,7 +6049,7 @@
                     + {{ t("admin.settings.quotaNotify.addEmail") }}
                   </button>
                 </div>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-xs text-muted">
                   {{ t("admin.settings.quotaNotify.emailsHint") }}
                 </p>
               </div>
@@ -6163,8 +6178,15 @@ import ProxySelector from "@/components/common/ProxySelector.vue";
 import ImageUpload from "@/components/common/ImageUpload.vue";
 import BackupSettings from "@/views/admin/BackupView.vue";
 import { useClipboard } from "@/composables/useClipboard";
-import { affiliatesAPI, type AffiliateAdminEntry, type SimpleUser as AffiliateSimpleUser } from "@/api/admin/affiliates";
-import { extractApiErrorMessage, extractI18nErrorMessage } from "@/utils/apiError";
+import {
+  affiliatesAPI,
+  type AffiliateAdminEntry,
+  type SimpleUser as AffiliateSimpleUser,
+} from "@/api/admin/affiliates";
+import {
+  extractApiErrorMessage,
+  extractI18nErrorMessage,
+} from "@/utils/apiError";
 import { useAppStore } from "@/stores";
 import { useAdminSettingsStore } from "@/stores/adminSettings";
 import { normalizeVisibleMethod } from "@/components/payment/paymentFlow";
@@ -6238,7 +6260,10 @@ function focusSettingsTab(tab: SettingsTab): void {
   });
 }
 
-function handleSettingsTabKeydown(event: KeyboardEvent, tab: SettingsTab): void {
+function handleSettingsTabKeydown(
+  event: KeyboardEvent,
+  tab: SettingsTab,
+): void {
   const action =
     settingsTabKeyboardActions[
       event.key as keyof typeof settingsTabKeyboardActions
@@ -6394,7 +6419,8 @@ function loginAgreementRoutePath(
   index: number,
 ): string {
   const id =
-    normalizeLoginAgreementDocumentId(doc.id || doc.title) || `doc-${index + 1}`;
+    normalizeLoginAgreementDocumentId(doc.id || doc.title) ||
+    `doc-${index + 1}`;
   return `/legal/${id}`;
 }
 
@@ -6625,22 +6651,30 @@ const authSourceDefaultsMeta = computed(() => [
   {
     source: "email" as AuthSourceType,
     title: t("admin.settings.authSourceDefaults.sources.email.title"),
-    description: t("admin.settings.authSourceDefaults.sources.email.description"),
+    description: t(
+      "admin.settings.authSourceDefaults.sources.email.description",
+    ),
   },
   {
     source: "linuxdo" as AuthSourceType,
     title: t("admin.settings.authSourceDefaults.sources.linuxdo.title"),
-    description: t("admin.settings.authSourceDefaults.sources.linuxdo.description"),
+    description: t(
+      "admin.settings.authSourceDefaults.sources.linuxdo.description",
+    ),
   },
   {
     source: "oidc" as AuthSourceType,
     title: t("admin.settings.authSourceDefaults.sources.oidc.title"),
-    description: t("admin.settings.authSourceDefaults.sources.oidc.description"),
+    description: t(
+      "admin.settings.authSourceDefaults.sources.oidc.description",
+    ),
   },
   {
     source: "wechat" as AuthSourceType,
     title: t("admin.settings.authSourceDefaults.sources.wechat.title"),
-    description: t("admin.settings.authSourceDefaults.sources.wechat.description"),
+    description: t(
+      "admin.settings.authSourceDefaults.sources.wechat.description",
+    ),
   },
   {
     source: "github" as AuthSourceType,
@@ -6851,7 +6885,7 @@ const defaultSubscriptionGroupOptions = computed<
 );
 
 const registrationEmailSuffixWhitelistSeparatorKeys = new Set([
-  " ",
+  "",
   ",",
   "，",
   "Enter",
@@ -7166,7 +7200,7 @@ function findDuplicateLoginAgreementDocumentId(
 }
 
 function formatTablePageSizeOptions(options: number[]): string {
-  return options.join(", ");
+  return options.join(",");
 }
 
 function parseTablePageSizeOptionsInput(raw: string): number[] | null {
@@ -7262,7 +7296,9 @@ async function loadSettings() {
       wechatCapabilities.mobileEnabled,
       settings.wechat_connect_mode,
     );
-    const legacyWeChatAppID = String(settings.wechat_connect_app_id || "").trim();
+    const legacyWeChatAppID = String(
+      settings.wechat_connect_app_id || "",
+    ).trim();
     const legacyWeChatSecretConfigured = Boolean(
       settings.wechat_connect_app_secret_configured,
     );
@@ -7272,7 +7308,10 @@ async function loadSettings() {
     if (!form.wechat_connect_mp_app_id && wechatCapabilities.mpEnabled) {
       form.wechat_connect_mp_app_id = legacyWeChatAppID;
     }
-    if (!form.wechat_connect_mobile_app_id && wechatCapabilities.mobileEnabled) {
+    if (
+      !form.wechat_connect_mobile_app_id &&
+      wechatCapabilities.mobileEnabled
+    ) {
       form.wechat_connect_mobile_app_id = legacyWeChatAppID;
     }
     if (
@@ -7286,7 +7325,8 @@ async function loadSettings() {
       !form.wechat_connect_mp_app_secret_configured &&
       wechatCapabilities.mpEnabled
     ) {
-      form.wechat_connect_mp_app_secret_configured = legacyWeChatSecretConfigured;
+      form.wechat_connect_mp_app_secret_configured =
+        legacyWeChatSecretConfigured;
     }
     if (
       !form.wechat_connect_mobile_app_secret_configured &&
@@ -7435,7 +7475,10 @@ async function saveSettings() {
 
     const normalizedLoginAgreementDocuments =
       normalizeLoginAgreementDocumentsForSave();
-    if (form.login_agreement_enabled && normalizedLoginAgreementDocuments.length === 0) {
+    if (
+      form.login_agreement_enabled &&
+      normalizedLoginAgreementDocuments.length === 0
+    ) {
       appStore.showError(
         localText(
           "启用登录条款确认时，至少需要保留一份文档。",
@@ -7557,9 +7600,21 @@ async function saveSettings() {
         100,
         Math.max(0, Number(form.affiliate_rebate_rate) || 0),
       ),
-      affiliate_rebate_freeze_hours: Math.max(0, Math.min(720, Number(form.affiliate_rebate_freeze_hours) || 0)),
-      affiliate_rebate_duration_days: Math.max(0, Math.min(3650, Math.floor(Number(form.affiliate_rebate_duration_days) || 0))),
-      affiliate_rebate_per_invitee_cap: Math.max(0, Number(form.affiliate_rebate_per_invitee_cap) || 0),
+      affiliate_rebate_freeze_hours: Math.max(
+        0,
+        Math.min(720, Number(form.affiliate_rebate_freeze_hours) || 0),
+      ),
+      affiliate_rebate_duration_days: Math.max(
+        0,
+        Math.min(
+          3650,
+          Math.floor(Number(form.affiliate_rebate_duration_days) || 0),
+        ),
+      ),
+      affiliate_rebate_per_invitee_cap: Math.max(
+        0,
+        Number(form.affiliate_rebate_per_invitee_cap) || 0,
+      ),
       default_concurrency: form.default_concurrency,
       default_subscriptions: normalizedDefaultSubscriptions,
       force_email_on_third_party_signup: form.force_email_on_third_party_signup,
@@ -7645,15 +7700,13 @@ async function saveSettings() {
         form.oidc_connect_userinfo_username_path,
       github_oauth_enabled: form.github_oauth_enabled,
       github_oauth_client_id: form.github_oauth_client_id,
-      github_oauth_client_secret:
-        form.github_oauth_client_secret || undefined,
+      github_oauth_client_secret: form.github_oauth_client_secret || undefined,
       github_oauth_redirect_url: form.github_oauth_redirect_url,
       github_oauth_frontend_redirect_url:
         form.github_oauth_frontend_redirect_url,
       google_oauth_enabled: form.google_oauth_enabled,
       google_oauth_client_id: form.google_oauth_client_id,
-      google_oauth_client_secret:
-        form.google_oauth_client_secret || undefined,
+      google_oauth_client_secret: form.google_oauth_client_secret || undefined,
       google_oauth_redirect_url: form.google_oauth_redirect_url,
       google_oauth_frontend_redirect_url:
         form.google_oauth_frontend_redirect_url,
@@ -8460,9 +8513,10 @@ function findProviderEnablementConflict(
   return null;
 }
 
-function showProviderEnablementConflict(
-  conflict: { method: "alipay" | "wxpay"; conflicting: ProviderInstance },
-) {
+function showProviderEnablementConflict(conflict: {
+  method: "alipay" | "wxpay";
+  conflicting: ProviderInstance;
+}) {
   appStore.showError(
     t("admin.settings.payment.enableConflict", {
       method: t(`payment.methods.${conflict.method}`),
@@ -8477,7 +8531,9 @@ async function loadProviders() {
     const res = await adminAPI.payment.getProviders();
     providers.value = res.data || [];
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    appStore.showError(
+      extractI18nErrorMessage(err, t, "payment.errors", t("common.error")),
+    );
   } finally {
     providersLoading.value = false;
   }
@@ -8526,7 +8582,9 @@ async function handleSaveProvider(payload: Partial<ProviderInstance>) {
     // Auto-save settings so provider changes take effect immediately
     await saveSettings();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    appStore.showError(
+      extractI18nErrorMessage(err, t, "payment.errors", t("common.error")),
+    );
   } finally {
     providerSaving.value = false;
   }
@@ -8564,7 +8622,9 @@ async function handleToggleField(
     await adminAPI.payment.updateProvider(provider.id, payload);
     await loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    appStore.showError(
+      extractI18nErrorMessage(err, t, "payment.errors", t("common.error")),
+    );
   }
 }
 
@@ -8589,7 +8649,9 @@ async function handleToggleType(provider: ProviderInstance, type: string) {
     } as any);
     await loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    appStore.showError(
+      extractI18nErrorMessage(err, t, "payment.errors", t("common.error")),
+    );
   }
 }
 
@@ -8611,7 +8673,9 @@ async function handleReorderProviders(
     );
     await loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    appStore.showError(
+      extractI18nErrorMessage(err, t, "payment.errors", t("common.error")),
+    );
     loadProviders();
   }
 }
@@ -8624,7 +8688,9 @@ async function handleDeleteProvider() {
     showDeleteProviderDialog.value = false;
     loadProviders();
   } catch (err: unknown) {
-    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
+    appStore.showError(
+      extractI18nErrorMessage(err, t, "payment.errors", t("common.error")),
+    );
   }
 }
 
@@ -8757,7 +8823,11 @@ function cancelAffiliateConfirm() {
 
 // debounceTimer wires a single timer slot to a callback with a delay,
 // canceling any pending invocation. Used for type-as-you-go search inputs.
-function debounceTimer(slot: { searchTimer: number | null }, delayMs: number, run: () => void) {
+function debounceTimer(
+  slot: { searchTimer: number | null },
+  delayMs: number,
+  run: () => void,
+) {
   if (slot.searchTimer != null) window.clearTimeout(slot.searchTimer);
   slot.searchTimer = window.setTimeout(run, delayMs);
 }
@@ -8767,7 +8837,7 @@ function debounceTimer(slot: { searchTimer: number | null }, delayMs: number, ru
 // undefined on invalid input (after surfacing a toast).
 //
 // Accepts unknown because <input type="number"> makes Vue's v-model coerce
-// the value to Number on each keystroke (e.g. typing "30" lands a `30: number`
+// the value to Number on each keystroke (e.g. typing"30" lands a `30: number`
 // in state, not a `"30": string`). String("") and (30).trim() would crash, so
 // we normalize here instead of forcing every caller to remember.
 function parseRebateRate(raw: unknown): number | null | undefined {
@@ -8775,7 +8845,9 @@ function parseRebateRate(raw: unknown): number | null | undefined {
   if (s === "") return null;
   const parsed = Number(s);
   if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
-    appStore.showError(t("admin.settings.features.affiliate.modal.errorBadRate"));
+    appStore.showError(
+      t("admin.settings.features.affiliate.modal.errorBadRate"),
+    );
     return undefined;
   }
   return parsed;
@@ -8793,7 +8865,9 @@ async function loadAffiliateUsers() {
     affiliateState.total = res.total ?? 0;
     // Drop selections that are no longer visible.
     const visibleIds = new Set(affiliateState.entries.map((e) => e.user_id));
-    affiliateState.selected = affiliateState.selected.filter((id) => visibleIds.has(id));
+    affiliateState.selected = affiliateState.selected.filter((id) =>
+      visibleIds.has(id),
+    );
   } catch (err) {
     appStore.showError(extractApiErrorMessage(err, t("common.error")));
   } finally {
@@ -8816,7 +8890,9 @@ function changeAffiliatePage(page: number) {
 
 function toggleAffiliateSelectAll(e: Event) {
   const checked = (e.target as HTMLInputElement).checked;
-  affiliateState.selected = checked ? affiliateState.entries.map((entry) => entry.user_id) : [];
+  affiliateState.selected = checked
+    ? affiliateState.entries.map((entry) => entry.user_id)
+    : [];
 }
 
 function toggleAffiliateSelect(userId: number) {
@@ -8836,7 +8912,9 @@ function openAffiliateModal(entry: AffiliateAdminEntry | null) {
   affiliateModal.editingEntry = entry;
   affiliateModal.code = entry?.aff_code_custom ? entry.aff_code : "";
   affiliateModal.rate =
-    entry?.aff_rebate_rate_percent != null ? String(entry.aff_rebate_rate_percent) : "";
+    entry?.aff_rebate_rate_percent != null
+      ? String(entry.aff_rebate_rate_percent)
+      : "";
 }
 
 function closeAffiliateModal() {
@@ -8875,7 +8953,7 @@ function clearSelectedAffiliateUser() {
 }
 
 // affiliateModalCanSubmit guards the Save button: must have a user picked AND
-// produce at least one field change. Without this the admin could "save" an
+// produce at least one field change. Without this the admin could"save" an
 // empty payload that silently does nothing — the user reported exactly that
 // confusion.
 const affiliateModalCanSubmit = computed(() => {
@@ -8887,7 +8965,7 @@ const affiliateModalCanSubmit = computed(() => {
   const codeFilled = affiliateModal.code.trim() !== "";
   const rateFilled = String(affiliateModal.rate ?? "").trim() !== "";
   if (codeFilled || rateFilled) return true;
-  // Edit mode + empty rate input is a meaningful "clear" only if the user
+  // Edit mode + empty rate input is a meaningful"clear" only if the user
   // currently has an exclusive rate to clear.
   return (
     affiliateModal.mode === "edit" &&
@@ -8916,7 +8994,10 @@ async function submitAffiliateModal() {
   const rateInput = parseRebateRate(affiliateModal.rate);
   if (rateInput === undefined) return; // toast already shown
   if (rateInput === null) {
-    if (affiliateModal.mode === "edit" && affiliateModal.editingEntry?.aff_rebate_rate_percent != null) {
+    if (
+      affiliateModal.mode === "edit" &&
+      affiliateModal.editingEntry?.aff_rebate_rate_percent != null
+    ) {
       payload.clear_rebate_rate = true;
     }
   } else {
@@ -8938,7 +9019,7 @@ async function submitAffiliateModal() {
 }
 
 // askResetAffiliateUser prompts via the project ConfirmDialog, then on confirm
-// calls the backend "reset all" endpoint that clears both the exclusive rate
+// calls the backend"reset all" endpoint that clears both the exclusive rate
 // AND regenerates the invite code as a system random one.
 function askResetAffiliateUser(entry: AffiliateAdminEntry) {
   openAffiliateConfirm(
@@ -9005,19 +9086,11 @@ watch(
 
 /* ============ 系统设置 Tab 导航 ============ */
 .settings-tabs-shell {
-  @apply sticky z-20 -mx-1 rounded-2xl border border-white/80 bg-white/90 p-1.5 backdrop-blur-xl;
+  @apply sticky z-20 -mx-1 rounded-lg border border-hairline/80 bg-canvas/90 p-1.5 ;
   top: 4.75rem;
   box-shadow:
     0 12px 28px rgb(15 23 42 / 0.07),
     0 1px 0 rgb(255 255 255 / 0.9) inset;
-}
-
-:global(.dark) .settings-tabs-shell {
-  border-color: rgb(51 65 85 / 0.65);
-  background: rgb(15 23 42 / 0.86);
-  box-shadow:
-    0 16px 36px rgb(0 0 0 / 0.28),
-    0 1px 0 rgb(255 255 255 / 0.06) inset;
 }
 
 .settings-tabs-scroll {
@@ -9035,7 +9108,7 @@ watch(
 }
 
 .settings-tab {
-  @apply relative isolate flex h-10 min-w-[6.75rem] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent px-3 text-sm font-medium text-gray-600 outline-none transition-colors duration-200 ease-out dark:text-gray-300;
+  @apply relative isolate flex h-10 min-w-[6.75rem] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent px-3 text-sm font-medium text-body outline-none transition-colors duration-200 ease-out;
 }
 
 @media (min-width: 768px) {
@@ -9055,7 +9128,7 @@ watch(
 .settings-tab::before {
   @apply absolute inset-0 -z-10 rounded-xl opacity-0 transition-opacity duration-200;
   content: "";
-  background: linear-gradient(135deg, rgb(248 250 252 / 0.95), rgb(241 245 249 / 0.8));
+  background: #f5f0e8;
 }
 
 .settings-tab:hover::before,
@@ -9063,25 +9136,15 @@ watch(
   opacity: 1;
 }
 
-:global(.dark) .settings-tab::before {
-  background: linear-gradient(135deg, rgb(30 41 59 / 0.9), rgb(51 65 85 / 0.62));
-}
-
 .settings-tab:focus-visible {
-  @apply ring-2 ring-primary-500/40 ring-offset-2 ring-offset-white dark:ring-offset-dark-900;
+  @apply ring-2 ring-primary-500/40 ring-offset-2 ring-offset-white;
 }
 
 .settings-tab-active {
-  @apply border-primary-200/80 bg-white text-primary-700 shadow-sm dark:border-primary-400/30 dark:bg-dark-700/95 dark:text-primary-200;
+  @apply border-primary-200/80 bg-canvas text-primary-700 shadow-sm;
   box-shadow:
     0 8px 18px rgb(15 23 42 / 0.08),
     0 1px 0 rgb(255 255 255 / 0.92) inset;
-}
-
-:global(.dark) .settings-tab-active {
-  box-shadow:
-    0 12px 26px rgb(0 0 0 / 0.22),
-    0 1px 0 rgb(255 255 255 / 0.08) inset;
 }
 
 .settings-tab-active::before {
@@ -9096,20 +9159,20 @@ watch(
   height: 2px;
   border-radius: 9999px;
   content: "";
-  background: linear-gradient(90deg, #14b8a6, #0ea5e9);
+  background: #cc785c;
 }
 
 .settings-tab-icon {
-  @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors duration-200 dark:text-gray-400;
+  @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted transition-colors duration-200;
 }
 
 .settings-tab:hover .settings-tab-icon,
 .settings-tab:focus-visible .settings-tab-icon {
-  @apply text-gray-700 dark:text-gray-200;
+  @apply text-body;
 }
 
 .settings-tab-active .settings-tab-icon {
-  @apply bg-primary-50 text-primary-600 dark:bg-primary-400/10 dark:text-primary-300;
+  @apply bg-primary-50 text-primary-600;
 }
 
 .settings-tab-label {

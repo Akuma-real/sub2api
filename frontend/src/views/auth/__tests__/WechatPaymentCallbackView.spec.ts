@@ -111,6 +111,6 @@ describe('WechatPaymentCallbackView', () => {
     expect(replaceMock).not.toHaveBeenCalled()
     expect(showErrorMock).toHaveBeenCalledWith('微信支付回调缺少恢复令牌。')
     expect(wrapper.text()).toContain('微信支付回调缺少恢复令牌。')
-    expect(wrapper.find('.bg-red-50').exists()).toBe(false)
+    expect(wrapper.find('.bg-error\\/15').exists()).toBe(false)
   })
 })

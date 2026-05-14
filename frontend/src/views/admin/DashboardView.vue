@@ -12,18 +12,23 @@
           <!-- Total API Keys -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
-                <Icon name="key" size="md" class="text-blue-600 dark:text-blue-400" :stroke-width="2" />
+              <div class="rounded-lg bg-accent-teal/15 p-2">
+                <Icon
+                  name="key"
+                  size="md"
+                  class="text-primary-700"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.apiKeys') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.apiKeys") }}
                 </p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                <p class="text-xl font-bold text-ink">
                   {{ stats.total_api_keys }}
                 </p>
-                <p class="text-xs text-green-600 dark:text-green-400">
-                  {{ stats.active_api_keys }} {{ t('common.active') }}
+                <p class="text-xs text-success">
+                  {{ stats.active_api_keys }} {{ t("common.active") }}
                 </p>
               </div>
             </div>
@@ -32,22 +37,29 @@
           <!-- Service Accounts -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
-                <Icon name="server" size="md" class="text-purple-600 dark:text-purple-400" :stroke-width="2" />
+              <div class="rounded-lg bg-primary-100 p-2">
+                <Icon
+                  name="server"
+                  size="md"
+                  class="text-primary-700"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.accounts') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.accounts") }}
                 </p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                <p class="text-xl font-bold text-ink">
                   {{ stats.total_accounts }}
                 </p>
                 <p class="text-xs">
-                  <span class="text-green-600 dark:text-green-400"
-                    >{{ stats.normal_accounts }} {{ t('common.active') }}</span
+                  <span class="text-success"
+                    >{{ stats.normal_accounts }} {{ t("common.active") }}</span
                   >
-                  <span v-if="stats.error_accounts > 0" class="ml-1 text-red-500"
-                    >{{ stats.error_accounts }} {{ t('common.error') }}</span
+                  <span
+                    v-if="stats.error_accounts > 0"
+                    class="ml-1 text-error"
+                    >{{ stats.error_accounts }} {{ t("common.error") }}</span
                   >
                 </p>
               </div>
@@ -57,18 +69,24 @@
           <!-- Today Requests -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
-                <Icon name="chart" size="md" class="text-green-600 dark:text-green-400" :stroke-width="2" />
+              <div class="rounded-lg bg-success/15 p-2">
+                <Icon
+                  name="chart"
+                  size="md"
+                  class="text-success"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.todayRequests') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.todayRequests") }}
                 </p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                <p class="text-xl font-bold text-ink">
                   {{ stats.today_requests }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('common.total') }}: {{ formatNumber(stats.total_requests) }}
+                <p class="text-xs text-muted">
+                  {{ t("common.total") }}:
+                  {{ formatNumber(stats.total_requests) }}
                 </p>
               </div>
             </div>
@@ -77,18 +95,23 @@
           <!-- New Users Today -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/30">
-                <Icon name="userPlus" size="md" class="text-emerald-600 dark:text-emerald-400" :stroke-width="2" />
+              <div class="rounded-lg bg-success/15 p-2">
+                <Icon
+                  name="userPlus"
+                  size="md"
+                  class="text-success"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.users') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.users") }}
                 </p>
-                <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                <p class="text-xl font-bold text-success">
                   +{{ stats.today_new_users }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('common.total') }}: {{ formatNumber(stats.total_users) }}
+                <p class="text-xs text-muted">
+                  {{ t("common.total") }}: {{ formatNumber(stats.total_users) }}
                 </p>
               </div>
             </div>
@@ -100,31 +123,36 @@
           <!-- Today Tokens -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/30">
-                <Icon name="cube" size="md" class="text-amber-600 dark:text-amber-400" :stroke-width="2" />
+              <div class="rounded-lg bg-accent-amber/15 p-2">
+                <Icon
+                  name="cube"
+                  size="md"
+                  class="text-warning"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.todayTokens') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.todayTokens") }}
                 </p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                <p class="text-xl font-bold text-ink">
                   {{ formatTokens(stats.today_tokens) }}
                 </p>
                 <p class="text-xs">
                   <span
-                    class="text-green-600 dark:text-green-400"
+                    class="text-success"
                     :title="t('admin.dashboard.actual')"
                     >${{ formatCost(stats.today_actual_cost) }}</span
                   >
-                  <span class="text-gray-400 dark:text-gray-500"> / </span>
+                  <span class="text-muted-soft"> / </span>
                   <span
-                    class="text-orange-500 dark:text-orange-400"
+                    class="text-warning"
                     :title="t('admin.dashboard.accountCost')"
                     >${{ formatCost(stats.today_account_cost) }}</span
                   >
-                  <span class="text-gray-400 dark:text-gray-500"> / </span>
+                  <span class="text-muted-soft"> / </span>
                   <span
-                    class="text-gray-400 dark:text-gray-500"
+                    class="text-muted-soft"
                     :title="t('admin.dashboard.standard')"
                     >${{ formatCost(stats.today_cost) }}</span
                   >
@@ -136,31 +164,36 @@
           <!-- Total Tokens -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/30">
-                <Icon name="database" size="md" class="text-indigo-600 dark:text-indigo-400" :stroke-width="2" />
+              <div class="rounded-lg bg-primary-100 p-2">
+                <Icon
+                  name="database"
+                  size="md"
+                  class="text-primary-600"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.totalTokens') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.totalTokens") }}
                 </p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                <p class="text-xl font-bold text-ink">
                   {{ formatTokens(stats.total_tokens) }}
                 </p>
                 <p class="text-xs">
                   <span
-                    class="text-green-600 dark:text-green-400"
+                    class="text-success"
                     :title="t('admin.dashboard.actual')"
                     >${{ formatCost(stats.total_actual_cost) }}</span
                   >
-                  <span class="text-gray-400 dark:text-gray-500"> / </span>
+                  <span class="text-muted-soft"> / </span>
                   <span
-                    class="text-orange-500 dark:text-orange-400"
+                    class="text-warning"
                     :title="t('admin.dashboard.accountCost')"
                     >${{ formatCost(stats.total_account_cost) }}</span
                   >
-                  <span class="text-gray-400 dark:text-gray-500"> / </span>
+                  <span class="text-muted-soft"> / </span>
                   <span
-                    class="text-gray-400 dark:text-gray-500"
+                    class="text-muted-soft"
                     :title="t('admin.dashboard.standard')"
                     >${{ formatCost(stats.total_cost) }}</span
                   >
@@ -172,24 +205,29 @@
           <!-- Performance (RPM/TPM) -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-violet-100 p-2 dark:bg-violet-900/30">
-                <Icon name="bolt" size="md" class="text-violet-600 dark:text-violet-400" :stroke-width="2" />
+              <div class="rounded-lg bg-primary-100 p-2">
+                <Icon
+                  name="bolt"
+                  size="md"
+                  class="text-primary-600"
+                  :stroke-width="2"
+                />
               </div>
               <div class="flex-1">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.performance') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.performance") }}
                 </p>
                 <div class="flex items-baseline gap-2">
-                  <p class="text-xl font-bold text-gray-900 dark:text-white">
+                  <p class="text-xl font-bold text-ink">
                     {{ formatTokens(stats.rpm) }}
                   </p>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">RPM</span>
+                  <span class="text-xs text-muted">RPM</span>
                 </div>
                 <div class="flex items-baseline gap-2">
-                  <p class="text-sm font-semibold text-violet-600 dark:text-violet-400">
+                  <p class="text-sm font-semibold text-primary-600">
                     {{ formatTokens(stats.tpm) }}
                   </p>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">TPM</span>
+                  <span class="text-xs text-muted">TPM</span>
                 </div>
               </div>
             </div>
@@ -198,18 +236,24 @@
           <!-- Avg Response Time -->
           <div class="card p-4">
             <div class="flex items-center gap-3">
-              <div class="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/30">
-                <Icon name="clock" size="md" class="text-rose-600 dark:text-rose-400" :stroke-width="2" />
+              <div class="rounded-lg bg-error/15 p-2">
+                <Icon
+                  name="clock"
+                  size="md"
+                  class="text-error"
+                  :stroke-width="2"
+                />
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {{ t('admin.dashboard.avgResponse') }}
+                <p class="text-xs font-medium text-muted">
+                  {{ t("admin.dashboard.avgResponse") }}
                 </p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                <p class="text-xl font-bold text-ink">
                   {{ formatDuration(stats.average_duration_ms) }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ stats.active_users }} {{ t('admin.dashboard.activeUsers') }}
+                <p class="text-xs text-muted">
+                  {{ stats.active_users }}
+                  {{ t("admin.dashboard.activeUsers") }}
                 </p>
               </div>
             </div>
@@ -222,8 +266,8 @@
           <div class="card p-4">
             <div class="flex flex-wrap items-center gap-4">
               <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t('admin.dashboard.timeRange') }}:</span
+                <span class="text-sm font-medium text-body"
+                  >{{ t("admin.dashboard.timeRange") }}:</span
                 >
                 <DateRangePicker
                   v-model:start-date="startDate"
@@ -231,12 +275,16 @@
                   @change="onDateRangeChange"
                 />
               </div>
-              <button @click="loadDashboardStats" :disabled="chartsLoading" class="btn btn-secondary">
-                {{ t('common.refresh') }}
+              <button
+                @click="loadDashboardStats"
+                :disabled="chartsLoading"
+                class="btn btn-secondary"
+              >
+                {{ t("common.refresh") }}
               </button>
               <div class="ml-auto flex items-center gap-2">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >{{ t('admin.dashboard.granularity') }}:</span
+                <span class="text-sm font-medium text-body"
+                  >{{ t("admin.dashboard.granularity") }}:</span
                 >
                 <div class="w-28">
                   <Select
@@ -270,19 +318,26 @@
 
           <!-- User Usage Trend (Full Width) -->
           <div class="card p-4">
-            <h3 class="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
-              {{ t('admin.dashboard.recentUsage') }} (Top 12)
+            <h3 class="mb-4 text-sm font-semibold text-ink">
+              {{ t("admin.dashboard.recentUsage") }} (Top 12)
             </h3>
             <div class="h-64">
-              <div v-if="userTrendLoading" class="flex h-full items-center justify-center">
+              <div
+                v-if="userTrendLoading"
+                class="flex h-full items-center justify-center"
+              >
                 <LoadingSpinner size="md" />
               </div>
-              <Line v-else-if="userTrendChartData" :data="userTrendChartData" :options="lineOptions" />
+              <Line
+                v-else-if="userTrendChartData"
+                :data="userTrendChartData"
+                :options="lineOptions"
+              />
               <div
                 v-else
-                class="flex h-full items-center justify-center text-sm text-gray-500 dark:text-gray-400"
+                class="flex h-full items-center justify-center text-sm text-muted"
               >
-                {{ t('admin.dashboard.noDataAvailable') }}
+                {{ t("admin.dashboard.noDataAvailable") }}
               </div>
             </div>
           </div>
@@ -293,27 +348,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/app'
+import { ref, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
+import { useAppStore } from "@/stores/app";
 
-const { t } = useI18n()
-import { adminAPI } from '@/api/admin'
+const { t } = useI18n();
+import { adminAPI } from "@/api/admin";
 import type {
   DashboardStats,
   TrendDataPoint,
   ModelStat,
   UserUsageTrendPoint,
-  UserSpendingRankingItem
-} from '@/types'
-import AppLayout from '@/components/layout/AppLayout.vue'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import Icon from '@/components/icons/Icon.vue'
-import DateRangePicker from '@/components/common/DateRangePicker.vue'
-import Select from '@/components/common/Select.vue'
-import ModelDistributionChart from '@/components/charts/ModelDistributionChart.vue'
-import TokenUsageTrend from '@/components/charts/TokenUsageTrend.vue'
+  UserSpendingRankingItem,
+} from "@/types";
+import AppLayout from "@/components/layout/AppLayout.vue";
+import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
+import Icon from "@/components/icons/Icon.vue";
+import DateRangePicker from "@/components/common/DateRangePicker.vue";
+import Select from "@/components/common/Select.vue";
+import ModelDistributionChart from "@/components/charts/ModelDistributionChart.vue";
+import TokenUsageTrend from "@/components/charts/TokenUsageTrend.vue";
 
 import {
   Chart as ChartJS,
@@ -323,9 +378,9 @@ import {
   LineElement,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js'
-import { Line } from 'vue-chartjs'
+  Filler,
+} from "chart.js";
+import { Line } from "vue-chartjs";
 
 // Register Chart.js components
 ChartJS.register(
@@ -335,67 +390,62 @@ ChartJS.register(
   LineElement,
   Tooltip,
   Legend,
-  Filler
-)
+  Filler,
+);
 
-const appStore = useAppStore()
-const router = useRouter()
-const stats = ref<DashboardStats | null>(null)
-const loading = ref(false)
-const chartsLoading = ref(false)
-const userTrendLoading = ref(false)
-const rankingLoading = ref(false)
-const rankingError = ref(false)
+const appStore = useAppStore();
+const router = useRouter();
+const stats = ref<DashboardStats | null>(null);
+const loading = ref(false);
+const chartsLoading = ref(false);
+const userTrendLoading = ref(false);
+const rankingLoading = ref(false);
+const rankingError = ref(false);
 
 // Chart data
-const trendData = ref<TrendDataPoint[]>([])
-const modelStats = ref<ModelStat[]>([])
-const userTrend = ref<UserUsageTrendPoint[]>([])
-const rankingItems = ref<UserSpendingRankingItem[]>([])
-const rankingTotalActualCost = ref(0)
-const rankingTotalRequests = ref(0)
-const rankingTotalTokens = ref(0)
-let chartLoadSeq = 0
-let usersTrendLoadSeq = 0
-let rankingLoadSeq = 0
-const rankingLimit = 12
+const trendData = ref<TrendDataPoint[]>([]);
+const modelStats = ref<ModelStat[]>([]);
+const userTrend = ref<UserUsageTrendPoint[]>([]);
+const rankingItems = ref<UserSpendingRankingItem[]>([]);
+const rankingTotalActualCost = ref(0);
+const rankingTotalRequests = ref(0);
+const rankingTotalTokens = ref(0);
+let chartLoadSeq = 0;
+let usersTrendLoadSeq = 0;
+let rankingLoadSeq = 0;
+const rankingLimit = 12;
 
 // Helper function to format date in local timezone
 const formatLocalDate = (date: Date): string => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
 
 const getLast24HoursRangeDates = (): { start: string; end: string } => {
-  const end = new Date()
-  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000)
+  const end = new Date();
+  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
   return {
     start: formatLocalDate(start),
-    end: formatLocalDate(end)
-  }
-}
+    end: formatLocalDate(end),
+  };
+};
 
 // Date range
-const granularity = ref<'day' | 'hour'>('hour')
-const defaultRange = getLast24HoursRangeDates()
-const startDate = ref(defaultRange.start)
-const endDate = ref(defaultRange.end)
+const granularity = ref<"day" | "hour">("hour");
+const defaultRange = getLast24HoursRangeDates();
+const startDate = ref(defaultRange.start);
+const endDate = ref(defaultRange.end);
 
 // Granularity options for Select component
 const granularityOptions = computed(() => [
-  { value: 'day', label: t('admin.dashboard.day') },
-  { value: 'hour', label: t('admin.dashboard.hour') }
-])
-
-// Dark mode detection
-const isDarkMode = computed(() => {
-  return document.documentElement.classList.contains('dark')
-})
+  { value: "day", label: t("admin.dashboard.day") },
+  { value: "hour", label: t("admin.dashboard.hour") },
+]);
 
 // Chart colors
-const chartColors = computed(() => ({
-  text: isDarkMode.value ? '#e5e7eb' : '#374151',
-  grid: isDarkMode.value ? '#374151' : '#e5e7eb'
-}))
+const chartColors = {
+  text: "#3d3d3a",
+  grid: "#e6dfd8",
+};
 
 // Line chart options (for user trend chart)
 const lineOptions = computed(() => ({
@@ -403,107 +453,112 @@ const lineOptions = computed(() => ({
   maintainAspectRatio: false,
   interaction: {
     intersect: false,
-    mode: 'index' as const
+    mode: "index" as const,
   },
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: "top" as const,
       labels: {
-        color: chartColors.value.text,
+        color: chartColors.text,
         usePointStyle: true,
-        pointStyle: 'circle',
+        pointStyle: "circle",
         padding: 15,
         font: {
-          size: 11
-        }
-      }
+          size: 11,
+        },
+      },
     },
     tooltip: {
       itemSort: (a: any, b: any) => {
-        const aValue = typeof a?.raw === 'number' ? a.raw : Number(a?.parsed?.y ?? 0)
-        const bValue = typeof b?.raw === 'number' ? b.raw : Number(b?.parsed?.y ?? 0)
-        return bValue - aValue
+        const aValue =
+          typeof a?.raw === "number" ? a.raw : Number(a?.parsed?.y ?? 0);
+        const bValue =
+          typeof b?.raw === "number" ? b.raw : Number(b?.parsed?.y ?? 0);
+        return bValue - aValue;
       },
       callbacks: {
         label: (context: any) => {
-          return `${context.dataset.label}: ${formatTokens(context.raw)}`
-        }
-      }
-    }
+          return `${context.dataset.label}: ${formatTokens(context.raw)}`;
+        },
+      },
+    },
   },
   scales: {
     x: {
       grid: {
-        color: chartColors.value.grid
+        color: chartColors.grid,
       },
       ticks: {
-        color: chartColors.value.text,
+        color: chartColors.text,
         font: {
-          size: 10
-        }
-      }
+          size: 10,
+        },
+      },
     },
     y: {
       grid: {
-        color: chartColors.value.grid
+        color: chartColors.grid,
       },
       ticks: {
-        color: chartColors.value.text,
+        color: chartColors.text,
         font: {
-          size: 10
+          size: 10,
         },
-        callback: (value: string | number) => formatTokens(Number(value))
-      }
-    }
-  }
-}))
+        callback: (value: string | number) => formatTokens(Number(value)),
+      },
+    },
+  },
+}));
 
 // User trend chart data
 const userTrendChartData = computed(() => {
-  if (!userTrend.value?.length) return null
+  if (!userTrend.value?.length) return null;
 
   const getDisplayName = (point: UserUsageTrendPoint): string => {
-    const username = point.username?.trim()
+    const username = point.username?.trim();
     if (username) {
-      return username
+      return username;
     }
 
-    const email = point.email?.trim()
+    const email = point.email?.trim();
     if (email) {
-      return email
+      return email;
     }
 
-    return t('admin.redeem.userPrefix', { id: point.user_id })
-  }
+    return t("admin.redeem.userPrefix", { id: point.user_id });
+  };
 
   // Group by user_id to avoid merging different users with the same display name
-  const userGroups = new Map<number, { name: string; data: Map<string, number> }>()
-  const allDates = new Set<string>()
+  const userGroups = new Map<
+    number,
+    { name: string; data: Map<string, number> }
+  >();
+  const allDates = new Set<string>();
 
   userTrend.value.forEach((point) => {
-    allDates.add(point.date)
-    const key = point.user_id
+    allDates.add(point.date);
+    const key = point.user_id;
     if (!userGroups.has(key)) {
-      userGroups.set(key, { name: getDisplayName(point), data: new Map() })
+      userGroups.set(key, { name: getDisplayName(point), data: new Map() });
     }
-    userGroups.get(key)!.data.set(point.date, point.tokens)
-  })
+    userGroups.get(key)!.data.set(point.date, point.tokens);
+  });
 
-  const sortedDates = Array.from(allDates).sort()
+  const sortedDates = Array.from(allDates).sort();
   const colors = [
-    '#3b82f6',
-    '#10b981',
-    '#f59e0b',
-    '#ef4444',
-    '#8b5cf6',
-    '#ec4899',
-    '#14b8a6',
-    '#f97316',
-    '#6366f1',
-    '#84cc16',
-    '#06b6d4',
-    '#a855f7'
-  ]
+    "#cc785c",
+    "#5db872",
+    "#e8a55a",
+    "#c64545",
+    "#cc785c",
+    "#cc785c",
+    "#5db8a6",
+    "#e8a55a",
+    "#cc785c",
+    "#5db872",
+    "#5db8a6",
+    "#cc785c",
+  ];
 
   const datasets = Array.from(userGroups.values()).map((group, idx) => ({
     label: group.name,
@@ -511,89 +566,92 @@ const userTrendChartData = computed(() => {
     borderColor: colors[idx % colors.length],
     backgroundColor: `${colors[idx % colors.length]}20`,
     fill: false,
-    tension: 0.3
-  }))
+    tension: 0.3,
+  }));
 
   return {
     labels: sortedDates,
-    datasets
-  }
-})
+    datasets,
+  };
+});
 
 // Format helpers
 const formatTokens = (value: number | undefined): string => {
-  if (value === undefined || value === null) return '0'
+  if (value === undefined || value === null) return "0";
   if (value >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toFixed(2)}B`
+    return `${(value / 1_000_000_000).toFixed(2)}B`;
   } else if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(2)}M`
+    return `${(value / 1_000_000).toFixed(2)}M`;
   } else if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(2)}K`
+    return `${(value / 1_000).toFixed(2)}K`;
   }
-  return value.toLocaleString()
-}
+  return value.toLocaleString();
+};
 
 const formatNumber = (value: number): string => {
-  return value.toLocaleString()
-}
+  return value.toLocaleString();
+};
 
-const formatCost = (value: number): string => {
-  if (value >= 1000) {
-    return (value / 1000).toFixed(2) + 'K'
-  } else if (value >= 1) {
-    return value.toFixed(2)
-  } else if (value >= 0.01) {
-    return value.toFixed(3)
+const formatCost = (value?: number): string => {
+  const amount = Number(value) || 0;
+  if (amount >= 1000) {
+    return (amount / 1000).toFixed(2) + "K";
+  } else if (amount >= 1) {
+    return amount.toFixed(2);
+  } else if (amount >= 0.01) {
+    return amount.toFixed(3);
   }
-  return value.toFixed(4)
-}
+  return amount.toFixed(4);
+};
 
 const formatDuration = (ms: number): string => {
   if (ms >= 1000) {
-    return `${(ms / 1000).toFixed(2)}s`
+    return `${(ms / 1000).toFixed(2)}s`;
   }
-  return `${Math.round(ms)}ms`
-}
+  return `${Math.round(ms)}ms`;
+};
 
 const goToUserUsage = (item: UserSpendingRankingItem) => {
   void router.push({
-    path: '/admin/usage',
+    path: "/admin/usage",
     query: {
       user_id: String(item.user_id),
       start_date: startDate.value,
-      end_date: endDate.value
-    }
-  })
-}
+      end_date: endDate.value,
+    },
+  });
+};
 
 // Date range change handler
 const onDateRangeChange = (range: {
-  startDate: string
-  endDate: string
-  preset: string | null
+  startDate: string;
+  endDate: string;
+  preset: string | null;
 }) => {
   // Auto-select granularity based on date range
-  const start = new Date(range.startDate)
-  const end = new Date(range.endDate)
-  const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const start = new Date(range.startDate);
+  const end = new Date(range.endDate);
+  const daysDiff = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   // If range is 1 day, use hourly granularity
   if (daysDiff <= 1) {
-    granularity.value = 'hour'
+    granularity.value = "hour";
   } else {
-    granularity.value = 'day'
+    granularity.value = "day";
   }
 
-  loadChartData()
-}
+  loadChartData();
+};
 
 // Load data
 const loadDashboardSnapshot = async (includeStats: boolean) => {
-  const currentSeq = ++chartLoadSeq
+  const currentSeq = ++chartLoadSeq;
   if (includeStats && !stats.value) {
-    loading.value = true
+    loading.value = true;
   }
-  chartsLoading.value = true
+  chartsLoading.value = true;
   try {
     const response = await adminAPI.dashboard.getSnapshotV2({
       start_date: startDate.value,
@@ -603,99 +661,98 @@ const loadDashboardSnapshot = async (includeStats: boolean) => {
       include_trend: true,
       include_model_stats: true,
       include_group_stats: false,
-      include_users_trend: false
-    })
-    if (currentSeq !== chartLoadSeq) return
+      include_users_trend: false,
+    });
+    if (currentSeq !== chartLoadSeq) return;
     if (includeStats && response.stats) {
-      stats.value = response.stats
+      stats.value = response.stats;
     }
-    trendData.value = response.trend || []
-    modelStats.value = response.models || []
+    trendData.value = response.trend || [];
+    modelStats.value = response.models || [];
   } catch (error) {
-    if (currentSeq !== chartLoadSeq) return
-    appStore.showError(t('admin.dashboard.failedToLoad'))
-    console.error('Error loading dashboard snapshot:', error)
+    if (currentSeq !== chartLoadSeq) return;
+    appStore.showError(t("admin.dashboard.failedToLoad"));
+    console.error("Error loading dashboard snapshot: ", error);
   } finally {
     if (currentSeq === chartLoadSeq) {
-      loading.value = false
-      chartsLoading.value = false
+      loading.value = false;
+      chartsLoading.value = false;
     }
   }
-}
+};
 
 const loadUsersTrend = async () => {
-  const currentSeq = ++usersTrendLoadSeq
-  userTrendLoading.value = true
+  const currentSeq = ++usersTrendLoadSeq;
+  userTrendLoading.value = true;
   try {
     const response = await adminAPI.dashboard.getUserUsageTrend({
       start_date: startDate.value,
       end_date: endDate.value,
       granularity: granularity.value,
-      limit: 12
-    })
-    if (currentSeq !== usersTrendLoadSeq) return
-    userTrend.value = response.trend || []
+      limit: 12,
+    });
+    if (currentSeq !== usersTrendLoadSeq) return;
+    userTrend.value = response.trend || [];
   } catch (error) {
-    if (currentSeq !== usersTrendLoadSeq) return
-    console.error('Error loading users trend:', error)
-    userTrend.value = []
+    if (currentSeq !== usersTrendLoadSeq) return;
+    console.error("Error loading users trend: ", error);
+    userTrend.value = [];
   } finally {
     if (currentSeq === usersTrendLoadSeq) {
-      userTrendLoading.value = false
+      userTrendLoading.value = false;
     }
   }
-}
+};
 
 const loadUserSpendingRanking = async () => {
-  const currentSeq = ++rankingLoadSeq
-  rankingLoading.value = true
-  rankingError.value = false
+  const currentSeq = ++rankingLoadSeq;
+  rankingLoading.value = true;
+  rankingError.value = false;
   try {
     const response = await adminAPI.dashboard.getUserSpendingRanking({
       start_date: startDate.value,
       end_date: endDate.value,
-      limit: rankingLimit
-    })
-    if (currentSeq !== rankingLoadSeq) return
-    rankingItems.value = response.ranking || []
-    rankingTotalActualCost.value = response.total_actual_cost || 0
-    rankingTotalRequests.value = response.total_requests || 0
-    rankingTotalTokens.value = response.total_tokens || 0
+      limit: rankingLimit,
+    });
+    if (currentSeq !== rankingLoadSeq) return;
+    rankingItems.value = response.ranking || [];
+    rankingTotalActualCost.value = response.total_actual_cost || 0;
+    rankingTotalRequests.value = response.total_requests || 0;
+    rankingTotalTokens.value = response.total_tokens || 0;
   } catch (error) {
-    if (currentSeq !== rankingLoadSeq) return
-    console.error('Error loading user spending ranking:', error)
-    rankingItems.value = []
-    rankingTotalActualCost.value = 0
-    rankingTotalRequests.value = 0
-    rankingTotalTokens.value = 0
-    rankingError.value = true
+    if (currentSeq !== rankingLoadSeq) return;
+    console.error("Error loading user spending ranking: ", error);
+    rankingItems.value = [];
+    rankingTotalActualCost.value = 0;
+    rankingTotalRequests.value = 0;
+    rankingTotalTokens.value = 0;
+    rankingError.value = true;
   } finally {
     if (currentSeq === rankingLoadSeq) {
-      rankingLoading.value = false
+      rankingLoading.value = false;
     }
   }
-}
+};
 
 const loadDashboardStats = async () => {
   await Promise.all([
     loadDashboardSnapshot(true),
     loadUsersTrend(),
-    loadUserSpendingRanking()
-  ])
-}
+    loadUserSpendingRanking(),
+  ]);
+};
 
 const loadChartData = async () => {
   await Promise.all([
     loadDashboardSnapshot(false),
     loadUsersTrend(),
-    loadUserSpendingRanking()
-  ])
-}
+    loadUserSpendingRanking(),
+  ]);
+};
 
 onMounted(() => {
-  loadDashboardStats()
-})
+  loadDashboardStats();
+});
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -3,9 +3,11 @@ import { createI18n } from 'vue-i18n'
 type LocaleCode = 'en' | 'zh'
 
 type LocaleMessages = Record<string, any>
+type LocaleChangeHandler = () => void | Promise<void>
 
 const LOCALE_KEY = 'sub2api_locale'
 const DEFAULT_LOCALE: LocaleCode = 'en'
+let localeChangeHandler: LocaleChangeHandler | null = null
 
 const localeLoaders: Record<LocaleCode, () => Promise<{ default: LocaleMessages }>> = {
   en: () => import('./locales/en'),
@@ -69,13 +71,11 @@ export async function setLocale(locale: string): Promise<void> {
   localStorage.setItem(LOCALE_KEY, locale)
   document.documentElement.setAttribute('lang', locale)
 
-  // 同步更新浏览器页签标题，使其跟随语言切换
-  const { resolveDocumentTitle } = await import('@/router/title')
-  const { default: router } = await import('@/router')
-  const { useAppStore } = await import('@/stores/app')
-  const route = router.currentRoute.value
-  const appStore = useAppStore()
-  document.title = resolveDocumentTitle(route.meta.title, appStore.siteName, route.meta.titleKey as string)
+  await localeChangeHandler?.()
+}
+
+export function setLocaleChangeHandler(handler: LocaleChangeHandler | null): void {
+  localeChangeHandler = handler
 }
 
 export function getLocale(): LocaleCode {

@@ -2,10 +2,15 @@
   <div class="empty-state">
     <!-- Icon -->
     <div
-      class="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100 dark:bg-dark-800"
+      class="mb-5 flex h-20 w-20 items-center justify-center rounded-lg bg-surface-card"
     >
       <slot name="icon">
-        <component v-if="icon" :is="icon" class="empty-state-icon h-10 w-10" aria-hidden="true" />
+        <component
+          v-if="icon"
+          :is="icon"
+          class="empty-state-icon h-10 w-10"
+          aria-hidden="true"
+        />
         <svg
           v-else
           class="empty-state-icon h-10 w-10"
@@ -52,29 +57,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import type { Component } from 'vue'
-import Icon from '@/components/icons/Icon.vue'
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import type { Component } from "vue";
+import Icon from "@/components/icons/Icon.vue";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 interface Props {
-  icon?: Component | string
-  title?: string
-  description?: string
-  actionText?: string
-  actionTo?: string | object
-  actionIcon?: boolean
-  message?: string
+  icon?: Component | string;
+  title?: string;
+  description?: string;
+  actionText?: string;
+  actionTo?: string | object;
+  actionIcon?: boolean;
+  message?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  description: '',
-  actionIcon: true
-})
+  description: "",
+  actionIcon: true,
+});
 
-const displayTitle = computed(() => props.title || t('common.noData'))
+const displayTitle = computed(() => props.title || t("common.noData"));
 
-defineEmits(['action'])
+defineEmits(["action"]);
 </script>

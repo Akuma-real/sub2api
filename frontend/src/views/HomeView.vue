@@ -15,78 +15,58 @@
   <!-- Default Home Page -->
   <div
     v-else
-    class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-100 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950"
+    class="relative flex min-h-screen flex-col overflow-hidden bg-canvas text-ink"
   >
-    <!-- Background Decorations -->
-    <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div
-        class="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-primary-400/20 blur-3xl"
-      ></div>
-      <div
-        class="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary-500/15 blur-3xl"
-      ></div>
-      <div
-        class="absolute left-1/3 top-1/4 h-72 w-72 rounded-full bg-primary-300/10 blur-3xl"
-      ></div>
-      <div
-        class="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-primary-400/10 blur-3xl"
-      ></div>
-      <div
-        class="absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"
-      ></div>
-    </div>
-
-    <!-- Header -->
-    <header class="relative z-20 px-6 py-4">
+    <header
+      class="relative z-20 border-b border-hairline bg-canvas/90 px-6 py-4 "
+    >
       <nav class="mx-auto flex max-w-6xl items-center justify-between">
-        <!-- Logo -->
-        <div class="flex items-center">
-          <div class="h-10 w-10 overflow-hidden rounded-xl shadow-md">
-            <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
+        <div class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 overflow-hidden rounded-lg border border-hairline bg-canvas shadow-sm"
+          >
+            <img
+              :src="siteLogo || '/logo.png'"
+              alt="Logo"
+              class="h-full w-full object-contain"
+            />
           </div>
+          <span
+            class="hidden font-display text-2xl font-medium leading-none text-ink sm:inline"
+          >
+            {{ siteName }}
+          </span>
         </div>
 
-        <!-- Nav Actions -->
         <div class="flex items-center gap-3">
-          <!-- Language Switcher -->
           <LocaleSwitcher />
 
-          <!-- Doc Link -->
           <a
             v-if="docUrl"
             :href="docUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-white"
+            class="rounded-lg p-2 text-muted transition-colors hover:bg-cream hover:text-ink"
             :title="t('home.viewDocs')"
           >
             <Icon name="book" size="md" />
           </a>
 
-          <!-- Theme Toggle -->
-          <button
-            @click="toggleTheme"
-            class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-white"
-            :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
-          >
-            <Icon v-if="isDark" name="sun" size="md" />
-            <Icon v-else name="moon" size="md" />
-          </button>
-
-          <!-- Login / Dashboard Button -->
           <router-link
             v-if="isAuthenticated"
             :to="dashboardPath"
-            class="inline-flex items-center gap-1.5 rounded-full bg-gray-900 py-1 pl-1 pr-2.5 transition-colors hover:bg-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700"
+            class="inline-flex items-center gap-1.5 rounded-full bg-surface-dark py-1 pl-1 pr-2.5 transition-colors hover:bg-surface-dark-elevated"
           >
             <span
-              class="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[10px] font-semibold text-white"
+              class="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-semibold text-on-primary"
             >
               {{ userInitial }}
             </span>
-            <span class="text-xs font-medium text-white">{{ t('home.dashboard') }}</span>
+            <span class="text-xs font-medium text-on-primary">{{
+              t("home.dashboard")
+            }}</span>
             <svg
-              class="h-3 w-3 text-gray-400"
+              class="h-3 w-3 text-muted-soft"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -102,44 +82,69 @@
           <router-link
             v-else
             to="/login"
-            class="inline-flex items-center rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700"
+            class="inline-flex items-center rounded-full bg-surface-dark px-4 py-2 text-xs font-medium text-on-primary transition-colors hover:bg-surface-dark-elevated"
           >
-            {{ t('home.login') }}
+            {{ t("home.login") }}
           </router-link>
         </div>
       </nav>
     </header>
 
     <!-- Main Content -->
-    <main class="relative z-10 flex-1 px-6 py-16">
+    <main class="relative z-10 flex-1 px-6">
       <div class="mx-auto max-w-6xl">
-        <!-- Hero Section - Left/Right Layout -->
-        <div class="mb-12 flex flex-col items-center justify-between gap-12 lg:flex-row lg:gap-16">
-          <!-- Left: Text Content -->
-          <div class="flex-1 text-center lg:text-left">
+        <section
+          class="grid min-h-[calc(100vh-5rem)] items-center gap-10 py-14 lg:grid-cols-[0.95fr_1.05fr] lg:py-20"
+        >
+          <div class="text-center lg:text-left">
+            <p
+              class="mb-5 text-xs font-medium uppercase tracking-[0.22em] text-primary-700"
+            >
+              API Gateway Platform
+            </p>
             <h1
-              class="mb-4 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl lg:text-6xl"
+              class="mb-5 font-display text-5xl font-medium leading-[1.02] text-ink md:text-6xl lg:text-7xl"
             >
               {{ siteName }}
             </h1>
-            <p class="mb-8 text-lg text-gray-600 dark:text-dark-300 md:text-xl">
+            <p
+              class="mx-auto mb-8 max-w-2xl text-lg leading-8 text-body lg:mx-0 md:text-xl"
+            >
               {{ siteSubtitle }}
             </p>
 
-            <!-- CTA Button -->
-            <div>
+            <div
+              class="flex flex-col items-center gap-3 sm:flex-row lg:items-start"
+            >
               <router-link
                 :to="isAuthenticated ? dashboardPath : '/login'"
-                class="btn btn-primary px-8 py-3 text-base shadow-lg shadow-primary-500/30"
+                class="btn btn-primary px-8 py-3 text-base"
               >
-                {{ isAuthenticated ? t('home.goToDashboard') : t('home.getStarted') }}
-                <Icon name="arrowRight" size="md" class="ml-2" :stroke-width="2" />
+                {{
+                  isAuthenticated
+                    ? t("home.goToDashboard")
+                    : t("home.getStarted")
+                }}
+                <Icon
+                  name="arrowRight"
+                  size="md"
+                  class="ml-2"
+                  :stroke-width="2"
+                />
               </router-link>
+              <a
+                v-if="docUrl"
+                :href="docUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-secondary px-8 py-3 text-base"
+              >
+                {{ t("home.viewDocs") }}
+              </a>
             </div>
           </div>
 
-          <!-- Right: Terminal Animation -->
-          <div class="flex flex-1 justify-center lg:justify-end">
+          <div class="flex justify-center lg:justify-end">
             <div class="terminal-container">
               <div class="terminal-window">
                 <!-- Window header -->
@@ -154,19 +159,43 @@
                 <!-- Terminal content -->
                 <div class="terminal-body">
                   <div class="code-line line-1">
-                    <span class="code-prompt">$</span>
-                    <span class="code-cmd">curl</span>
-                    <span class="code-flag">-X POST</span>
-                    <span class="code-url">/v1/messages</span>
+                    <span class="code-prompt">{{ shellUsername }}@chatgpt</span>
+                    <span class="code-path">~ $</span>
+                    <span class="code-cmd">motd</span>
                   </div>
                   <div class="code-line line-2">
-                    <span class="code-comment"># Routing to upstream...</span>
+                    <span class="code-welcome">Welcome to {{ siteName }}</span>
                   </div>
                   <div class="code-line line-3">
-                    <span class="code-success">200 OK</span>
-                    <span class="code-response">{ "content": "Hello!" }</span>
+                    <span class="code-success">认证入口已在线</span>
                   </div>
-                  <div class="code-line line-4">
+                  <template v-if="geoStatus === 'loading'">
+                    <div class="code-line line-4">
+                      <span class="code-comment">正在解析地理位置...</span>
+                    </div>
+                  </template>
+                  <template v-else-if="geoStatus === 'success'">
+                    <div class="code-line motd-row line-4">
+                      <span class="code-label">IP</span>
+                      <span class="code-value">{{ geoInfo.ip }}</span>
+                    </div>
+                    <div class="code-line motd-row line-5">
+                      <span class="code-label">ASN</span>
+                      <span class="code-value code-value-wrap">{{
+                        geoInfo.asnText
+                      }}</span>
+                    </div>
+                    <div class="code-line motd-row line-6">
+                      <span class="code-label">来源国家</span>
+                      <span class="code-value">{{ geoInfo.countryName }}</span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="code-line line-4">
+                      <span class="code-error">IP 解析失败</span>
+                    </div>
+                  </template>
+                  <div class="code-line line-cursor">
                     <span class="code-prompt">$</span>
                     <span class="cursor"></span>
                   </div>
@@ -174,32 +203,33 @@
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Feature Tags - Centered -->
-        <div class="mb-12 flex flex-wrap items-center justify-center gap-4 md:gap-6">
+        <div
+          class="mb-12 flex flex-wrap items-center justify-center gap-3 md:gap-4"
+        >
           <div
-            class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
+            class="inline-flex items-center gap-2.5 rounded-full border border-hairline bg-cream px-5 py-2.5 shadow-sm"
           >
-            <Icon name="swap" size="sm" class="text-primary-500" />
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.subscriptionToApi')
+            <Icon name="swap" size="sm" class="text-primary-700" />
+            <span class="text-sm font-medium text-ink">{{
+              t("home.tags.subscriptionToApi")
             }}</span>
           </div>
           <div
-            class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
+            class="inline-flex items-center gap-2.5 rounded-full border border-hairline bg-cream px-5 py-2.5 shadow-sm"
           >
-            <Icon name="shield" size="sm" class="text-primary-500" />
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.stickySession')
+            <Icon name="shield" size="sm" class="text-primary-700" />
+            <span class="text-sm font-medium text-ink">{{
+              t("home.tags.stickySession")
             }}</span>
           </div>
           <div
-            class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
+            class="inline-flex items-center gap-2.5 rounded-full border border-hairline bg-cream px-5 py-2.5 shadow-sm"
           >
-            <Icon name="chart" size="sm" class="text-primary-500" />
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.realtimeBilling')
+            <Icon name="chart" size="sm" class="text-primary-700" />
+            <span class="text-sm font-medium text-ink">{{
+              t("home.tags.realtimeBilling")
             }}</span>
           </div>
         </div>
@@ -208,30 +238,30 @@
         <div class="mb-12 grid gap-6 md:grid-cols-3">
           <!-- Feature 1: Unified Gateway -->
           <div
-            class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
+            class="group rounded-lg border border-hairline bg-surface-card p-7 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover"
           >
             <div
-              class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110"
+              class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-surface-dark text-on-primary transition-transform group-hover:scale-105"
             >
-              <Icon name="server" size="lg" class="text-white" />
+              <Icon name="server" size="lg" class="text-on-primary" />
             </div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('home.features.unifiedGateway') }}
-            </h3>
-            <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
-              {{ t('home.features.unifiedGatewayDesc') }}
+            <h2 class="mb-2 font-display text-2xl font-medium text-ink">
+              {{ t("home.features.unifiedGateway") }}
+            </h2>
+            <p class="text-sm leading-relaxed text-body">
+              {{ t("home.features.unifiedGatewayDesc") }}
             </p>
           </div>
 
           <!-- Feature 2: Account Pool -->
           <div
-            class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
+            class="group rounded-lg border border-hairline bg-surface-card p-7 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover"
           >
             <div
-              class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30 transition-transform group-hover:scale-110"
+              class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-primary-500 text-on-primary transition-transform group-hover:scale-105"
             >
               <svg
-                class="h-6 w-6 text-white"
+                class="h-6 w-6 text-on-primary"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -244,23 +274,23 @@
                 />
               </svg>
             </div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('home.features.multiAccount') }}
-            </h3>
-            <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
-              {{ t('home.features.multiAccountDesc') }}
+            <h2 class="mb-2 font-display text-2xl font-medium text-ink">
+              {{ t("home.features.multiAccount") }}
+            </h2>
+            <p class="text-sm leading-relaxed text-body">
+              {{ t("home.features.multiAccountDesc") }}
             </p>
           </div>
 
           <!-- Feature 3: Billing & Quota -->
           <div
-            class="group rounded-2xl border border-gray-200/50 bg-white/60 p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 dark:border-dark-700/50 dark:bg-dark-800/60"
+            class="group rounded-lg border border-hairline bg-surface-card p-7 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover"
           >
             <div
-              class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30 transition-transform group-hover:scale-110"
+              class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-accent-amber text-on-primary transition-transform group-hover:scale-105"
             >
               <svg
-                class="h-6 w-6 text-white"
+                class="h-6 w-6 text-on-primary"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -273,99 +303,107 @@
                 />
               </svg>
             </div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              {{ t('home.features.balanceQuota') }}
-            </h3>
-            <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-400">
-              {{ t('home.features.balanceQuotaDesc') }}
+            <h2 class="mb-2 font-display text-2xl font-medium text-ink">
+              {{ t("home.features.balanceQuota") }}
+            </h2>
+            <p class="text-sm leading-relaxed text-body">
+              {{ t("home.features.balanceQuotaDesc") }}
             </p>
           </div>
         </div>
 
         <!-- Supported Providers -->
         <div class="mb-8 text-center">
-          <h2 class="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
-            {{ t('home.providers.title') }}
+          <h2 class="mb-3 font-display text-4xl font-medium text-ink">
+            {{ t("home.providers.title") }}
           </h2>
-          <p class="text-sm text-gray-600 dark:text-dark-400">
-            {{ t('home.providers.description') }}
+          <p class="text-sm text-muted">
+            {{ t("home.providers.description") }}
           </p>
         </div>
 
         <div class="mb-16 flex flex-wrap items-center justify-center gap-4">
           <!-- Claude - Supported -->
           <div
-            class="flex items-center gap-2 rounded-xl border border-primary-200 bg-white/60 px-5 py-3 ring-1 ring-primary-500/20 backdrop-blur-sm dark:border-primary-800 dark:bg-dark-800/60"
+            class="flex items-center gap-2 rounded-lg border border-primary-200 bg-canvas px-5 py-3 ring-1 ring-primary-500/10"
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-500"
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-500"
             >
-              <span class="text-xs font-bold text-white">C</span>
+              <span class="text-xs font-bold text-on-primary">C</span>
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ t('home.providers.claude') }}</span>
+            <span class="text-sm font-medium text-body">{{
+              t("home.providers.claude")
+            }}</span>
             <span
-              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-              >{{ t('home.providers.supported') }}</span
+              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+              >{{ t("home.providers.supported") }}</span
             >
           </div>
           <!-- GPT - Supported -->
           <div
-            class="flex items-center gap-2 rounded-xl border border-primary-200 bg-white/60 px-5 py-3 ring-1 ring-primary-500/20 backdrop-blur-sm dark:border-primary-800 dark:bg-dark-800/60"
+            class="flex items-center gap-2 rounded-lg border border-primary-200 bg-canvas px-5 py-3 ring-1 ring-primary-500/10"
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600"
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-dark"
             >
-              <span class="text-xs font-bold text-white">G</span>
+              <span class="text-xs font-bold text-on-primary">G</span>
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">GPT</span>
+            <span class="text-sm font-medium text-body">GPT</span>
             <span
-              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-              >{{ t('home.providers.supported') }}</span
+              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+              >{{ t("home.providers.supported") }}</span
             >
           </div>
           <!-- Gemini - Supported -->
           <div
-            class="flex items-center gap-2 rounded-xl border border-primary-200 bg-white/60 px-5 py-3 ring-1 ring-primary-500/20 backdrop-blur-sm dark:border-primary-800 dark:bg-dark-800/60"
+            class="flex items-center gap-2 rounded-lg border border-primary-200 bg-canvas px-5 py-3 ring-1 ring-primary-500/10"
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600"
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-amber"
             >
-              <span class="text-xs font-bold text-white">G</span>
+              <span class="text-xs font-bold text-on-primary">G</span>
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ t('home.providers.gemini') }}</span>
+            <span class="text-sm font-medium text-body">{{
+              t("home.providers.gemini")
+            }}</span>
             <span
-              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-              >{{ t('home.providers.supported') }}</span
+              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+              >{{ t("home.providers.supported") }}</span
             >
           </div>
           <!-- Antigravity - Supported -->
           <div
-            class="flex items-center gap-2 rounded-xl border border-primary-200 bg-white/60 px-5 py-3 ring-1 ring-primary-500/20 backdrop-blur-sm dark:border-primary-800 dark:bg-dark-800/60"
+            class="flex items-center gap-2 rounded-lg border border-primary-200 bg-canvas px-5 py-3 ring-1 ring-primary-500/10"
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600"
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-error"
             >
-              <span class="text-xs font-bold text-white">A</span>
+              <span class="text-xs font-bold text-on-primary">A</span>
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ t('home.providers.antigravity') }}</span>
+            <span class="text-sm font-medium text-body">{{
+              t("home.providers.antigravity")
+            }}</span>
             <span
-              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-              >{{ t('home.providers.supported') }}</span
+              class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+              >{{ t("home.providers.supported") }}</span
             >
           </div>
           <!-- More - Coming Soon -->
           <div
-            class="flex items-center gap-2 rounded-xl border border-gray-200/50 bg-white/40 px-5 py-3 opacity-60 backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/40"
+            class="flex items-center gap-2 rounded-lg border border-dashed border-hairline bg-cream px-5 py-3"
           >
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-500 to-gray-600"
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted"
             >
-              <span class="text-xs font-bold text-white">+</span>
+              <span class="text-xs font-bold text-on-primary">+</span>
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ t('home.providers.more') }}</span>
+            <span class="text-sm font-medium text-body">{{
+              t("home.providers.more")
+            }}</span>
             <span
-              class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-dark-700 dark:text-dark-400"
-              >{{ t('home.providers.soon') }}</span
+              class="rounded bg-canvas px-1.5 py-0.5 text-[10px] font-medium text-body-strong"
+              >{{ t("home.providers.soon") }}</span
             >
           </div>
         </div>
@@ -373,12 +411,15 @@
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 border-t border-gray-200/50 px-6 py-8 dark:border-dark-800/50">
+    <footer
+      class="relative z-10 border-t border-hairline bg-cream/55 px-6 py-8"
+    >
       <div
         class="mx-auto flex max-w-6xl flex-col items-center justify-center gap-4 text-center sm:flex-row sm:text-left"
       >
-        <p class="text-sm text-gray-500 dark:text-dark-400">
-          &copy; {{ currentYear }} {{ siteName }}. {{ t('home.footer.allRightsReserved') }}
+        <p class="text-sm text-muted">
+          &copy; {{ currentYear }} {{ siteName }}.
+          {{ t("home.footer.allRightsReserved") }}
         </p>
         <div class="flex items-center gap-4">
           <a
@@ -386,15 +427,15 @@
             :href="docUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-dark-400 dark:hover:text-white"
+            class="text-sm text-muted transition-colors hover:text-ink"
           >
-            {{ t('home.docs') }}
+            {{ t("home.docs") }}
           </a>
           <a
             :href="githubUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-dark-400 dark:hover:text-white"
+            class="text-sm text-muted transition-colors hover:text-ink"
           >
             GitHub
           </a>
@@ -405,79 +446,224 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useAuthStore, useAppStore } from '@/stores'
-import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
-import Icon from '@/components/icons/Icon.vue'
+import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useAuthStore, useAppStore } from "@/stores";
+import LocaleSwitcher from "@/components/common/LocaleSwitcher.vue";
+import Icon from "@/components/icons/Icon.vue";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const authStore = useAuthStore()
-const appStore = useAppStore()
+const authStore = useAuthStore();
+const appStore = useAppStore();
 
 // Site settings - directly from appStore (already initialized from injected config)
-const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
-const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
-const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || 'AI API Gateway Platform')
-const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
-const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
+const siteName = computed(
+  () =>
+    appStore.cachedPublicSettings?.site_name || appStore.siteName || "Sub2API",
+);
+const siteLogo = computed(
+  () => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || "",
+);
+const siteSubtitle = computed(
+  () =>
+    appStore.cachedPublicSettings?.site_subtitle || "AI API Gateway Platform",
+);
+const docUrl = computed(
+  () => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || "",
+);
+const homeContent = computed(
+  () => appStore.cachedPublicSettings?.home_content || "",
+);
 
 // Check if homeContent is a URL (for iframe display)
 const isHomeContentUrl = computed(() => {
-  const content = homeContent.value.trim()
-  return content.startsWith('http://') || content.startsWith('https://')
-})
-
-// Theme
-const isDark = ref(document.documentElement.classList.contains('dark'))
+  const content = homeContent.value.trim();
+  return content.startsWith("http://") || content.startsWith("https://");
+});
 
 // GitHub URL
-const githubUrl = 'https://github.com/Wei-Shaw/sub2api'
+const githubUrl = "https://github.com/Wei-Shaw/sub2api";
 
 // Auth state
-const isAuthenticated = computed(() => authStore.isAuthenticated)
-const isAdmin = computed(() => authStore.isAdmin)
-const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const isAdmin = computed(() => authStore.isAdmin);
+const dashboardPath = computed(() =>
+  isAdmin.value ? "/admin/dashboard" : "/dashboard",
+);
 const userInitial = computed(() => {
-  const user = authStore.user
-  if (!user || !user.email) return ''
-  return user.email.charAt(0).toUpperCase()
-})
+  const user = authStore.user;
+  if (!user || !user.email) return "";
+  return user.email.charAt(0).toUpperCase();
+});
+const shellUsername = computed(() => {
+  const username = authStore.user?.username?.trim();
+  return username || "guest";
+});
 
-// Current year for footer
-const currentYear = computed(() => new Date().getFullYear())
+type GeoStatus = "loading" | "success" | "error";
 
-// Toggle theme
-function toggleTheme() {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+interface GeoInfo {
+  ip: string;
+  asnText: string;
+  countryName: string;
 }
 
-// Initialize theme
-function initTheme() {
-  const savedTheme = localStorage.getItem('theme')
-  if (
-    savedTheme === 'dark' ||
-    (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  ) {
-    isDark.value = true
-    document.documentElement.classList.add('dark')
+const GEO_REQUEST_TIMEOUT_MS = 2500;
+const geoStatus = ref<GeoStatus>("loading");
+const geoInfo = ref<GeoInfo>({
+  ip: "",
+  asnText: "",
+  countryName: "",
+});
+
+const geoEndpoints = [
+  "https://api.ip.sb/geoip",
+  "https://api.country.is/?fields=asn",
+] as const;
+
+function getRecord(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+}
+
+function getString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getNumberOrString(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return getString(value);
+}
+
+function countryCodeToName(countryCode: string): string {
+  if (!countryCode) {
+    return "";
+  }
+
+  try {
+    return (
+      new Intl.DisplayNames(["en"], { type: "region" }).of(
+        countryCode.toUpperCase(),
+      ) || countryCode.toUpperCase()
+    );
+  } catch {
+    return countryCode.toUpperCase();
   }
 }
 
-onMounted(() => {
-  initTheme()
+function normalizeCountryName(data: Record<string, unknown>): string {
+  const countryName = getString(data.country_name);
+  if (countryName) {
+    return countryName;
+  }
 
+  const country = getString(data.country);
+  if (country.length === 2) {
+    return countryCodeToName(country);
+  }
+
+  return country || countryCodeToName(getString(data.country_code));
+}
+
+function normalizeAsnText(data: Record<string, unknown>): string {
+  const nestedAsn = getRecord(data.asn);
+  const asnNumber =
+    getNumberOrString(data.asn) ||
+    getNumberOrString(data.asn_number) ||
+    getNumberOrString(nestedAsn?.number);
+  const organization =
+    getString(data.asn_organization) ||
+    getString(data.organization) ||
+    getString(data.isp) ||
+    getString(nestedAsn?.organization);
+
+  if (asnNumber && organization) {
+    return `AS${asnNumber.replace(/^AS/i, "")} (${organization})`;
+  }
+  if (asnNumber) {
+    return `AS${asnNumber.replace(/^AS/i, "")}`;
+  }
+  return organization || "Unknown";
+}
+
+function normalizeGeoInfo(payload: unknown): GeoInfo | null {
+  const data = getRecord(payload);
+  if (!data) {
+    return null;
+  }
+
+  const ip = getString(data.ip);
+  const countryName = normalizeCountryName(data);
+
+  if (!ip || !countryName) {
+    return null;
+  }
+
+  return {
+    ip,
+    asnText: normalizeAsnText(data),
+    countryName,
+  };
+}
+
+async function fetchGeoEndpoint(endpoint: string): Promise<GeoInfo | null> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(
+    () => controller.abort(),
+    GEO_REQUEST_TIMEOUT_MS,
+  );
+
+  try {
+    const response = await fetch(endpoint, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      return null;
+    }
+
+    return normalizeGeoInfo(await response.json());
+  } catch {
+    return null;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+async function loadGeoInfo(): Promise<void> {
+  geoStatus.value = "loading";
+
+  for (const endpoint of geoEndpoints) {
+    const result = await fetchGeoEndpoint(endpoint);
+    if (result) {
+      geoInfo.value = result;
+      geoStatus.value = "success";
+      return;
+    }
+  }
+
+  geoStatus.value = "error";
+}
+
+// Current year for footer
+const currentYear = computed(() => new Date().getFullYear());
+
+onMounted(() => {
   // Check auth state
-  authStore.checkAuth()
+  authStore.checkAuth();
 
   // Ensure public settings are loaded (will use cache if already loaded from injected config)
   if (!appStore.publicSettingsLoaded) {
-    appStore.fetchPublicSettings()
+    appStore.fetchPublicSettings();
   }
-})
+
+  loadGeoInfo();
+});
 </script>
 
 <style scoped>
@@ -485,19 +671,21 @@ onMounted(() => {
 .terminal-container {
   position: relative;
   display: inline-block;
+  max-width: 100%;
 }
 
 /* Terminal Window */
 .terminal-window {
   width: 420px;
-  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-  border-radius: 14px;
+  max-width: min(420px, calc(100vw - 3rem));
+  background: #181715;
+  border-radius: 12px;
   box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 0 1px rgba(250, 249, 245, 0.1),
+    inset 0 1px 0 rgba(250, 249, 245, 0.1);
   overflow: hidden;
-  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);
+  transform: perspective(1000px) rotateX(1.5deg) rotateY(-1.5deg);
   transition: transform 0.3s ease;
 }
 
@@ -510,8 +698,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  background: rgba(30, 41, 59, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(37, 35, 32, 0.9);
+  border-bottom: 1px solid rgba(250, 249, 245, 0.05);
 }
 
 .terminal-buttons {
@@ -526,13 +714,13 @@ onMounted(() => {
 }
 
 .btn-close {
-  background: #ef4444;
+  background: #c64545;
 }
 .btn-minimize {
-  background: #eab308;
+  background: #d4a017;
 }
 .btn-maximize {
-  background: #22c55e;
+  background: #5db872;
 }
 
 .terminal-title {
@@ -540,14 +728,14 @@ onMounted(() => {
   text-align: center;
   font-size: 12px;
   font-family: ui-monospace, monospace;
-  color: #64748b;
+  color: #a09d96;
   margin-right: 52px;
 }
 
 /* Terminal Body */
 .terminal-body {
   padding: 20px 24px;
-  font-family: ui-monospace, 'Fira Code', monospace;
+  font-family: ui-monospace, "Fira Code", monospace;
   font-size: 14px;
   line-height: 2;
 }
@@ -559,6 +747,12 @@ onMounted(() => {
   flex-wrap: wrap;
   opacity: 0;
   animation: line-appear 0.5s ease forwards;
+}
+.motd-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 8px;
 }
 
 .line-1 {
@@ -573,6 +767,15 @@ onMounted(() => {
 .line-4 {
   animation-delay: 2.5s;
 }
+.line-5 {
+  animation-delay: 3.1s;
+}
+.line-6 {
+  animation-delay: 3.7s;
+}
+.line-cursor {
+  animation-delay: 4.3s;
+}
 
 @keyframes line-appear {
   from {
@@ -586,31 +789,46 @@ onMounted(() => {
 }
 
 .code-prompt {
-  color: #22c55e;
+  color: #5db872;
   font-weight: bold;
 }
+.code-path {
+  color: #a09d96;
+}
 .code-cmd {
-  color: #38bdf8;
-}
-.code-flag {
-  color: #a78bfa;
-}
-.code-url {
-  color: #14b8a6;
+  color: #e8a55a;
 }
 .code-comment {
-  color: #64748b;
+  color: #a09d96;
   font-style: italic;
 }
+.code-welcome {
+  color: #e8dfd5;
+}
 .code-success {
-  color: #22c55e;
+  color: #5db872;
   background: rgba(34, 197, 94, 0.15);
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 600;
 }
-.code-response {
-  color: #fbbf24;
+.code-label {
+  color: #cc785c;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.code-value {
+  color: #e8a55a;
+  min-width: 0;
+  white-space: normal;
+}
+.code-value-wrap {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.code-error {
+  color: #c64545;
+  font-weight: 600;
 }
 
 /* Blinking Cursor */
@@ -618,7 +836,7 @@ onMounted(() => {
   display: inline-block;
   width: 8px;
   height: 16px;
-  background: #22c55e;
+  background: #cc785c;
   animation: blink 1s step-end infinite;
 }
 
@@ -631,14 +849,5 @@ onMounted(() => {
   100% {
     opacity: 0;
   }
-}
-
-/* Dark mode adjustments */
-:deep(.dark) .terminal-window {
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(20, 184, 166, 0.2),
-    0 0 40px rgba(20, 184, 166, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 </style>
