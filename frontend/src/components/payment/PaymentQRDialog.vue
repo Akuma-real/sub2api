@@ -192,7 +192,7 @@ async function renderQR() {
   if (!qrCanvas.value || !qrUrl.value) return;
   const logoSrc = getLogoForType();
   await QRCode.toCanvas(qrCanvas.value, qrUrl.value, {
-    width: 220,
+    width: 288,
     margin: 2,
     errorCorrectionLevel: logoSrc ? "M" : "L",
   });
@@ -203,10 +203,10 @@ async function renderQR() {
   const img = new Image();
   img.src = logoSrc;
   img.onload = () => {
-    const logoSize = 40;
+    const logoSize = 52;
     const x = (canvas.width - logoSize) / 2;
     const y = (canvas.height - logoSize) / 2;
-    const pad = 4;
+    const pad = 5;
     ctx.fillStyle = "#faf9f5";
     ctx.beginPath();
     const r = 5;

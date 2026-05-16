@@ -347,6 +347,8 @@
                   :key="plan.id"
                   :plan="plan"
                   :active-subscriptions="activeSubscriptions"
+                  :currency="selectedCurrency"
+                  :locale="localeCode"
                   @select="selectPlan"
                 />
               </div>
@@ -479,6 +481,8 @@
                 :key="plan.id"
                 :plan="plan"
                 :active-subscriptions="activeSubscriptions"
+                :currency="selectedCurrency"
+                :locale="localeCode"
                 @select="selectPlanFromModal"
               />
             </div>

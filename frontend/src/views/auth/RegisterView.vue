@@ -91,6 +91,31 @@
           </p>
         </div>
 
+        <!-- Confirm Password Input -->
+        <div>
+          <label for="password_confirm" class="input-label">
+            {{ t("auth.confirmPassword") }}
+          </label>
+          <div class="relative">
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5"
+            >
+              <Icon name="lock" size="md" class="text-muted-soft" />
+            </div>
+            <input
+              id="password_confirm"
+              v-model="formData.password_confirm"
+              :type="showPassword ? 'text' : 'password'"
+              required
+              autocomplete="new-password"
+              :disabled="registrationActionDisabled"
+              class="input pl-11"
+              :class="{ 'input-error': errors.password_confirm }"
+              :placeholder="t('auth.confirmPasswordPlaceholder')"
+            />
+          </div>
+        </div>
+
         <!-- Invitation Code Input (Required when enabled) -->
         <div v-if="invitationCodeEnabled">
           <label for="invitation_code" class="input-label">
@@ -481,6 +506,7 @@ let invitationValidateTimeout: ReturnType<typeof setTimeout> | null = null;
 const formData = reactive({
   email: "",
   password: "",
+  password_confirm: "",
   promo_code: "",
   invitation_code: "",
   aff_code: "",
@@ -489,6 +515,7 @@ const formData = reactive({
 const errors = reactive({
   email: "",
   password: "",
+  password_confirm: "",
   turnstile: "",
   invitation_code: "",
 });
@@ -497,6 +524,7 @@ const validationToastMessage = computed(
   () =>
     errors.email ||
     errors.password ||
+    errors.password_confirm ||
     (invitationValidation.invalid ? invitationValidation.message : "") ||
     errors.invitation_code ||
     (promoValidation.invalid ? promoValidation.message : "") ||
@@ -851,6 +879,7 @@ function validateForm(): boolean {
   // Reset errors
   errors.email = "";
   errors.password = "";
+  errors.password_confirm = "";
   errors.turnstile = "";
   errors.invitation_code = "";
 
@@ -887,6 +916,15 @@ function validateForm(): boolean {
     isValid = false;
   } else if (formData.password.length < 6) {
     errors.password = t("auth.passwordMinLength");
+    isValid = false;
+  }
+
+  // Confirm password validation
+  if (!formData.password_confirm) {
+    errors.password_confirm = t("auth.confirmPasswordRequired");
+    isValid = false;
+  } else if (formData.password && formData.password !== formData.password_confirm) {
+    errors.password_confirm = t("auth.passwordsDoNotMatch");
     isValid = false;
   }
 

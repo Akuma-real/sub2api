@@ -36,10 +36,9 @@
         </div>
         <div class="shrink-0 text-right">
           <div class="flex items-baseline gap-1">
-            <span class="text-xs text-muted-soft">$</span>
             <span
               :class="['text-2xl font-extrabold tracking-tight', textClass]"
-              >{{ plan.price }}</span
+              >{{ priceDisplay }}</span
             >
           </div>
           <span class="text-[11px] text-muted-soft"
@@ -50,7 +49,7 @@
             class="mt-0.5 flex items-center justify-end gap-1.5"
           >
             <span class="text-xs text-muted-soft line-through"
-              >${{ plan.original_price }}</span
+              >{{ originalPriceDisplay }}</span
             >
             <span
               :class="[
@@ -181,6 +180,10 @@ import { useI18n } from "vue-i18n";
 import type { SubscriptionPlan } from "@/types/payment";
 import type { UserSubscription } from "@/types";
 import {
+  formatPaymentAmount,
+  normalizePaymentCurrency,
+} from "@/components/payment/currency";
+import {
   platformAccentBarClass,
   platformBadgeLightClass,
   platformBorderClass,
@@ -194,9 +197,31 @@ import {
 const props = defineProps<{
   plan: SubscriptionPlan;
   activeSubscriptions?: UserSubscription[];
+  currency?: string | null;
+  locale?: string;
 }>();
 const emit = defineEmits<{ select: [plan: SubscriptionPlan] }>();
 const { t } = useI18n();
+
+const paymentCurrency = computed(() =>
+  normalizePaymentCurrency(props.currency),
+);
+const priceDisplay = computed(() =>
+  formatPaymentAmount(
+    Number(props.plan.price) || 0,
+    paymentCurrency.value,
+    props.locale,
+  ),
+);
+const originalPriceDisplay = computed(() =>
+  props.plan.original_price
+    ? formatPaymentAmount(
+        Number(props.plan.original_price) || 0,
+        paymentCurrency.value,
+        props.locale,
+      )
+    : "",
+);
 
 const platform = computed(() => props.plan.group_platform || "");
 const isRenewal = computed(
@@ -236,6 +261,7 @@ const MODEL_SCOPE_LABELS: Record<string, string> = {
 };
 
 const modelScopeLabels = computed(() => {
+  if (platform.value !== "antigravity") return [];
   const scopes = props.plan.supported_model_scopes;
   if (!scopes || scopes.length === 0) return [];
   return scopes.map((s) => MODEL_SCOPE_LABELS[s] || s);

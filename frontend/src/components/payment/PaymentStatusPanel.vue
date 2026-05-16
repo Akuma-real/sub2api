@@ -346,7 +346,7 @@ async function renderQR() {
   await nextTick();
   if (!qrCanvas.value || !qrUrl.value) return;
   await QRCode.toCanvas(qrCanvas.value, qrUrl.value, {
-    width: 220,
+    width: 288,
     margin: 2,
     errorCorrectionLevel: "M",
   });
