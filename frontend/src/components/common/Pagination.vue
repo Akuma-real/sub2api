@@ -71,14 +71,14 @@
 
       <!-- Desktop pagination buttons -->
       <nav
-        class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm"
+        class="relative z-0 inline-flex justify-end -space-x-px rounded-md shadow-sm sm:w-[24.75rem]"
         aria-label="Pagination"
       >
         <!-- Previous button -->
         <button
           @click="goToPage(page - 1)"
           :disabled="page === 1"
-          class="relative inline-flex items-center rounded-l-md border border-hairline bg-canvas px-2 py-2 text-sm font-medium text-muted hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-50"
+          class="relative inline-flex h-9 w-9 items-center justify-center rounded-l-md border border-hairline bg-canvas text-sm font-medium text-muted hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-50"
           :aria-label="t('pagination.previous')"
         >
           <Icon name="chevronLeft" size="md" />
@@ -87,11 +87,12 @@
         <!-- Page numbers -->
         <button
           v-for="(pageNum, index) in visiblePages"
-          :key="`${pageNum}-${index}`"
+          :key="`${pageNum ?? 'spacer'}-${index}`"
           @click="typeof pageNum === 'number' && goToPage(pageNum)"
           :disabled="typeof pageNum !== 'number'"
           :class="[
-            'relative inline-flex items-center border px-4 py-2 text-sm font-medium',
+            'relative inline-flex h-9 w-9 items-center justify-center border text-sm font-medium',
+            pageNum === null && 'invisible pointer-events-none',
             pageNum === page
               ? 'z-10 border-primary-500 bg-primary-50 text-primary-600 '
               : 'border-hairline bg-canvas text-body hover:bg-surface-soft ',
@@ -103,6 +104,7 @@
               : undefined
           "
           :aria-current="pageNum === page ? 'page' : undefined"
+          :aria-hidden="pageNum === null ? 'true' : undefined"
         >
           {{ pageNum }}
         </button>
@@ -111,7 +113,7 @@
         <button
           @click="goToPage(page + 1)"
           :disabled="page === totalPages"
-          class="relative inline-flex items-center rounded-r-md border border-hairline bg-canvas px-2 py-2 text-sm font-medium text-muted hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-50"
+          class="relative inline-flex h-9 w-9 items-center justify-center rounded-r-md border border-hairline bg-canvas text-sm font-medium text-muted hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-50"
           :aria-label="t('pagination.next')"
         >
           <Icon name="chevronRight" size="md" />
@@ -185,7 +187,7 @@ const pageSizeSelectOptions = computed(() => {
 const jumpPage = ref("");
 
 const visiblePages = computed(() => {
-  const pages: (number | string)[] = [];
+  const pages: (number | string | null)[] = [];
   const maxVisible = 7;
   const total = totalPages.value;
 
@@ -218,6 +220,14 @@ const visiblePages = computed(() => {
 
     // Always show last page
     pages.push(total);
+
+    while (pages.length < 9) {
+      if (props.page <= 4) {
+        pages.splice(pages.length - 1, 0, null);
+      } else {
+        pages.splice(1, 0, null);
+      }
+    }
   }
 
   return pages;

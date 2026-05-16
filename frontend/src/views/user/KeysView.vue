@@ -419,6 +419,14 @@
             <div class="flex items-center gap-1">
               <!-- Use Key Button -->
               <button
+                @click="openModelsDialog(row)"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted transition-colors hover:bg-surface-card hover:text-primary-600"
+                :title="t('keys.viewModels')"
+              >
+                <Icon name="cube" size="sm" />
+                <span class="text-xs">{{ t("keys.models") }}</span>
+              </button>
+              <button
                 @click="openUseKeyModal(row)"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted transition-colors hover:bg-success/15 hover:text-success"
               >
@@ -1176,6 +1184,115 @@
       @close="closeUseKeyModal"
     />
 
+    <BaseDialog
+      :show="showModelsDialog"
+      :title="modelDialogTitle"
+      width="wide"
+      @close="closeModelsDialog"
+    >
+      <div v-if="!selectedKey?.group_id" class="py-8 text-center">
+        <Icon
+          name="cube"
+          size="xl"
+          class="mx-auto mb-3 h-12 w-12 text-muted-soft"
+        />
+        <p class="text-sm text-muted">{{ t("keys.modelListNoGroup") }}</p>
+      </div>
+      <div v-else-if="availableModelsLoading" class="py-8 text-center">
+        <Icon
+          name="refresh"
+          size="lg"
+          class="inline-block animate-spin text-muted-soft"
+        />
+        <p class="mt-3 text-sm text-muted">{{ t("common.loading") }}</p>
+      </div>
+      <div
+        v-else-if="
+          !selectedGroupModelSummary ||
+          selectedGroupModelSummary.modelCount === 0
+        "
+        class="py-8 text-center"
+      >
+        <Icon
+          name="inbox"
+          size="xl"
+          class="mx-auto mb-3 h-12 w-12 text-muted-soft"
+        />
+        <p class="text-sm text-muted">{{ t("keys.modelListEmpty") }}</p>
+      </div>
+      <div v-else class="space-y-5">
+        <div
+          class="flex flex-col gap-3 rounded-lg border border-hairline bg-surface-soft p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <GroupBadge
+                :name="selectedGroupModelSummary.groupName"
+                :platform="selectedGroupModelSummary.platform"
+                :subscription-type="selectedGroupModelSummary.subscriptionType"
+                :rate-multiplier="selectedGroupModelSummary.rateMultiplier"
+                :user-rate-multiplier="
+                  userGroupRates[selectedGroupModelSummary.groupId]
+                "
+              />
+              <span class="text-sm text-muted">
+                {{
+                  t("keys.modelCount", {
+                    count: selectedGroupModelSummary.modelCount,
+                  })
+                }}
+              </span>
+            </div>
+            <p
+              v-if="selectedGroupModelSummary.channelNames.length > 0"
+              class="mt-2 text-xs text-muted"
+            >
+              {{ t("keys.modelSource") }}:
+              {{ selectedGroupModelSummary.channelNames.join(", ") }}
+            </p>
+          </div>
+        </div>
+
+        <div class="max-h-[50vh] space-y-4 overflow-y-auto pr-1">
+          <section
+            v-for="section in selectedGroupModelSummary.channelSections"
+            :key="section.channelName"
+            class="space-y-2"
+          >
+            <div
+              class="flex items-center justify-between gap-3 border-b border-hairline-soft pb-1"
+            >
+              <h4 class="text-sm font-medium text-ink">
+                {{ section.channelName }}
+              </h4>
+              <span class="text-xs text-muted">
+                {{ t("keys.modelCount", { count: section.models.length }) }}
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <SupportedModelChip
+                v-for="model in section.models"
+                :key="`${section.channelName}-${model.platform}-${model.name}-${model.pricing ? JSON.stringify(model.pricing) : 'none'}`"
+                :model="model"
+                pricing-key-prefix="availableChannels.pricing"
+                :no-pricing-label="t('availableChannels.noPricing')"
+                :show-platform="true"
+                :platform-hint="selectedGroupModelSummary.platform"
+              />
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end">
+          <button class="btn btn-secondary" @click="closeModelsDialog">
+            {{ t("common.close") }}
+          </button>
+        </div>
+      </template>
+    </BaseDialog>
+
     <!-- CCS Client Selection Dialog for Antigravity -->
     <BaseDialog
       :show="showCcsClientSelect"
@@ -1274,7 +1391,7 @@
             :key="option.value ?? 'null'"
             @click="changeGroup(selectedKeyForGroup!, option.value)"
             :class="[
-              'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors',
+              'block w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors',
               'border-b border-hairline-soft last:border-0 ',
               selectedKeyForGroup?.group_id === option.value ||
               (!selectedKeyForGroup?.group_id && option.value === null)
@@ -1295,6 +1412,46 @@
                 (!selectedKeyForGroup?.group_id && option.value === null)
               "
             />
+            <div class="mt-2 flex flex-wrap items-center gap-1">
+              <span
+                v-if="availableModelsLoading"
+                class="inline-flex items-center gap-1 text-xs text-muted-soft"
+              >
+                <Icon name="refresh" size="xs" class="animate-spin" />
+                {{ t("keys.modelListLoading") }}
+              </span>
+              <span
+                v-else-if="availableModelsError"
+                class="text-xs text-warning"
+              >
+                {{ t("keys.modelListLoadFailed") }}
+              </span>
+              <template v-else-if="getGroupModelNames(option.value).length > 0">
+                <span
+                  v-for="modelName in getGroupModelNames(option.value).slice(
+                    0,
+                    3,
+                  )"
+                  :key="modelName"
+                  class="inline-flex max-w-[11rem] items-center truncate rounded-md border border-hairline-soft bg-surface-soft px-1.5 py-0.5 text-[11px] text-body"
+                >
+                  {{ modelName }}
+                </span>
+                <span
+                  v-if="getGroupModelNames(option.value).length > 3"
+                  class="inline-flex items-center rounded-md bg-primary-50 px-1.5 py-0.5 text-[11px] font-medium text-primary-700"
+                >
+                  {{
+                    t("keys.modelPreviewMore", {
+                      count: getGroupModelNames(option.value).length - 3,
+                    })
+                  }}
+                </span>
+              </template>
+              <span v-else class="text-xs text-muted-soft">
+                {{ t("keys.modelListEmpty") }}
+              </span>
+            </div>
           </button>
           <!-- Empty state when search has no results -->
           <div
@@ -1324,7 +1481,7 @@ import { useClipboard } from "@/composables/useClipboard";
 import { getPersistedPageSize } from "@/composables/usePersistedPageSize";
 
 const { t } = useI18n();
-import { keysAPI, authAPI, usageAPI, userGroupsAPI } from "@/api";
+import { keysAPI, authAPI, usageAPI, userGroupsAPI, userChannelsAPI } from "@/api";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import TablePageLayout from "@/components/layout/TablePageLayout.vue";
 import DataTable from "@/components/common/DataTable.vue";
@@ -1337,6 +1494,7 @@ import SearchInput from "@/components/common/SearchInput.vue";
 import Icon from "@/components/icons/Icon.vue";
 import UseKeyModal from "@/components/keys/UseKeyModal.vue";
 import EndpointPopover from "@/components/keys/EndpointPopover.vue";
+import SupportedModelChip from "@/components/channels/SupportedModelChip.vue";
 import GroupBadge from "@/components/common/GroupBadge.vue";
 import GroupOptionItem from "@/components/common/GroupOptionItem.vue";
 import type {
@@ -1348,6 +1506,7 @@ import type {
 } from "@/types";
 import type { Column } from "@/components/common/types";
 import type { BatchApiKeyUsageStats } from "@/api/usage";
+import type { UserAvailableChannel, UserSupportedModel } from "@/api/channels";
 import { formatDateTime } from "@/utils/format";
 import { maskApiKey } from "@/utils/maskApiKey";
 import {
@@ -1370,6 +1529,22 @@ interface GroupOption {
   userRate: number | null;
   subscriptionType: SubscriptionType;
   platform: GroupPlatform;
+}
+
+interface ChannelModelSection {
+  channelName: string;
+  models: UserSupportedModel[];
+}
+
+interface GroupModelSummary {
+  groupId: number;
+  groupName: string;
+  platform: GroupPlatform;
+  subscriptionType: SubscriptionType;
+  rateMultiplier: number;
+  channelNames: string[];
+  channelSections: ChannelModelSection[];
+  modelCount: number;
 }
 
 const appStore = useAppStore();
@@ -1420,12 +1595,16 @@ const showDeleteDialog = ref(false);
 const showResetQuotaDialog = ref(false);
 const showResetRateLimitDialog = ref(false);
 const showUseKeyModal = ref(false);
+const showModelsDialog = ref(false);
 const showCcsClientSelect = ref(false);
 const pendingCcsRow = ref<ApiKey | null>(null);
 const selectedKey = ref<ApiKey | null>(null);
 const copiedKeyId = ref<number | null>(null);
 const groupSelectorKeyId = ref<number | null>(null);
 const publicSettings = ref<PublicSettings | null>(null);
+const availableChannels = ref<UserAvailableChannel[]>([]);
+const availableModelsLoading = ref(false);
+const availableModelsError = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 const dropdownPosition = ref<{
   top?: number;
@@ -1434,6 +1613,107 @@ const dropdownPosition = ref<{
 } | null>(null);
 const groupButtonRefs = ref<Map<number, HTMLElement>>(new Map());
 let abortController: AbortController | null = null;
+
+const groupModelSummaries = computed<Record<number, GroupModelSummary>>(() => {
+  const summaries = new Map<
+    number,
+    Omit<GroupModelSummary, "channelSections" | "modelCount"> & {
+      channelNameSet: Set<string>;
+      channelSectionsMap: Map<string, UserSupportedModel[]>;
+    }
+  >();
+
+  for (const channel of availableChannels.value) {
+    for (const section of channel.platforms) {
+      for (const group of section.groups) {
+        let summary = summaries.get(group.id);
+        if (!summary) {
+          summary = {
+            groupId: group.id,
+            groupName: group.name,
+            platform: group.platform as GroupPlatform,
+            subscriptionType: (group.subscription_type || "standard") as SubscriptionType,
+            rateMultiplier: group.rate_multiplier,
+            channelNames: [],
+            channelNameSet: new Set<string>(),
+            channelSectionsMap: new Map<string, UserSupportedModel[]>(),
+          };
+          summaries.set(group.id, summary);
+        }
+
+        if (!summary.channelNameSet.has(channel.name)) {
+          summary.channelNameSet.add(channel.name);
+          summary.channelNames.push(channel.name);
+        }
+
+        const channelModels =
+          summary.channelSectionsMap.get(channel.name) ?? [];
+        const channelModelKeys = new Set(
+          channelModels.map(
+            (model) =>
+              `${model.platform}:${model.name}:${
+                model.pricing ? JSON.stringify(model.pricing) : "none"
+              }`,
+          ),
+        );
+
+        for (const model of section.supported_models) {
+          const modelWithPlatform = {
+            ...model,
+            platform: model.platform || section.platform,
+          };
+          const modelKey = `${modelWithPlatform.platform}:${modelWithPlatform.name}:${
+            modelWithPlatform.pricing
+              ? JSON.stringify(modelWithPlatform.pricing)
+              : "none"
+          }`;
+          if (!channelModelKeys.has(modelKey)) {
+            channelModelKeys.add(modelKey);
+            channelModels.push(modelWithPlatform);
+          }
+        }
+
+        summary.channelSectionsMap.set(channel.name, channelModels);
+      }
+    }
+  }
+
+  return Array.from(summaries.values()).reduce<Record<number, GroupModelSummary>>(
+    (acc, summary) => {
+      acc[summary.groupId] = {
+        groupId: summary.groupId,
+        groupName: summary.groupName,
+        platform: summary.platform,
+        subscriptionType: summary.subscriptionType,
+        rateMultiplier: summary.rateMultiplier,
+        channelNames: summary.channelNames.sort((a, b) => a.localeCompare(b)),
+        channelSections: Array.from(summary.channelSectionsMap.entries())
+          .map(([channelName, models]) => ({
+            channelName,
+            models: models.sort((a, b) => a.name.localeCompare(b.name)),
+          }))
+          .sort((a, b) => a.channelName.localeCompare(b.channelName)),
+        modelCount: Array.from(summary.channelSectionsMap.values()).reduce(
+          (total, models) => total + models.length,
+          0,
+        ),
+      };
+      return acc;
+    },
+    {},
+  );
+});
+
+const selectedGroupModelSummary = computed(() => {
+  if (!selectedKey.value?.group_id) return null;
+  return groupModelSummaries.value[selectedKey.value.group_id] ?? null;
+});
+
+const modelDialogTitle = computed(() =>
+  selectedKey.value
+    ? t("keys.modelListForKey", { name: selectedKey.value.name })
+    : t("keys.modelListTitle"),
+);
 
 // Get the currently selected key for group change
 const selectedKeyForGroup = computed(() => {
@@ -1644,6 +1924,19 @@ const loadUserGroupRates = async () => {
   }
 };
 
+const loadAvailableChannels = async () => {
+  availableModelsLoading.value = true;
+  availableModelsError.value = false;
+  try {
+    availableChannels.value = await userChannelsAPI.getAvailable();
+  } catch (error) {
+    availableModelsError.value = true;
+    console.error("Failed to load available channel models: ", error);
+  } finally {
+    availableModelsLoading.value = false;
+  }
+};
+
 const loadPublicSettings = async () => {
   try {
     publicSettings.value = await authAPI.getPublicSettings();
@@ -1660,6 +1953,28 @@ const openUseKeyModal = (key: ApiKey) => {
 const closeUseKeyModal = () => {
   showUseKeyModal.value = false;
   selectedKey.value = null;
+};
+
+const openModelsDialog = (key: ApiKey) => {
+  selectedKey.value = key;
+  showModelsDialog.value = true;
+  if (availableChannels.value.length === 0 && !availableModelsLoading.value) {
+    loadAvailableChannels();
+  }
+};
+
+const closeModelsDialog = () => {
+  showModelsDialog.value = false;
+  selectedKey.value = null;
+};
+
+const getGroupModelNames = (groupId: number | null) => {
+  if (groupId === null) return [];
+  const modelNames =
+    groupModelSummaries.value[groupId]?.channelSections.flatMap((section) =>
+      section.models.map((model) => model.name),
+    ) ?? [];
+  return Array.from(new Set(modelNames)).sort((a, b) => a.localeCompare(b));
 };
 
 const handlePageChange = (page: number) => {
@@ -2111,6 +2426,7 @@ onMounted(() => {
   loadApiKeys();
   loadGroups();
   loadUserGroupRates();
+  loadAvailableChannels();
   loadPublicSettings();
   document.addEventListener("click", closeGroupSelector);
   resetTimer = setInterval(() => {
