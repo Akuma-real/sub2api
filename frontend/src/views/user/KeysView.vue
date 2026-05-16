@@ -1198,7 +1198,7 @@
         />
         <p class="text-sm text-muted">{{ t("keys.modelListNoGroup") }}</p>
       </div>
-      <div v-else-if="availableModelsLoading" class="py-8 text-center">
+      <div v-else-if="keyModelsLoading" class="py-8 text-center">
         <Icon
           name="refresh"
           size="lg"
@@ -1206,10 +1206,18 @@
         />
         <p class="mt-3 text-sm text-muted">{{ t("common.loading") }}</p>
       </div>
+      <div v-else-if="keyModelsError" class="py-8 text-center">
+        <Icon
+          name="exclamationCircle"
+          size="xl"
+          class="mx-auto mb-3 h-12 w-12 text-warning"
+        />
+        <p class="text-sm text-muted">{{ t("keys.modelRuntimeLoadFailed") }}</p>
+      </div>
       <div
         v-else-if="
-          !selectedGroupModelSummary ||
-          selectedGroupModelSummary.modelCount === 0
+          !selectedKeyModelSummary ||
+          selectedKeyModelSummary.modelCount === 0
         "
         class="py-8 text-center"
       >
@@ -1227,60 +1235,96 @@
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
               <GroupBadge
-                :name="selectedGroupModelSummary.groupName"
-                :platform="selectedGroupModelSummary.platform"
-                :subscription-type="selectedGroupModelSummary.subscriptionType"
-                :rate-multiplier="selectedGroupModelSummary.rateMultiplier"
+                :name="selectedKeyModelSummary.groupName"
+                :platform="selectedKeyModelSummary.platform"
+                :subscription-type="selectedKeyModelSummary.subscriptionType"
+                :rate-multiplier="selectedKeyModelSummary.rateMultiplier"
                 :user-rate-multiplier="
-                  userGroupRates[selectedGroupModelSummary.groupId]
+                  userGroupRates[selectedKeyModelSummary.groupId]
                 "
               />
               <span class="text-sm text-muted">
                 {{
                   t("keys.modelCount", {
-                    count: selectedGroupModelSummary.modelCount,
+                    count: selectedKeyModelSummary.modelCount,
                   })
                 }}
               </span>
             </div>
             <p
-              v-if="selectedGroupModelSummary.channelNames.length > 0"
+              v-if="selectedKeyModelSummary.channelNames.length > 0"
               class="mt-2 text-xs text-muted"
             >
               {{ t("keys.modelSource") }}:
-              {{ selectedGroupModelSummary.channelNames.join(", ") }}
+              {{ selectedKeyModelSummary.channelNames.join(", ") }}
             </p>
           </div>
         </div>
 
         <div class="max-h-[50vh] space-y-4 overflow-y-auto pr-1">
-          <section
-            v-for="section in selectedGroupModelSummary.channelSections"
-            :key="section.channelName"
-            class="space-y-2"
-          >
+          <section class="space-y-2">
             <div
               class="flex items-center justify-between gap-3 border-b border-hairline-soft pb-1"
             >
               <h4 class="text-sm font-medium text-ink">
-                {{ section.channelName }}
+                {{ t("keys.modelRuntimeSource") }}
               </h4>
               <span class="text-xs text-muted">
-                {{ t("keys.modelCount", { count: section.models.length }) }}
+                {{
+                  t("keys.modelCount", {
+                    count: selectedKeyModelSummary.runtimeModels.length,
+                  })
+                }}
               </span>
             </div>
             <div class="flex flex-wrap gap-2">
               <SupportedModelChip
-                v-for="model in section.models"
-                :key="`${section.channelName}-${model.platform}-${model.name}-${model.pricing ? JSON.stringify(model.pricing) : 'none'}`"
+                v-for="model in selectedKeyModelSummary.runtimeModels"
+                :key="`runtime-${model.platform}-${model.name}-${model.pricing ? JSON.stringify(model.pricing) : 'none'}`"
                 :model="model"
                 pricing-key-prefix="availableChannels.pricing"
                 :no-pricing-label="t('availableChannels.noPricing')"
                 :show-platform="true"
-                :platform-hint="selectedGroupModelSummary.platform"
+                :platform-hint="selectedKeyModelSummary.platform"
               />
             </div>
           </section>
+
+          <div
+            v-if="selectedKeyModelSummary.pricingSections.length > 0"
+            class="space-y-4"
+          >
+            <div class="border-t border-hairline-soft pt-4 text-sm font-medium text-ink">
+              {{ t("keys.modelPricingReference") }}
+            </div>
+            <section
+              v-for="section in selectedKeyModelSummary.pricingSections"
+              :key="section.channelName"
+              class="space-y-2"
+            >
+              <div
+                class="flex items-center justify-between gap-3 border-b border-hairline-soft pb-1"
+              >
+                <h4 class="text-sm font-medium text-ink">
+                  {{ section.channelName }}
+                </h4>
+                <span class="text-xs text-muted">
+                  {{ t("keys.modelCount", { count: section.models.length }) }}
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <SupportedModelChip
+                  v-for="model in section.models"
+                  :key="`${section.channelName}-${model.platform}-${model.name}-${model.pricing ? JSON.stringify(model.pricing) : 'none'}`"
+                  :model="model"
+                  pricing-key-prefix="availableChannels.pricing"
+                  :no-pricing-label="t('availableChannels.noPricing')"
+                  :show-platform="true"
+                  :platform-hint="selectedKeyModelSummary.platform"
+                />
+              </div>
+            </section>
+          </div>
         </div>
       </div>
 
@@ -1547,6 +1591,18 @@ interface GroupModelSummary {
   modelCount: number;
 }
 
+interface KeyModelDialogSummary {
+  groupId: number;
+  groupName: string;
+  platform: GroupPlatform;
+  subscriptionType: SubscriptionType;
+  rateMultiplier: number;
+  channelNames: string[];
+  runtimeModels: UserSupportedModel[];
+  pricingSections: ChannelModelSection[];
+  modelCount: number;
+}
+
 const appStore = useAppStore();
 const onboardingStore = useOnboardingStore();
 const { copyToClipboard: clipboardCopy } = useClipboard();
@@ -1605,6 +1661,9 @@ const publicSettings = ref<PublicSettings | null>(null);
 const availableChannels = ref<UserAvailableChannel[]>([]);
 const availableModelsLoading = ref(false);
 const availableModelsError = ref(false);
+const keyRuntimeModels = ref<UserSupportedModel[]>([]);
+const keyModelsLoading = ref(false);
+const keyModelsError = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 const dropdownPosition = ref<{
   top?: number;
@@ -1613,6 +1672,7 @@ const dropdownPosition = ref<{
 } | null>(null);
 const groupButtonRefs = ref<Map<number, HTMLElement>>(new Map());
 let abortController: AbortController | null = null;
+let runtimeModelsAbortController: AbortController | null = null;
 
 const groupModelSummaries = computed<Record<number, GroupModelSummary>>(() => {
   const summaries = new Map<
@@ -1704,9 +1764,63 @@ const groupModelSummaries = computed<Record<number, GroupModelSummary>>(() => {
   );
 });
 
-const selectedGroupModelSummary = computed(() => {
+const getUniqueConfiguredPricingForModel = (
+  groupId: number,
+  modelName: string,
+): UserSupportedModel["pricing"] => {
+  const summary = groupModelSummaries.value[groupId];
+  if (!summary) return null;
+
+  const pricingByPayload = new Map<string, UserSupportedModel["pricing"]>();
+  for (const section of summary.channelSections) {
+    for (const model of section.models) {
+      if (model.name === modelName && model.pricing) {
+        pricingByPayload.set(JSON.stringify(model.pricing), model.pricing);
+      }
+    }
+  }
+
+  return pricingByPayload.size === 1
+    ? Array.from(pricingByPayload.values())[0]
+    : null;
+};
+
+const selectedKeyModelSummary = computed<KeyModelDialogSummary | null>(() => {
   if (!selectedKey.value?.group_id) return null;
-  return groupModelSummaries.value[selectedKey.value.group_id] ?? null;
+
+  const groupId = selectedKey.value.group_id;
+  const configuredSummary = groupModelSummaries.value[groupId] ?? null;
+  const selectedGroup =
+    selectedKey.value.group ?? groups.value.find((group) => group.id === groupId);
+  const platform = (selectedGroup?.platform ||
+    configuredSummary?.platform ||
+    "openai") as GroupPlatform;
+  const runtimeNames = new Set(keyRuntimeModels.value.map((model) => model.name));
+  const pricingSections =
+    configuredSummary?.channelSections
+      .map((section) => ({
+        channelName: section.channelName,
+        models: section.models.filter((model) => runtimeNames.has(model.name)),
+      }))
+      .filter((section) => section.models.length > 0) ?? [];
+  const runtimeModels = keyRuntimeModels.value.map((model) => ({
+    ...model,
+    pricing: model.pricing ?? getUniqueConfiguredPricingForModel(groupId, model.name),
+  }));
+
+  return {
+    groupId,
+    groupName: selectedGroup?.name || configuredSummary?.groupName || String(groupId),
+    platform,
+    subscriptionType: (selectedGroup?.subscription_type ||
+      configuredSummary?.subscriptionType ||
+      "standard") as SubscriptionType,
+    rateMultiplier: selectedGroup?.rate_multiplier ?? configuredSummary?.rateMultiplier ?? 1,
+    channelNames: configuredSummary?.channelNames ?? [],
+    runtimeModels,
+    pricingSections,
+    modelCount: runtimeModels.length,
+  };
 });
 
 const modelDialogTitle = computed(() =>
@@ -1847,6 +1961,97 @@ const isAbortError = (error: unknown) => {
   return name === "AbortError" || code === "ERR_CANCELED";
 };
 
+const buildRuntimeModelsUrl = () => {
+  const rawBase = (
+    publicSettings.value?.api_base_url || window.location.origin
+  ).replace(/\/+$/, "");
+  return rawBase.endsWith("/v1") ? `${rawBase}/models` : `${rawBase}/v1/models`;
+};
+
+const extractRuntimeModelNames = (payload: unknown): string[] => {
+  const record =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : {};
+  const rawModels = Array.isArray(payload)
+    ? payload
+    : Array.isArray(record.data)
+      ? record.data
+      : [];
+
+  const names = rawModels
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (!item || typeof item !== "object") return null;
+      const model = item as Record<string, unknown>;
+      const id = model.id ?? model.name ?? model.model ?? model.display_name;
+      return typeof id === "string" ? id : null;
+    })
+    .filter((name): name is string => Boolean(name));
+
+  return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
+};
+
+const loadKeyRuntimeModels = async (key: ApiKey) => {
+  runtimeModelsAbortController?.abort();
+  keyRuntimeModels.value = [];
+  keyModelsError.value = false;
+
+  if (!key.group_id || !key.key) {
+    return;
+  }
+
+  const controller = new AbortController();
+  runtimeModelsAbortController = controller;
+  keyModelsLoading.value = true;
+
+  try {
+    if (!publicSettings.value) {
+      await loadPublicSettings();
+    }
+    if (controller.signal.aborted) {
+      return;
+    }
+
+    const response = await fetch(buildRuntimeModelsUrl(), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${key.key}`,
+      },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load key models: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const platform = (key.group?.platform ||
+      groups.value.find((group) => group.id === key.group_id)?.platform ||
+      "openai") as GroupPlatform;
+    const models = extractRuntimeModelNames(payload).map((name) => ({
+      name,
+      platform,
+      pricing: null,
+    }));
+
+    if (selectedKey.value?.id === key.id) {
+      keyRuntimeModels.value = models;
+    }
+  } catch (error) {
+    if (isAbortError(error)) {
+      return;
+    }
+    keyModelsError.value = true;
+    console.error("Failed to load key runtime models: ", error);
+  } finally {
+    if (runtimeModelsAbortController === controller) {
+      keyModelsLoading.value = false;
+    }
+  }
+};
+
 const loadApiKeys = async () => {
   abortController?.abort();
   const controller = new AbortController();
@@ -1958,14 +2163,19 @@ const closeUseKeyModal = () => {
 const openModelsDialog = (key: ApiKey) => {
   selectedKey.value = key;
   showModelsDialog.value = true;
+  loadKeyRuntimeModels(key);
   if (availableChannels.value.length === 0 && !availableModelsLoading.value) {
     loadAvailableChannels();
   }
 };
 
 const closeModelsDialog = () => {
+  runtimeModelsAbortController?.abort();
   showModelsDialog.value = false;
   selectedKey.value = null;
+  keyRuntimeModels.value = [];
+  keyModelsLoading.value = false;
+  keyModelsError.value = false;
 };
 
 const getGroupModelNames = (groupId: number | null) => {
@@ -2435,6 +2645,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  abortController?.abort();
+  runtimeModelsAbortController?.abort();
   document.removeEventListener("click", closeGroupSelector);
   if (resetTimer) clearInterval(resetTimer);
 });
