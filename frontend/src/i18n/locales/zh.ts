@@ -355,7 +355,7 @@ export default {
     users: '用户管理',
     groups: '分组管理',
     channels: '渠道管理',
-    availableChannels: '可用渠道',
+    availableChannels: '模型广场',
     subscriptions: '订阅管理',
     accounts: '账号管理',
     proxies: 'IP管理',
@@ -973,10 +973,10 @@ export default {
 
   // Available Channels (user-facing)
   availableChannels: {
-    title: '可用渠道',
-    description: '查看您可访问的渠道与其支持的模型、定价',
+    title: '模型广场',
+    description: '查看您可访问的模型、渠道、分组与定价',
     searchPlaceholder: '搜索渠道或模型...',
-    empty: '暂无可用渠道',
+    empty: '暂无可用模型',
     noModels: '未配置模型',
     noPricing: '未配置定价',
     exclusive: '专属',
@@ -1004,6 +1004,97 @@ export default {
       intervals: '阶梯定价',
       unitPerMillion: '/ 1M token',
       unitPerRequest: '/ 次'
+    }
+  },
+
+  modelMarketplace: {
+    kicker: 'Model Marketplace',
+    title: '模型广场',
+    description: '查看当前账号实际可访问的模型、渠道、分组倍率与价格口径，并复制可直接调用的模型 ID。',
+    searchPlaceholder: '搜索模型、渠道或分组...',
+    empty: '没有匹配的模型',
+    noPricing: '未配置价格',
+    copyModelId: '复制模型 ID',
+    modelCopied: '模型 ID 已复制',
+    requestCopied: '请求示例已复制',
+    viewDetails: '查看详情',
+    details: '详情',
+    requestExample: 'OpenAI 兼容请求示例',
+    mapping: '映射链',
+    resetFilters: '重置筛选',
+    resultCount: '显示 {count} / {total} 个模型',
+    channelCount: '{count} 个渠道',
+    summary: {
+      models: '可用模型',
+      platforms: '平台',
+      channels: '渠道',
+      groups: '分组',
+      priced: '已配置价格'
+    },
+    filters: {
+      all: '全部',
+      platform: '平台',
+      channel: '渠道',
+      group: '分组',
+      billing: '计费',
+      pricing: '价格',
+      capability: '能力',
+      priced: '有价格',
+      unpriced: '无价格'
+    },
+    sort: {
+      label: '排序',
+      name: '模型名',
+      platform: '平台',
+      input: '输入价格',
+      output: '输出价格',
+      channels: '渠道数量'
+    },
+    view: {
+      table: '表格',
+      cards: '卡片'
+    },
+    columns: {
+      model: '模型',
+      platform: '平台',
+      price: '价格',
+      channels: '渠道',
+      groups: '分组',
+      capabilities: '能力',
+      actions: '操作',
+      priceVariants: '价格版本'
+    },
+    billing: {
+      token: 'Token',
+      perRequest: '按次',
+      image: '图片'
+    },
+    capabilities: {
+      image: '图片',
+      cache: '缓存价',
+      tiered: '阶梯',
+      perRequest: '按次'
+    },
+    pricingSource: {
+      channel: '渠道定价',
+      global: '全局价格',
+      none: '未配置'
+    },
+    pricing: {
+      input: '输入',
+      output: '输出',
+      cacheWrite: '缓存写入',
+      cacheRead: '缓存读取',
+      perMillion: '/ 1M token',
+      perRequestUnit: '/ 次',
+      perImageUnit: '/ 图'
+    },
+    groups: {
+      exclusive: '专属',
+      public: '公开',
+      rate: '默认 {rate}',
+      userRate: '专属 {rate}',
+      effectiveRate: '实际 {rate}'
     }
   },
 
@@ -5306,10 +5397,10 @@ export default {
           defaultIntervalHint: '新建渠道监控时表单的默认值，可被单个渠道覆盖。范围 15 – 3600 秒。',
         },
         availableChannels: {
-          title: '可用渠道',
-          description: '向已登录用户展示他们能访问的渠道、模型和定价聚合视图。默认关闭。',
+          title: '模型广场',
+          description: '向已登录用户展示他们能访问的模型、渠道、分组倍率和定价聚合视图。默认关闭。',
           configureLink: '前往 渠道管理 > 渠道定价 配置模型价格',
-          enabled: '启用可用渠道',
+          enabled: '启用模型广场',
           enabledHint: '关闭后用户端侧边栏入口隐藏，接口返回空数组。',
         },
         riskControl: {

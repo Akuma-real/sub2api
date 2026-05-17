@@ -355,7 +355,7 @@ export default {
     users: 'Users',
     groups: 'Groups',
     channels: 'Channels',
-    availableChannels: 'Available Channels',
+    availableChannels: 'Model Marketplace',
     subscriptions: 'Subscriptions',
     accounts: 'Accounts',
     proxies: 'Proxies',
@@ -969,10 +969,10 @@ export default {
 
   // Available Channels (user-facing)
   availableChannels: {
-    title: 'Available Channels',
-    description: 'Channels you can access, along with their supported models and pricing',
+    title: 'Model Marketplace',
+    description: 'Models you can access, along with channels, groups and pricing',
     searchPlaceholder: 'Search channels or models...',
-    empty: 'No available channels',
+    empty: 'No available models',
     noModels: 'No models configured',
     noPricing: 'Pricing not configured',
     exclusive: 'Exclusive',
@@ -1000,6 +1000,97 @@ export default {
       intervals: 'Tiered Pricing',
       unitPerMillion: '/ 1M tokens',
       unitPerRequest: '/ request'
+    }
+  },
+
+  modelMarketplace: {
+    kicker: 'Model Marketplace',
+    title: 'Model Marketplace',
+    description: 'Browse the models this account can actually use, with channels, group multipliers, pricing sources, and copy-ready model IDs.',
+    searchPlaceholder: 'Search models, channels, or groups...',
+    empty: 'No matching models',
+    noPricing: 'Pricing not configured',
+    copyModelId: 'Copy Model ID',
+    modelCopied: 'Model ID copied',
+    requestCopied: 'Request example copied',
+    viewDetails: 'View Details',
+    details: 'Details',
+    requestExample: 'OpenAI-compatible request example',
+    mapping: 'Mapping',
+    resetFilters: 'Reset filters',
+    resultCount: 'Showing {count} / {total} models',
+    channelCount: '{count} channels',
+    summary: {
+      models: 'Models',
+      platforms: 'Platforms',
+      channels: 'Channels',
+      groups: 'Groups',
+      priced: 'Priced Models'
+    },
+    filters: {
+      all: 'All',
+      platform: 'Platform',
+      channel: 'Channel',
+      group: 'Group',
+      billing: 'Billing',
+      pricing: 'Pricing',
+      capability: 'Capability',
+      priced: 'Priced',
+      unpriced: 'Unpriced'
+    },
+    sort: {
+      label: 'Sort',
+      name: 'Model name',
+      platform: 'Platform',
+      input: 'Input price',
+      output: 'Output price',
+      channels: 'Channel count'
+    },
+    view: {
+      table: 'Table',
+      cards: 'Cards'
+    },
+    columns: {
+      model: 'Model',
+      platform: 'Platform',
+      price: 'Price',
+      channels: 'Channels',
+      groups: 'Groups',
+      capabilities: 'Capabilities',
+      actions: 'Actions',
+      priceVariants: 'Price Variants'
+    },
+    billing: {
+      token: 'Token',
+      perRequest: 'Per request',
+      image: 'Image'
+    },
+    capabilities: {
+      image: 'Image',
+      cache: 'Cache pricing',
+      tiered: 'Tiered',
+      perRequest: 'Per request'
+    },
+    pricingSource: {
+      channel: 'Channel pricing',
+      global: 'Global pricing',
+      none: 'Not configured'
+    },
+    pricing: {
+      input: 'Input',
+      output: 'Output',
+      cacheWrite: 'Cache write',
+      cacheRead: 'Cache read',
+      perMillion: '/ 1M tokens',
+      perRequestUnit: '/ request',
+      perImageUnit: '/ image'
+    },
+    groups: {
+      exclusive: 'Exclusive',
+      public: 'Public',
+      rate: 'Default {rate}',
+      userRate: 'Custom {rate}',
+      effectiveRate: 'Effective {rate}'
     }
   },
 
@@ -5143,10 +5234,10 @@ export default {
           defaultIntervalHint: 'Pre-fills the interval when creating a new monitor; each monitor can override it. Range 15 – 3600.',
         },
         availableChannels: {
-          title: 'Available Channels',
-          description: 'Show logged-in users an aggregate view of the channels, models and pricing they can access. Disabled by default.',
+          title: 'Model Marketplace',
+          description: 'Show logged-in users the models, channels, group multipliers and pricing they can access. Disabled by default.',
           configureLink: 'Configure model pricing in Channel Management > Channel Pricing',
-          enabled: 'Enable Available Channels',
+          enabled: 'Enable Model Marketplace',
           enabledHint: 'When off, the sidebar entry is hidden and the endpoint returns an empty list.',
         },
         riskControl: {

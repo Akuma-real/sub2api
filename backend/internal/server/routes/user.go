@@ -76,6 +76,13 @@ func RegisterUserRoutes(
 			channels.GET("/available", h.AvailableChannel.List)
 		}
 
+		// 模型广场（当前用户可见模型、渠道、分组与价格）
+		models := authenticated.Group("/models")
+		{
+			models.GET("/marketplace", h.AvailableChannel.ModelMarketplace)
+			models.GET("/marketplace/detail", h.AvailableChannel.ModelMarketplaceDetail)
+		}
+
 		// 使用记录
 		usage := authenticated.Group("/usage")
 		{

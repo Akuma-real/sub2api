@@ -155,3 +155,81 @@ func TestBuildPlatformSections_GroupsByPlatform(t *testing.T) {
 	require.Len(t, sections[0].SupportedModels, 1)
 	require.Equal(t, "claude-sonnet-4-6", sections[0].SupportedModels[0].Name)
 }
+
+func TestBuildUserModelMarketplace_AggregatesUserVisibleModels(t *testing.T) {
+	inputPrice := 0.000002
+	outputPrice := 0.00001
+	channels := []service.AvailableChannel{
+		{
+			ID:                 10,
+			Name:               "OpenAI Main",
+			Description:        "primary",
+			Status:             service.StatusActive,
+			BillingModelSource: service.BillingModelSourceChannelMapped,
+			Groups: []service.AvailableGroupRef{
+				{ID: 1, Name: "VIP", Platform: "openai", RateMultiplier: 0.8, IsExclusive: true},
+				{ID: 2, Name: "Hidden", Platform: "anthropic", RateMultiplier: 1.2},
+			},
+			SupportedModels: []service.SupportedModel{
+				{
+					Name:          "gpt-5.5",
+					Platform:      "openai",
+					PricingSource: "channel",
+					MappedModel:   "gpt-5.5-pro",
+					Pricing: &service.ChannelModelPricing{
+						BillingMode: service.BillingModeToken,
+						InputPrice:  &inputPrice,
+						OutputPrice: &outputPrice,
+					},
+				},
+				{Name: "claude-sonnet-4-6", Platform: "anthropic"},
+			},
+		},
+		{
+			ID:     11,
+			Name:   "Disabled",
+			Status: service.StatusDisabled,
+			Groups: []service.AvailableGroupRef{
+				{ID: 1, Name: "VIP", Platform: "openai", RateMultiplier: 0.8},
+			},
+			SupportedModels: []service.SupportedModel{{Name: "gpt-hidden", Platform: "openai"}},
+		},
+	}
+
+	out := buildUserModelMarketplace(
+		channels,
+		map[int64]struct{}{1: {}},
+		map[int64]float64{1: 0.6},
+	)
+
+	require.Equal(t, 1, out.Summary.Models)
+	require.Equal(t, 1, out.Summary.Platforms)
+	require.Equal(t, 1, out.Summary.Channels)
+	require.Equal(t, 1, out.Summary.Groups)
+	require.Equal(t, 1, out.Summary.PricedModels)
+	require.Len(t, out.Models, 1)
+	model := out.Models[0]
+	require.Equal(t, "gpt-5.5", model.ID)
+	require.Equal(t, "openai", model.Platform)
+	require.Equal(t, "token", model.BillingMode)
+	require.True(t, model.Capabilities.SupportsCachePricing == false)
+	require.Len(t, model.Channels, 1)
+	require.Equal(t, "gpt-5.5→gpt-5.5-pro", model.Channels[0].Mapping.Chain)
+	require.Len(t, model.Channels[0].Groups, 1)
+	require.Equal(t, 0.6, model.Channels[0].Groups[0].EffectiveRateMultiplier)
+	require.NotNil(t, model.Channels[0].Groups[0].UserRateMultiplier)
+	require.Equal(t, 0.6, *model.Channels[0].Groups[0].UserRateMultiplier)
+}
+
+func TestFindMarketplaceModel_UsesPlatformAndRawModelID(t *testing.T) {
+	models := []userMarketplaceModel{
+		{ID: "chat/special", Platform: "openai"},
+		{ID: "chat/special", Platform: "anthropic"},
+	}
+
+	model, ok := findMarketplaceModel(models, "anthropic", "chat/special")
+
+	require.True(t, ok)
+	require.Equal(t, "anthropic", model.Platform)
+	require.Equal(t, "chat/special", model.ID)
+}

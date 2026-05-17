@@ -2,6 +2,8 @@ package handler
 
 import (
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
@@ -92,6 +94,79 @@ type userSupportedModel struct {
 	Pricing  *userSupportedModelPricing `json:"pricing"`
 }
 
+type userModelMarketplaceSummary struct {
+	Models         int `json:"models"`
+	Platforms      int `json:"platforms"`
+	Channels       int `json:"channels"`
+	Groups         int `json:"groups"`
+	PricedModels   int `json:"priced_models"`
+	UnpricedModels int `json:"unpriced_models"`
+	PriceVariants  int `json:"price_variants"`
+}
+
+type userModelMarketplaceResponse struct {
+	Summary userModelMarketplaceSummary `json:"summary"`
+	Models  []userMarketplaceModel      `json:"models"`
+}
+
+type userMarketplaceModel struct {
+	ID                string                        `json:"id"`
+	DisplayName       string                        `json:"display_name"`
+	Platform          string                        `json:"platform"`
+	BillingMode       string                        `json:"billing_mode"`
+	Pricing           *userSupportedModelPricing    `json:"pricing"`
+	PricingSource     string                        `json:"pricing_source"`
+	Availability      userModelAvailability         `json:"availability"`
+	Capabilities      userModelCapabilities         `json:"capabilities"`
+	ChannelCount      int                           `json:"channel_count"`
+	GroupCount        int                           `json:"group_count"`
+	PriceVariantCount int                           `json:"price_variant_count"`
+	Channels          []userMarketplaceModelChannel `json:"channels"`
+}
+
+type userModelAvailability struct {
+	Status          string  `json:"status"`
+	LatestLatencyMS *int    `json:"latest_latency_ms"`
+	LatestCheckedAt *string `json:"latest_checked_at"`
+}
+
+type userModelCapabilities struct {
+	SupportsImage        bool `json:"supports_image"`
+	SupportsCachePricing bool `json:"supports_cache_pricing"`
+	HasTieredPricing     bool `json:"has_tiered_pricing"`
+	HasPerRequestPricing bool `json:"has_per_request_pricing"`
+}
+
+type userMarketplaceModelChannel struct {
+	ID                 int64                       `json:"id"`
+	Name               string                      `json:"name"`
+	Description        string                      `json:"description"`
+	Platform           string                      `json:"platform"`
+	BillingModelSource string                      `json:"billing_model_source"`
+	Pricing            *userSupportedModelPricing  `json:"pricing"`
+	PricingSource      string                      `json:"pricing_source"`
+	Mapping            userMarketplaceModelMapping `json:"mapping"`
+	Groups             []userMarketplaceGroup      `json:"groups"`
+}
+
+type userMarketplaceModelMapping struct {
+	RequestedModel     string `json:"requested_model"`
+	MappedModel        string `json:"mapped_model"`
+	BillingModelSource string `json:"billing_model_source"`
+	Chain              string `json:"chain"`
+}
+
+type userMarketplaceGroup struct {
+	ID                      int64    `json:"id"`
+	Name                    string   `json:"name"`
+	Platform                string   `json:"platform"`
+	SubscriptionType        string   `json:"subscription_type"`
+	RateMultiplier          float64  `json:"rate_multiplier"`
+	UserRateMultiplier      *float64 `json:"user_rate_multiplier"`
+	EffectiveRateMultiplier float64  `json:"effective_rate_multiplier"`
+	IsExclusive             bool     `json:"is_exclusive"`
+}
+
 // userChannelPlatformSection 单渠道内某个平台的子视图：用户可见的分组 + 该平台
 // 支持的模型。按 platform 聚合后让前端可以把渠道名作为 row-group 一次渲染，
 // 后面的平台行按 sections 顺序铺开。
@@ -164,6 +239,210 @@ func (h *AvailableChannelHandler) List(c *gin.Context) {
 	}
 
 	response.Success(c, out)
+}
+
+// ModelMarketplace 列出当前用户可见的模型广场。
+// GET /api/v1/models/marketplace
+func (h *AvailableChannelHandler) ModelMarketplace(c *gin.Context) {
+	resp, ok := h.buildModelMarketplace(c)
+	if !ok {
+		return
+	}
+	response.Success(c, resp)
+}
+
+// ModelMarketplaceDetail 返回某个模型在当前用户权限下的完整可用渠道与价格视图。
+// GET /api/v1/models/marketplace/detail?platform=openai&model=gpt-5.5
+func (h *AvailableChannelHandler) ModelMarketplaceDetail(c *gin.Context) {
+	platform := strings.TrimSpace(c.Query("platform"))
+	modelID := strings.TrimSpace(c.Query("model"))
+	if platform == "" || modelID == "" {
+		response.BadRequest(c, "platform and model are required")
+		return
+	}
+	resp, ok := h.buildModelMarketplace(c)
+	if !ok {
+		return
+	}
+	if model, ok := findMarketplaceModel(resp.Models, platform, modelID); ok {
+		response.Success(c, model)
+		return
+	}
+	response.NotFound(c, "Model not found")
+}
+
+func findMarketplaceModel(
+	models []userMarketplaceModel,
+	platform string,
+	modelID string,
+) (userMarketplaceModel, bool) {
+	for _, model := range models {
+		if strings.EqualFold(model.Platform, platform) && strings.EqualFold(model.ID, modelID) {
+			return model, true
+		}
+	}
+	return userMarketplaceModel{}, false
+}
+
+func (h *AvailableChannelHandler) buildModelMarketplace(c *gin.Context) (userModelMarketplaceResponse, bool) {
+	empty := userModelMarketplaceResponse{Models: []userMarketplaceModel{}}
+	subject, ok := middleware.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return empty, false
+	}
+	if !h.featureEnabled(c) {
+		response.Success(c, empty)
+		return empty, false
+	}
+
+	userGroups, err := h.apiKeyService.GetAvailableGroups(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return empty, false
+	}
+	allowedGroupIDs := make(map[int64]struct{}, len(userGroups))
+	for i := range userGroups {
+		allowedGroupIDs[userGroups[i].ID] = struct{}{}
+	}
+	userRates, err := h.apiKeyService.GetUserGroupRates(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return empty, false
+	}
+	if userRates == nil {
+		userRates = map[int64]float64{}
+	}
+
+	channels, err := h.channelService.ListAvailable(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return empty, false
+	}
+	resp := buildUserModelMarketplace(channels, allowedGroupIDs, userRates)
+	return resp, true
+}
+
+func buildUserModelMarketplace(
+	channels []service.AvailableChannel,
+	allowedGroupIDs map[int64]struct{},
+	userRates map[int64]float64,
+) userModelMarketplaceResponse {
+	type modelKey struct {
+		platform string
+		name     string
+	}
+	models := make(map[modelKey]*userMarketplaceModel)
+	platforms := make(map[string]struct{})
+	channelsSeen := make(map[int64]struct{})
+	groupsSeen := make(map[int64]struct{})
+	priceVariants := 0
+
+	for _, ch := range channels {
+		if ch.Status != service.StatusActive {
+			continue
+		}
+		visibleGroups := filterUserVisibleGroups(ch.Groups, allowedGroupIDs)
+		if len(visibleGroups) == 0 {
+			continue
+		}
+		sections := buildPlatformSections(ch, visibleGroups)
+		for _, section := range sections {
+			groups := marketplaceGroups(section.Groups, userRates)
+			if len(groups) == 0 {
+				continue
+			}
+			platforms[section.Platform] = struct{}{}
+			channelsSeen[ch.ID] = struct{}{}
+			for _, g := range groups {
+				groupsSeen[g.ID] = struct{}{}
+			}
+			for _, model := range ch.SupportedModels {
+				if model.Platform != section.Platform {
+					continue
+				}
+				key := modelKey{platform: model.Platform, name: strings.ToLower(model.Name)}
+				row, exists := models[key]
+				if !exists {
+					row = &userMarketplaceModel{
+						ID:            model.Name,
+						DisplayName:   model.Name,
+						Platform:      model.Platform,
+						BillingMode:   marketplaceBillingMode(model.Pricing),
+						Pricing:       toUserPricing(model.Pricing),
+						PricingSource: normalizePricingSource(model.PricingSource, model.Pricing),
+						Availability:  userModelAvailability{Status: "unknown"},
+						Capabilities:  marketplaceCapabilities(model.Pricing),
+						Channels:      []userMarketplaceModelChannel{},
+					}
+					models[key] = row
+				} else {
+					row.Capabilities = mergeCapabilities(row.Capabilities, marketplaceCapabilities(model.Pricing))
+					if row.Pricing == nil && model.Pricing != nil {
+						row.Pricing = toUserPricing(model.Pricing)
+						row.PricingSource = normalizePricingSource(model.PricingSource, model.Pricing)
+						row.BillingMode = marketplaceBillingMode(model.Pricing)
+					}
+				}
+				row.Channels = append(row.Channels, userMarketplaceModelChannel{
+					ID:                 ch.ID,
+					Name:               ch.Name,
+					Description:        ch.Description,
+					Platform:           section.Platform,
+					BillingModelSource: ch.BillingModelSource,
+					Pricing:            toUserPricing(model.Pricing),
+					PricingSource:      normalizePricingSource(model.PricingSource, model.Pricing),
+					Mapping:            marketplaceMapping(model, ch.BillingModelSource),
+					Groups:             groups,
+				})
+				if model.Pricing != nil {
+					priceVariants++
+				}
+			}
+		}
+	}
+
+	out := make([]userMarketplaceModel, 0, len(models))
+	priced := 0
+	for _, row := range models {
+		groupIDs := make(map[int64]struct{})
+		for _, ch := range row.Channels {
+			for _, g := range ch.Groups {
+				groupIDs[g.ID] = struct{}{}
+			}
+		}
+		row.ChannelCount = len(row.Channels)
+		row.GroupCount = len(groupIDs)
+		row.PriceVariantCount = countPriceVariants(row.Channels)
+		if row.Pricing != nil {
+			priced++
+		}
+		sort.SliceStable(row.Channels, func(i, j int) bool {
+			if row.Channels[i].Name != row.Channels[j].Name {
+				return strings.ToLower(row.Channels[i].Name) < strings.ToLower(row.Channels[j].Name)
+			}
+			return row.Channels[i].Platform < row.Channels[j].Platform
+		})
+		out = append(out, *row)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Platform != out[j].Platform {
+			return out[i].Platform < out[j].Platform
+		}
+		return strings.ToLower(out[i].ID) < strings.ToLower(out[j].ID)
+	})
+	return userModelMarketplaceResponse{
+		Summary: userModelMarketplaceSummary{
+			Models:         len(out),
+			Platforms:      len(platforms),
+			Channels:       len(channelsSeen),
+			Groups:         len(groupsSeen),
+			PricedModels:   priced,
+			UnpricedModels: len(out) - priced,
+			PriceVariants:  priceVariants,
+		},
+		Models: out,
+	}
 }
 
 // buildPlatformSections 把一个渠道按 visibleGroups 的平台集合拆成有序的 section 列表：
@@ -280,4 +559,120 @@ func toUserPricing(p *service.ChannelModelPricing) *userSupportedModelPricing {
 		PerRequestPrice:  p.PerRequestPrice,
 		Intervals:        intervals,
 	}
+}
+
+func marketplaceGroups(groups []userAvailableGroup, userRates map[int64]float64) []userMarketplaceGroup {
+	out := make([]userMarketplaceGroup, 0, len(groups))
+	for _, g := range groups {
+		effective := g.RateMultiplier
+		var userRate *float64
+		if rate, ok := userRates[g.ID]; ok {
+			r := rate
+			userRate = &r
+			effective = r
+		}
+		out = append(out, userMarketplaceGroup{
+			ID:                      g.ID,
+			Name:                    g.Name,
+			Platform:                g.Platform,
+			SubscriptionType:        g.SubscriptionType,
+			RateMultiplier:          g.RateMultiplier,
+			UserRateMultiplier:      userRate,
+			EffectiveRateMultiplier: effective,
+			IsExclusive:             g.IsExclusive,
+		})
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].IsExclusive != out[j].IsExclusive {
+			return out[i].IsExclusive
+		}
+		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
+	})
+	return out
+}
+
+func marketplaceBillingMode(p *service.ChannelModelPricing) string {
+	if p == nil || p.BillingMode == "" {
+		return string(service.BillingModeToken)
+	}
+	return string(p.BillingMode)
+}
+
+func normalizePricingSource(source string, p *service.ChannelModelPricing) string {
+	if p == nil {
+		return "none"
+	}
+	if strings.TrimSpace(source) == "" {
+		return "channel"
+	}
+	return source
+}
+
+func marketplaceCapabilities(p *service.ChannelModelPricing) userModelCapabilities {
+	if p == nil {
+		return userModelCapabilities{}
+	}
+	return userModelCapabilities{
+		SupportsImage:        p.ImageOutputPrice != nil || p.BillingMode == service.BillingModeImage,
+		SupportsCachePricing: p.CacheWritePrice != nil || p.CacheReadPrice != nil,
+		HasTieredPricing:     len(p.Intervals) > 0,
+		HasPerRequestPricing: p.PerRequestPrice != nil || p.BillingMode == service.BillingModePerRequest,
+	}
+}
+
+func mergeCapabilities(a, b userModelCapabilities) userModelCapabilities {
+	return userModelCapabilities{
+		SupportsImage:        a.SupportsImage || b.SupportsImage,
+		SupportsCachePricing: a.SupportsCachePricing || b.SupportsCachePricing,
+		HasTieredPricing:     a.HasTieredPricing || b.HasTieredPricing,
+		HasPerRequestPricing: a.HasPerRequestPricing || b.HasPerRequestPricing,
+	}
+}
+
+func marketplaceMapping(model service.SupportedModel, billingModelSource string) userMarketplaceModelMapping {
+	mapped := model.MappedModel
+	chain := model.Name
+	if mapped != "" && !strings.EqualFold(mapped, model.Name) {
+		chain = model.Name + "→" + mapped
+	}
+	return userMarketplaceModelMapping{
+		RequestedModel:     model.Name,
+		MappedModel:        mapped,
+		BillingModelSource: billingModelSource,
+		Chain:              chain,
+	}
+}
+
+func countPriceVariants(channels []userMarketplaceModelChannel) int {
+	seen := make(map[string]struct{})
+	for _, ch := range channels {
+		if ch.Pricing == nil {
+			continue
+		}
+		key := ch.PricingSource + "|" + ch.Pricing.BillingMode
+		if ch.Pricing.InputPrice != nil {
+			key += "|i:" + floatKey(*ch.Pricing.InputPrice)
+		}
+		if ch.Pricing.OutputPrice != nil {
+			key += "|o:" + floatKey(*ch.Pricing.OutputPrice)
+		}
+		if ch.Pricing.CacheWritePrice != nil {
+			key += "|cw:" + floatKey(*ch.Pricing.CacheWritePrice)
+		}
+		if ch.Pricing.CacheReadPrice != nil {
+			key += "|cr:" + floatKey(*ch.Pricing.CacheReadPrice)
+		}
+		if ch.Pricing.ImageOutputPrice != nil {
+			key += "|img:" + floatKey(*ch.Pricing.ImageOutputPrice)
+		}
+		if ch.Pricing.PerRequestPrice != nil {
+			key += "|req:" + floatKey(*ch.Pricing.PerRequestPrice)
+		}
+		seen[key] = struct{}{}
+	}
+	return len(seen)
+}
+
+func floatKey(v float64) string {
+	return strconv.FormatFloat(v, 'g', -1, 64)
 }
