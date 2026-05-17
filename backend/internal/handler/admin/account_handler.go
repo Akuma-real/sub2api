@@ -2157,7 +2157,7 @@ func requestUpstreamModelIDs(ctx context.Context, client *http.Client, endpoint 
 	if err != nil {
 		return nil, fmt.Errorf("upstream request failed: %s", sanitizeModelDiscoveryError(err.Error()))
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxDiscoverModelsResponseBytes+1))
 	if err != nil {
