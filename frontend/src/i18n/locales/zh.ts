@@ -345,7 +345,6 @@ export default {
     announcements: '公告',
     apiKeys: 'API 密钥',
     usage: '使用记录',
-    playground: '在线体验',
     redeem: '兑换',
     affiliate: '邀请返利',
     affiliateManagement: '邀请返利',
@@ -807,27 +806,6 @@ export default {
       quota_exhausted: '额度耗尽',
       expired: '已过期'
     }
-  },
-
-  playground: {
-    title: '在线体验',
-    description: '使用自己的 API Key 在线聊天和生图',
-    apiKey: 'API Key',
-    manualKey: '手动输入 Key',
-    manualKeyPlaceholder: '粘贴 API Key',
-    model: '模型',
-    chat: '聊天',
-    image: '生图',
-    systemPrompt: '系统提示词',
-    messagePlaceholder: '输入消息',
-    send: '发送',
-    imageModel: '生图模型',
-    imageSize: '尺寸',
-    prompt: '提示词',
-    imagePromptPlaceholder: '描述要生成的图片',
-    generate: '生成',
-    noImage: '暂无图片',
-    keyRequired: '请先选择或输入 API Key'
   },
 
   // Usage

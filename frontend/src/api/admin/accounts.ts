@@ -446,6 +446,31 @@ export async function getAvailableModels(id: number): Promise<ClaudeModel[]> {
   return data
 }
 
+export interface DiscoverUpstreamModelsRequest {
+  platform: string
+  type?: string
+  base_url?: string
+  api_key: string
+  proxy_id?: number | null
+}
+
+export interface DiscoverUpstreamModelsResponse {
+  models: string[]
+}
+
+/**
+ * Discover models from an upstream through the backend to avoid browser CORS/private network limits.
+ */
+export async function discoverUpstreamModels(
+  request: DiscoverUpstreamModelsRequest
+): Promise<DiscoverUpstreamModelsResponse> {
+  const { data } = await apiClient.post<DiscoverUpstreamModelsResponse>(
+    '/admin/accounts/discover-models',
+    request
+  )
+  return data
+}
+
 export interface CRSPreviewAccount {
   crs_account_id: string
   kind: string
@@ -660,6 +685,7 @@ export const accountsAPI = {
   resetTempUnschedulable,
   setSchedulable,
   getAvailableModels,
+  discoverUpstreamModels,
   generateAuthUrl,
   exchangeCode,
   refreshOpenAIToken,

@@ -1237,6 +1237,7 @@
               t("admin.accounts.modelRestriction")
             }}</label>
             <button
+              v-if="!isOpenAIModelRestrictionDisabled"
               type="button"
               class="btn btn-secondary btn-sm"
               :disabled="fetchingUpstreamModels || !canFetchUpstreamModels"
@@ -4019,91 +4020,25 @@ const canFetchUpstreamModels = computed(() => {
       upstreamApiKey.value.trim() !== ""
     );
   }
-  return (
-    form.type === "apikey" &&
-    apiKeyValue.value.trim() !== ""
-  );
+  if (isOpenAIModelRestrictionDisabled.value) return false;
+  return form.type === "apikey" && apiKeyValue.value.trim() !== "";
 });
 
-function normalizeModelBaseUrl(baseUrl: string, fallback: string): string {
-  const raw = (baseUrl.trim() || fallback).replace(/\/+$/, "");
-  return raw.endsWith("/v1") || raw.endsWith("/v1beta") ? raw : `${raw}/v1`;
-}
-
-function extractModelIds(payload: unknown): string[] {
-  const data = payload as {
-    data?: Array<{ id?: string; name?: string }>;
-    models?: Array<{ id?: string; name?: string }>;
-  };
-  const items = Array.isArray(data.data)
-    ? data.data
-    : Array.isArray(data.models)
-      ? data.models
-      : Array.isArray(payload)
-        ? (payload as Array<{ id?: string; name?: string }>)
-        : [];
-  return [
-    ...new Set(
-      items
-        .map((model) => model.id || model.name || "")
-        .map((id) => id.replace(/^models\//, "").trim())
-        .filter(Boolean),
-    ),
-  ].sort();
-}
-
-async function fetchJsonModels(
-  url: string,
-  init: Parameters<typeof fetch>[1],
-): Promise<string[]> {
-  const response = await fetch(url, init);
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = payload as { error?: { message?: string }; message?: string };
-    throw new Error(
-      error.error?.message || error.message || `${response.status} ${response.statusText}`,
-    );
-  }
-  return extractModelIds(payload);
-}
-
 async function fetchUpstreamModels(): Promise<string[]> {
-  if (form.platform === "gemini") {
-    const base = (apiKeyBaseUrl.value.trim() || "https://generativelanguage.googleapis.com").replace(
-      /\/+$/,
-      "",
-    );
-    return fetchJsonModels(
-      `${base}/v1beta/models?key=${encodeURIComponent(apiKeyValue.value.trim())}`,
-      { method: "GET" },
-    );
-  }
-
-  if (form.platform === "anthropic") {
-    const base = normalizeModelBaseUrl(apiKeyBaseUrl.value, "https://api.anthropic.com");
-    return fetchJsonModels(`${base}/models`, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKeyValue.value.trim(),
-        "anthropic-version": "2023-06-01",
-      },
-    });
-  }
-
   const isAntigravityUpstream =
     form.platform === "antigravity" && antigravityAccountType.value === "upstream";
-  const base = isAntigravityUpstream
-    ? normalizeModelBaseUrl(upstreamBaseUrl.value, "")
-    : normalizeModelBaseUrl(apiKeyBaseUrl.value, "https://api.openai.com");
-  const apiKey = isAntigravityUpstream
-    ? upstreamApiKey.value.trim()
-    : apiKeyValue.value.trim();
-  return fetchJsonModels(`${base}/models`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
+  const result = await adminAPI.accounts.discoverUpstreamModels({
+    platform: form.platform,
+    type: isAntigravityUpstream ? "upstream" : form.type,
+    base_url: isAntigravityUpstream
+      ? upstreamBaseUrl.value.trim()
+      : apiKeyBaseUrl.value.trim(),
+    api_key: isAntigravityUpstream
+      ? upstreamApiKey.value.trim()
+      : apiKeyValue.value.trim(),
+    proxy_id: form.proxy_id,
   });
+  return result.models;
 }
 
 function applyFetchedModels(models: string[]) {

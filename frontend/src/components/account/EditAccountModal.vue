@@ -80,9 +80,39 @@
           v-if="account.platform !== 'antigravity'"
           class="border-t border-hairline pt-4"
         >
-          <label class="input-label">{{
-            t("admin.accounts.modelRestriction")
-          }}</label>
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <label class="input-label mb-0">{{
+              t("admin.accounts.modelRestriction")
+            }}</label>
+            <button
+              v-if="!isOpenAIModelRestrictionDisabled"
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="fetchingUpstreamModels || !canFetchUpstreamModels"
+              @click="fetchAndApplyUpstreamModels"
+            >
+              <Icon
+                name="refresh"
+                size="sm"
+                :class="{ 'animate-spin': fetchingUpstreamModels }"
+              />
+              {{
+                fetchingUpstreamModels
+                  ? t("admin.accounts.fetchingUpstreamModels")
+                  : t("admin.accounts.fetchUpstreamModels")
+              }}
+            </button>
+          </div>
+          <p
+            v-if="fetchedUpstreamModels.length > 0"
+            class="mb-3 text-xs text-muted"
+          >
+            {{
+              t("admin.accounts.fetchedUpstreamModels", {
+                count: fetchedUpstreamModels.length,
+              })
+            }}
+          </p>
 
           <div
             v-if="isOpenAIModelRestrictionDisabled"
@@ -1164,9 +1194,38 @@
         v-if="account.platform === 'antigravity'"
         class="border-t border-hairline pt-4"
       >
-        <label class="input-label">{{
-          t("admin.accounts.modelRestriction")
-        }}</label>
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <label class="input-label mb-0">{{
+            t("admin.accounts.modelRestriction")
+          }}</label>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            :disabled="fetchingUpstreamModels || !canFetchUpstreamModels"
+            @click="fetchAndApplyUpstreamModels"
+          >
+            <Icon
+              name="refresh"
+              size="sm"
+              :class="{ 'animate-spin': fetchingUpstreamModels }"
+            />
+            {{
+              fetchingUpstreamModels
+                ? t("admin.accounts.fetchingUpstreamModels")
+                : t("admin.accounts.fetchUpstreamModels")
+            }}
+          </button>
+        </div>
+        <p
+          v-if="fetchedUpstreamModels.length > 0"
+          class="mb-3 text-xs text-muted"
+        >
+          {{
+            t("admin.accounts.fetchedUpstreamModels", {
+              count: fetchedUpstreamModels.length,
+            })
+          }}
+        </p>
 
         <!-- Mapping Mode Only (no toggle for Antigravity) -->
         <div>
@@ -2711,7 +2770,11 @@
   </BaseDialog>
 
   <datalist id="account-model-suggestions">
-    <option v-for="model in allModelValues" :key="model" :value="model" />
+    <option
+      v-for="model in accountModelSuggestionValues"
+      :key="model"
+      :value="model"
+    />
   </datalist>
 
   <!-- Mixed Channel Warning Dialog -->
@@ -2824,6 +2887,11 @@ interface TempUnschedRuleForm {
 const submitting = ref(false);
 const editBaseUrl = ref("https://api.anthropic.com");
 const editApiKey = ref("");
+const fetchingUpstreamModels = ref(false);
+const fetchedUpstreamModels = ref<string[]>([]);
+const accountModelSuggestionValues = computed(() => [
+  ...new Set([...allModelValues, ...fetchedUpstreamModels.value]),
+]);
 // Bedrock credentials
 const editBedrockAccessKeyId = ref("");
 const editBedrockSecretAccessKey = ref("");
@@ -3103,8 +3171,82 @@ const defaultBaseUrl = computed(() => {
   if (props.account?.platform === "openai") return "https://api.openai.com";
   if (props.account?.platform === "gemini")
     return "https://generativelanguage.googleapis.com";
+  if (props.account?.platform === "antigravity")
+    return "https://cloudcode-pa.googleapis.com";
   return "https://api.anthropic.com";
 });
+
+function currentCredentialString(key: string): string {
+  const value = (props.account?.credentials as Record<string, unknown> | undefined)?.[
+    key
+  ];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+const resolvedDiscoveryApiKey = computed(
+  () => editApiKey.value.trim() || currentCredentialString("api_key"),
+);
+
+const canFetchUpstreamModels = computed(() => {
+  const account = props.account;
+  if (!account || !["apikey", "upstream"].includes(account.type)) return false;
+  if (isOpenAIModelRestrictionDisabled.value) return false;
+  if (!resolvedDiscoveryApiKey.value) return false;
+  if (account.type === "upstream" || account.platform === "antigravity") {
+    return editBaseUrl.value.trim() !== "";
+  }
+  return true;
+});
+
+function applyFetchedModels(models: string[]) {
+  if (props.account?.platform === "antigravity") {
+    antigravityModelMappings.value = models.map((model) => ({
+      from: model,
+      to: model,
+    }));
+    return;
+  }
+  if (modelRestrictionMode.value === "whitelist") {
+    allowedModels.value = models;
+    return;
+  }
+  modelMappings.value = models.map((model) => ({ from: model, to: model }));
+}
+
+async function fetchAndApplyUpstreamModels() {
+  if (!props.account || !canFetchUpstreamModels.value || fetchingUpstreamModels.value) {
+    return;
+  }
+
+  fetchingUpstreamModels.value = true;
+  try {
+    const result = await adminAPI.accounts.discoverUpstreamModels({
+      platform: props.account.platform,
+      type: props.account.type,
+      base_url: editBaseUrl.value.trim() || defaultBaseUrl.value,
+      api_key: resolvedDiscoveryApiKey.value,
+      proxy_id: form.proxy_id,
+    });
+    if (result.models.length === 0) {
+      appStore.showError(t("admin.accounts.noUpstreamModels"));
+      return;
+    }
+    fetchedUpstreamModels.value = result.models;
+    applyFetchedModels(result.models);
+    appStore.showSuccess(
+      t("admin.accounts.fetchUpstreamModelsSuccess", {
+        count: result.models.length,
+      }),
+    );
+  } catch (error: any) {
+    console.error("Failed to fetch upstream models: ", error);
+    appStore.showError(
+      error?.message || t("admin.accounts.fetchUpstreamModelsFailed"),
+    );
+  } finally {
+    fetchingUpstreamModels.value = false;
+  }
+}
 
 const mixedChannelWarningMessageText = computed(() => {
   if (mixedChannelWarningDetails.value) {
@@ -3372,7 +3514,9 @@ const syncFormFromAccount = (newAccount: Account | null) => {
         ? "https://api.openai.com"
         : newAccount.platform === "gemini"
           ? "https://generativelanguage.googleapis.com"
-          : "https://api.anthropic.com";
+          : newAccount.platform === "antigravity"
+            ? "https://cloudcode-pa.googleapis.com"
+            : "https://api.anthropic.com";
     editBaseUrl.value = (credentials.base_url as string) || platformDefaultUrl;
 
     // Load model mappings and detect mode
@@ -3571,6 +3715,7 @@ const syncFormFromAccount = (newAccount: Account | null) => {
     selectedErrorCodes.value = [];
   }
   editApiKey.value = "";
+  fetchedUpstreamModels.value = [];
 };
 
 async function loadTLSProfiles() {

@@ -345,7 +345,6 @@ export default {
     announcements: 'Announcements',
     apiKeys: 'API Keys',
     usage: 'Usage',
-    playground: 'Playground',
     redeem: 'Redeem',
     affiliate: 'Affiliate Rebates',
     affiliateManagement: 'Affiliate Rebates',
@@ -803,27 +802,6 @@ export default {
       quota_exhausted: 'Quota Exhausted',
       expired: 'Expired',
     },
-  },
-
-  playground: {
-    title: 'Playground',
-    description: 'Chat and image generation with your own API key',
-    apiKey: 'API Key',
-    manualKey: 'Manual Key',
-    manualKeyPlaceholder: 'Paste an API key',
-    model: 'Model',
-    chat: 'Chat',
-    image: 'Image',
-    systemPrompt: 'System Prompt',
-    messagePlaceholder: 'Message',
-    send: 'Send',
-    imageModel: 'Image Model',
-    imageSize: 'Size',
-    prompt: 'Prompt',
-    imagePromptPlaceholder: 'Describe the image',
-    generate: 'Generate',
-    noImage: 'No image',
-    keyRequired: 'Select or enter an API key first'
   },
 
   // Usage
