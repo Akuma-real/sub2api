@@ -4214,6 +4214,24 @@
                         t('admin.settings.customMenu.urlPlaceholder')
                       "
                     />
+                    <div class="mt-2 flex items-center justify-between gap-3">
+                      <p class="text-xs text-muted-soft">
+                        {{ t("admin.settings.customMenu.urlPreviewHint") }}
+                      </p>
+                      <router-link
+                        v-if="getCustomMenuPreviewPath(item)"
+                        :to="getCustomMenuPreviewPath(item)!"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700"
+                      >
+                        {{ t("admin.settings.customMenu.preview") }}
+                        <Icon name="externalLink" size="xs" :stroke-width="2" />
+                      </router-link>
+                      <span v-else class="text-xs text-muted-soft">
+                        {{ t("admin.settings.customMenu.previewUnavailable") }}
+                      </span>
+                    </div>
                   </div>
 
                   <!-- SVG Icon (full width) -->
@@ -6643,6 +6661,22 @@ const form = reactive<SettingsForm>({
   affiliate_enabled: false,
 });
 
+const persistedCustomMenuUrls = ref<Map<string, string>>(new Map());
+
+function snapshotCustomMenuUrls(
+  items: Array<{ id?: string; url?: string }> | undefined,
+): Map<string, string> {
+  const urls = new Map<string, string>();
+  for (const item of items || []) {
+    const id = item.id?.trim();
+    const url = item.url?.trim();
+    if (id && url) {
+      urls.set(id, url);
+    }
+  }
+  return urls;
+}
+
 const authSourceDefaults = reactive<AuthSourceDefaultsState>(
   buildAuthSourceDefaultsState({}),
 );
@@ -7132,6 +7166,14 @@ function addMenuItem() {
   });
 }
 
+function getCustomMenuPreviewPath(item: { id: string; url: string }) {
+  const id = item.id?.trim();
+  const url = item.url?.trim();
+  if (!id || !url) return "";
+  if (persistedCustomMenuUrls.value.get(id) !== url) return "";
+  return `/custom/${encodeURIComponent(id)}`;
+}
+
 function removeMenuItem(index: number) {
   form.custom_menu_items.splice(index, 1);
   // Re-index sort_order
@@ -7260,6 +7302,9 @@ async function loadSettings() {
     form.backend_mode_enabled = settings.backend_mode_enabled;
     form.default_subscriptions = normalizeDefaultSubscriptionSettings(
       settings.default_subscriptions,
+    );
+    persistedCustomMenuUrls.value = snapshotCustomMenuUrls(
+      settings.custom_menu_items,
     );
     registrationEmailSuffixWhitelistTags.value =
       normalizeRegistrationEmailSuffixDomains(
@@ -7813,6 +7858,9 @@ async function saveSettings() {
         (form as Record<string, unknown>)[key] = value;
       }
     }
+    persistedCustomMenuUrls.value = snapshotCustomMenuUrls(
+      updated.custom_menu_items,
+    );
     Object.assign(authSourceDefaults, buildAuthSourceDefaultsState(updated));
     registrationEmailSuffixWhitelistTags.value =
       normalizeRegistrationEmailSuffixDomains(

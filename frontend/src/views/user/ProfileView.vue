@@ -1,63 +1,98 @@
 <template>
   <AppLayout>
     <div data-testid="profile-shell" class="mx-auto max-w-[950px] space-y-6">
-      <ProfileInfoCard
-        :user="user"
-        :linuxdo-enabled="linuxdoOAuthEnabled"
-        :oidc-enabled="oidcOAuthEnabled"
-        :oidc-provider-name="oidcOAuthProviderName"
-        :wechat-enabled="wechatOAuthEnabled"
-        :wechat-open-enabled="wechatOAuthOpenEnabled"
-        :wechat-mp-enabled="wechatOAuthMPEnabled"
-      />
-
-      <div v-if="contactInfo" class="card border-primary-200 bg-primary-50 p-6">
-        <div class="flex items-center gap-4">
-          <div class="rounded-xl bg-primary-100 p-3 text-primary-600">
-            <Icon name="chat" size="lg" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-primary-800">
-              {{ t("common.contactSupport") }}
-            </h3>
-            <p class="text-sm font-medium">{{ contactInfo }}</p>
-          </div>
-        </div>
+      <div class="flex flex-wrap gap-2 border-b border-hairline pb-2">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+          :class="
+            activeTab === tab.key
+              ? 'bg-primary-100 text-primary-700'
+              : 'text-muted hover:bg-surface-card hover:text-body'
+          "
+          @click="setActiveTab(tab.key)"
+        >
+          {{ tab.label }}
+        </button>
       </div>
 
-      <ProfilePasswordForm />
+      <template v-if="activeTab === 'account'">
+        <ProfileInfoCard
+          :user="user"
+          :linuxdo-enabled="linuxdoOAuthEnabled"
+          :oidc-enabled="oidcOAuthEnabled"
+          :oidc-provider-name="oidcOAuthProviderName"
+          :wechat-enabled="wechatOAuthEnabled"
+          :wechat-open-enabled="wechatOAuthOpenEnabled"
+          :wechat-mp-enabled="wechatOAuthMPEnabled"
+        />
 
-      <ProfileBalanceNotifyCard
-        v-if="user && balanceLowNotifyEnabled"
-        :enabled="user.balance_notify_enabled ?? true"
-        :threshold="user.balance_notify_threshold"
-        :extra-emails="user.balance_notify_extra_emails ?? []"
-        :system-default-threshold="systemDefaultThreshold"
-        :user-email="user.email"
-      />
+        <div
+          v-if="contactInfo"
+          class="card border-primary-200 bg-primary-50 p-6"
+        >
+          <div class="flex items-center gap-4">
+            <div class="rounded-xl bg-primary-100 p-3 text-primary-600">
+              <Icon name="chat" size="lg" />
+            </div>
+            <div>
+              <h3 class="font-semibold text-primary-800">
+                {{ t("common.contactSupport") }}
+              </h3>
+              <p class="text-sm font-medium">{{ contactInfo }}</p>
+            </div>
+          </div>
+        </div>
 
-      <ProfileTotpCard />
+        <ProfilePasswordForm />
+
+        <ProfileBalanceNotifyCard
+          v-if="user && balanceLowNotifyEnabled"
+          :enabled="user.balance_notify_enabled ?? true"
+          :threshold="user.balance_notify_threshold"
+          :extra-emails="user.balance_notify_extra_emails ?? []"
+          :system-default-threshold="systemDefaultThreshold"
+          :user-email="user.email"
+        />
+
+        <ProfileTotpCard />
+      </template>
+
+      <UserSubscriptionsPanel v-else />
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute, useRouter } from "vue-router";
 import { Icon } from "@/components/icons";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import ProfileBalanceNotifyCard from "@/components/user/profile/ProfileBalanceNotifyCard.vue";
 import ProfileInfoCard from "@/components/user/profile/ProfileInfoCard.vue";
 import ProfilePasswordForm from "@/components/user/profile/ProfilePasswordForm.vue";
 import ProfileTotpCard from "@/components/user/profile/ProfileTotpCard.vue";
+import UserSubscriptionsPanel from "@/components/user/subscriptions/UserSubscriptionsPanel.vue";
 import { isWeChatWebOAuthEnabled } from "@/api/auth";
 import { useAppStore } from "@/stores/app";
 import { useAuthStore } from "@/stores/auth";
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 const appStore = useAppStore();
 const authStore = useAuthStore();
 const user = computed(() => authStore.user);
+type ProfileTab = "account" | "subscriptions";
+const activeTab = ref<ProfileTab>(
+  route.query.section === "subscriptions" ? "subscriptions" : "account",
+);
+const tabs = computed(() => [
+  { key: "account" as const, label: t("profile.tabs.account") },
+  { key: "subscriptions" as const, label: t("profile.tabs.subscriptions") },
+]);
 
 const contactInfo = ref("");
 const balanceLowNotifyEnabled = ref(false);
@@ -68,6 +103,23 @@ const wechatOAuthOpenEnabled = ref<boolean | undefined>(undefined);
 const wechatOAuthMPEnabled = ref<boolean | undefined>(undefined);
 const oidcOAuthEnabled = ref(false);
 const oidcOAuthProviderName = ref("OIDC");
+
+function setActiveTab(tab: ProfileTab) {
+  activeTab.value = tab;
+  router.replace({
+    query: {
+      ...route.query,
+      section: tab === "subscriptions" ? "subscriptions" : undefined,
+    },
+  });
+}
+
+watch(
+  () => route.query.section,
+  (section) => {
+    activeTab.value = section === "subscriptions" ? "subscriptions" : "account";
+  },
+);
 
 onMounted(async () => {
   const profileRefresh = authStore.refreshUser().catch((error) => {

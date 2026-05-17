@@ -345,6 +345,7 @@ export default {
     announcements: '公告',
     apiKeys: 'API 密钥',
     usage: '使用记录',
+    playground: '在线体验',
     redeem: '兑换',
     affiliate: '邀请返利',
     affiliateManagement: '邀请返利',
@@ -808,6 +809,27 @@ export default {
     }
   },
 
+  playground: {
+    title: '在线体验',
+    description: '使用自己的 API Key 在线聊天和生图',
+    apiKey: 'API Key',
+    manualKey: '手动输入 Key',
+    manualKeyPlaceholder: '粘贴 API Key',
+    model: '模型',
+    chat: '聊天',
+    image: '生图',
+    systemPrompt: '系统提示词',
+    messagePlaceholder: '输入消息',
+    send: '发送',
+    imageModel: '生图模型',
+    imageSize: '尺寸',
+    prompt: '提示词',
+    imagePromptPlaceholder: '描述要生成的图片',
+    generate: '生成',
+    noImage: '暂无图片',
+    keyRequired: '请先选择或输入 API Key'
+  },
+
   // Usage
   usage: {
     title: '使用记录',
@@ -864,6 +886,7 @@ export default {
     stream: '流式',
     sync: '同步',
     unknown: '未知',
+    default: '默认',
     in: '输入',
     out: '输出',
     inputTokenPrice: '输入单价',
@@ -1100,6 +1123,10 @@ export default {
   profile: {
     title: '个人设置',
     description: '管理您的账户信息和设置',
+    tabs: {
+      account: '账户',
+      subscriptions: '订阅'
+    },
     accountBalance: '账户余额',
     concurrencyLimit: '并发限制',
     rpmLimit: 'RPM 限制',
@@ -2099,6 +2126,13 @@ export default {
       public: '公开',
       rateAndAccounts: '{rate}x 费率 · {count} 个账号',
       accountsCount: '{count} 个账号',
+      accounts: {
+        action: '账号',
+        manageTitle: '维护账号：{name}',
+        searchPlaceholder: '搜索账号名称',
+        selectedCount: '已选择 {count} 个',
+        failedToLoad: '账号加载失败'
+      },
       enterGroupName: '请输入分组名称',
       optionalDescription: '可选描述',
       platformHint: '选择此分组关联的平台',
@@ -3214,6 +3248,11 @@ export default {
         disableScheduling: '批量停止调度',
         resetStatus: '批量重置状态',
         refreshToken: '批量刷新令牌',
+        testSelected: '批量测试',
+        testingSelected: '测试中...',
+        noSelected: '请先选择账号',
+        testFinished: '已测试 {count} 个账号',
+        testFinishedWithErrors: '批量测试完成：成功 {success} 个，失败 {failed} 个',
         resetStatusSuccess: '已成功重置 {count} 个账号状态',
         refreshTokenSuccess: '已成功刷新 {count} 个账号令牌',
         partialSuccess: '操作部分完成：{success} 成功，{failed} 失败'
@@ -3365,6 +3404,12 @@ export default {
       mapRequestModels: '将请求模型映射到实际模型。左边是请求的模型，右边是发送到 API 的实际模型。',
       selectedModels: '已选择 {count} 个模型',
       supportsAllModels: '（支持所有模型）',
+      fetchUpstreamModels: '获取上游模型',
+      fetchingUpstreamModels: '获取中...',
+      fetchedUpstreamModels: '已获取 {count} 个上游模型',
+      fetchUpstreamModelsSuccess: '已获取 {count} 个上游模型',
+      fetchUpstreamModelsFailed: '获取上游模型失败',
+      noUpstreamModels: '没有获取到上游模型',
       requestModel: '请求模型',
       actualModel: '实际模型',
       addMapping: '添加映射',
@@ -5634,6 +5679,9 @@ export default {
         namePlaceholder: '如：帮助中心',
         url: '页面 URL',
         urlPlaceholder: 'https://example.com/page',
+        urlPreviewHint: '预览会打开用户实际看到的侧边栏页面。',
+        preview: '预览',
+        previewUnavailable: '填写 ID 和 URL 后可预览',
         iconSvg: 'SVG 图标',
         iconSvgPlaceholder: '<svg>...</svg>',
         iconPreview: '图标预览',

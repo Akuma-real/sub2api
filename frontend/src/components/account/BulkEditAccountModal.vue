@@ -305,6 +305,7 @@
                   <input
                     v-model="mapping.from"
                     type="text"
+                  list="account-model-suggestions"
                     class="input flex-1"
                     :placeholder="t('admin.accounts.requestModel')"
                   />
@@ -324,6 +325,7 @@
                   <input
                     v-model="mapping.to"
                     type="text"
+                  list="account-model-suggestions"
                     class="input flex-1"
                     :placeholder="t('admin.accounts.actualModel')"
                   />
@@ -946,6 +948,7 @@
               <input
                 v-model="mapping.from"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
                 data-testid="bulk-edit-openai-compact-model-mapping-input"
@@ -954,6 +957,7 @@
               <input
                 v-model="mapping.to"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.toModel')"
                 data-testid="bulk-edit-openai-compact-model-mapping-input"
@@ -1209,6 +1213,10 @@
     </template>
   </BaseDialog>
 
+  <datalist id="account-model-suggestions">
+    <option v-for="model in allModelValues" :key="model" :value="model" />
+  </datalist>
+
   <ConfirmDialog
     :show="showMixedChannelWarning"
     :title="t('admin.accounts.mixedChannelWarningTitle')"
@@ -1242,6 +1250,7 @@ import ModelWhitelistSelector from "@/components/account/ModelWhitelistSelector.
 import Icon from "@/components/icons/Icon.vue";
 import {
   buildModelMappingObject as buildModelMappingPayload,
+  allModels,
   getPresetMappingsByPlatform,
 } from "@/composables/useModelWhitelist";
 import {
@@ -1273,6 +1282,7 @@ const emit = defineEmits<{
   close: [];
   updated: [];
 }>();
+const allModelValues = allModels.map((model) => model.value);
 
 const { t } = useI18n();
 const appStore = useAppStore();

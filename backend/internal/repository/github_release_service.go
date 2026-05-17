@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -22,6 +23,14 @@ type githubReleaseClient struct {
 
 type githubReleaseClientError struct {
 	err error
+}
+
+type githubAPIError struct {
+	statusCode int
+}
+
+func (e *githubAPIError) Error() string {
+	return fmt.Sprintf("GitHub API returned %d", e.statusCode)
 }
 
 // NewGitHubReleaseClient 创建 GitHub Release 客户端
@@ -77,6 +86,47 @@ func (c *githubReleaseClientError) FetchChecksumFile(ctx context.Context, url st
 
 func (c *githubReleaseClient) FetchLatestRelease(ctx context.Context, repo string) (*service.GitHubRelease, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
+	release, err := c.fetchRelease(ctx, url)
+	if err == nil {
+		return release, nil
+	}
+
+	var apiErr *githubAPIError
+	if !errors.As(err, &apiErr) || apiErr.statusCode != http.StatusNotFound {
+		return nil, err
+	}
+
+	return c.fetchLatestListedRelease(ctx, repo)
+}
+
+func (c *githubReleaseClient) fetchRelease(ctx context.Context, url string) (*service.GitHubRelease, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "Sub2API-Updater")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &githubAPIError{statusCode: resp.StatusCode}
+	}
+
+	var release service.GitHubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return nil, err
+	}
+
+	return &release, nil
+}
+
+func (c *githubReleaseClient) fetchLatestListedRelease(ctx context.Context, repo string) (*service.GitHubRelease, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/releases?per_page=10", repo)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -92,15 +142,21 @@ func (c *githubReleaseClient) FetchLatestRelease(ctx context.Context, repo strin
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub API returned %d", resp.StatusCode)
+		return nil, &githubAPIError{statusCode: resp.StatusCode}
 	}
 
-	var release service.GitHubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+	var releases []service.GitHubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
 		return nil, err
 	}
 
-	return &release, nil
+	for i := range releases {
+		if !releases[i].Draft {
+			return &releases[i], nil
+		}
+	}
+
+	return nil, errors.New("no GitHub releases found")
 }
 
 func (c *githubReleaseClient) DownloadFile(ctx context.Context, url, dest string, maxSize int64) error {

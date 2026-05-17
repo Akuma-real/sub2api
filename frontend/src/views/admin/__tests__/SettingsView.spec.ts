@@ -163,6 +163,9 @@ vi.mock("vue-i18n", async () => {
     "admin.settings.openaiExperimentalScheduler.description": "默认关闭。开启后仅影响本网关在 OpenAI 账号间的实验性调度选择逻辑，不代表上游 OpenAI 官方能力。",
     "admin.settings.site.uploadImage": "上传图片",
     "admin.settings.site.remove": "移除",
+    "admin.settings.customMenu.urlPreviewHint": "保存后可通过站内预览入口打开该页面。",
+    "admin.settings.customMenu.preview": "预览",
+    "admin.settings.customMenu.previewUnavailable": "填写 ID 和 URL 后可预览",
   };
   return {
     ...actual,
@@ -175,6 +178,26 @@ vi.mock("vue-i18n", async () => {
 });
 
 const AppLayoutStub = { template: "<div><slot /></div>" };
+const RouterLinkStub = defineComponent({
+  props: {
+    to: {
+      type: String,
+      required: true,
+    },
+  },
+  setup(props, { slots, attrs }) {
+    return () =>
+      h(
+        "a",
+        {
+          ...attrs,
+          href: props.to,
+          "data-router-link": props.to,
+        },
+        slots.default?.(),
+      );
+  },
+});
 const ToggleStub = defineComponent({
   props: {
     modelValue: {
@@ -408,6 +431,7 @@ function mountView() {
     global: {
       stubs: {
         AppLayout: AppLayoutStub,
+        RouterLink: RouterLinkStub,
         Select: SelectStub,
         Toggle: ToggleStub,
         Icon: true,
@@ -682,6 +706,7 @@ describe("admin SettingsView payment visible method controls", () => {
       global: {
         stubs: {
           AppLayout: AppLayoutStub,
+          RouterLink: RouterLinkStub,
           Select: SelectStub,
           Toggle: ToggleStub,
           Icon: true,
@@ -734,6 +759,32 @@ describe("admin SettingsView payment visible method controls", () => {
     expect(paymentHelpImageUpload).toBeDefined();
     expect(paymentHelpImageUpload?.attributes("data-upload-label")).toBe("上传图片");
     expect(paymentHelpImageUpload?.attributes("data-remove-label")).toBe("移除");
+  });
+
+  it("renders custom menu preview links for saved menu entries", async () => {
+    getSettings.mockResolvedValueOnce({
+      ...baseSettingsResponse,
+      custom_menu_items: [
+        {
+          id: "billing-help",
+          label: "Billing help",
+          url: "https://example.com/help",
+          icon_svg: "",
+          visibility: "user",
+          sort_order: 0,
+        },
+      ],
+    });
+
+    const wrapper = mountView();
+
+    await flushPromises();
+
+    const previewLink = wrapper.get('[data-router-link="/custom/billing-help"]');
+    expect(previewLink.text()).toContain("预览");
+    expect(previewLink.attributes("href")).toBe("/custom/billing-help");
+    expect(previewLink.attributes("target")).toBe("_blank");
+    expect(previewLink.attributes("rel")).toContain("noopener");
   });
 });
 

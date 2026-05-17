@@ -435,9 +435,11 @@
               class="h-40 max-w-full cursor-pointer rounded-lg object-contain transition-opacity hover:opacity-80"
               @click="previewImage = checkout.help_image_url"
             />
-            <p v-if="checkout.help_text" class="text-center text-sm text-muted">
-              {{ checkout.help_text }}
-            </p>
+            <div
+              v-if="paymentHelpHtml"
+              class="payment-help-markdown text-sm text-muted"
+              v-html="paymentHelpHtml"
+            ></div>
           </div>
         </div>
       </template>
@@ -571,6 +573,7 @@ import {
   parseWechatResumeRoute,
   stripWechatResumeQuery,
 } from "./paymentWechatResume";
+import { renderMarkdownToSafeHtml } from "@/utils/sanitize";
 
 const i18n = useI18n();
 const { t } = i18n;
@@ -830,6 +833,9 @@ const balanceRechargeMultiplier = computed(() => {
   const multiplier = checkout.value.balance_recharge_multiplier;
   return multiplier > 0 ? multiplier : 1;
 });
+const paymentHelpHtml = computed(() =>
+  renderMarkdownToSafeHtml(checkout.value.help_text || ""),
+);
 const creditedAmount = computed(
   () =>
     Math.round(validAmount.value * balanceRechargeMultiplier.value * 100) / 100,
@@ -1525,3 +1531,46 @@ onMounted(async () => {
   subscriptionStore.fetchActiveSubscriptions().catch(() => {});
 });
 </script>
+
+<style scoped>
+.payment-help-markdown {
+  text-align: center;
+}
+
+.payment-help-markdown :deep(p) {
+  margin: 0;
+}
+
+.payment-help-markdown :deep(p + p),
+.payment-help-markdown :deep(ul),
+.payment-help-markdown :deep(ol) {
+  margin-top: 0.5rem;
+}
+
+.payment-help-markdown :deep(ul),
+.payment-help-markdown :deep(ol) {
+  display: inline-block;
+  text-align: left;
+}
+
+.payment-help-markdown :deep(ul) {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+
+.payment-help-markdown :deep(ol) {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+
+.payment-help-markdown :deep(a) {
+  color: #a9583e;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.payment-help-markdown :deep(strong) {
+  color: #141413;
+}
+</style>

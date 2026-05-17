@@ -985,9 +985,38 @@
         v-if="form.platform === 'antigravity'"
         class="border-t border-hairline pt-4"
       >
-        <label class="input-label">{{
-          t("admin.accounts.modelRestriction")
-        }}</label>
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <label class="input-label mb-0">{{
+            t("admin.accounts.modelRestriction")
+          }}</label>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            :disabled="fetchingUpstreamModels || !canFetchUpstreamModels"
+            @click="fetchAndApplyUpstreamModels"
+          >
+            <Icon
+              name="refresh"
+              size="sm"
+              :class="{ 'animate-spin': fetchingUpstreamModels }"
+            />
+            {{
+              fetchingUpstreamModels
+                ? t("admin.accounts.fetchingUpstreamModels")
+                : t("admin.accounts.fetchUpstreamModels")
+            }}
+          </button>
+        </div>
+        <p
+          v-if="fetchedUpstreamModels.length > 0"
+          class="mb-3 text-xs text-muted"
+        >
+          {{
+            t("admin.accounts.fetchedUpstreamModels", {
+              count: fetchedUpstreamModels.length,
+            })
+          }}
+        </p>
 
         <!-- Mapping Mode Only (no toggle for Antigravity) -->
         <div>
@@ -1010,6 +1039,7 @@
                 <input
                   v-model="mapping.from"
                   type="text"
+                  list="account-model-suggestions"
                   :class="[
                     'input flex-1',
                     !isValidWildcardPattern(mapping.from)
@@ -1034,6 +1064,7 @@
                 <input
                   v-model="mapping.to"
                   type="text"
+                  list="account-model-suggestions"
                   :class="[
                     'input flex-1',
                     mapping.to.includes('*') ? 'border-error ' : '',
@@ -1201,9 +1232,38 @@
 
         <!-- Model Restriction Section (Antigravity 已在上层条件排除) -->
         <div class="border-t border-hairline pt-4">
-          <label class="input-label">{{
-            t("admin.accounts.modelRestriction")
-          }}</label>
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <label class="input-label mb-0">{{
+              t("admin.accounts.modelRestriction")
+            }}</label>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="fetchingUpstreamModels || !canFetchUpstreamModels"
+              @click="fetchAndApplyUpstreamModels"
+            >
+              <Icon
+                name="refresh"
+                size="sm"
+                :class="{ 'animate-spin': fetchingUpstreamModels }"
+              />
+              {{
+                fetchingUpstreamModels
+                  ? t("admin.accounts.fetchingUpstreamModels")
+                  : t("admin.accounts.fetchUpstreamModels")
+              }}
+            </button>
+          </div>
+          <p
+            v-if="fetchedUpstreamModels.length > 0"
+            class="mb-3 text-xs text-muted"
+          >
+            {{
+              t("admin.accounts.fetchedUpstreamModels", {
+                count: fetchedUpstreamModels.length,
+              })
+            }}
+          </p>
 
           <div
             v-if="isOpenAIModelRestrictionDisabled"
@@ -1320,6 +1380,7 @@
                   <input
                     v-model="mapping.from"
                     type="text"
+                  list="account-model-suggestions"
                     class="input flex-1"
                     :placeholder="t('admin.accounts.requestModel')"
                   />
@@ -1339,6 +1400,7 @@
                   <input
                     v-model="mapping.to"
                     type="text"
+                  list="account-model-suggestions"
                     class="input flex-1"
                     :placeholder="t('admin.accounts.actualModel')"
                   />
@@ -1798,6 +1860,7 @@
               <input
                 v-model="mapping.from"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
               />
@@ -1805,6 +1868,7 @@
               <input
                 v-model="mapping.to"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.toModel')"
               />
@@ -2138,6 +2202,7 @@
                 <input
                   v-model="mapping.from"
                   type="text"
+                  list="account-model-suggestions"
                   class="input flex-1"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
@@ -2157,6 +2222,7 @@
                 <input
                   v-model="mapping.to"
                   type="text"
+                  list="account-model-suggestions"
                   class="input flex-1"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
@@ -3204,6 +3270,7 @@
               <input
                 v-model="mapping.from"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
               />
@@ -3211,6 +3278,7 @@
               <input
                 v-model="mapping.to"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.toModel')"
               />
@@ -3453,6 +3521,14 @@
       </div>
     </template>
   </BaseDialog>
+
+  <datalist id="account-model-suggestions">
+    <option
+      v-for="model in accountModelSuggestionValues"
+      :key="model"
+      :value="model"
+    />
+  </datalist>
 
   <!-- Gemini Help Dialog -->
   <BaseDialog
@@ -3748,6 +3824,7 @@ import { useI18n } from "vue-i18n";
 import { useAppStore } from "@/stores/app";
 import {
   claudeModels,
+  allModels,
   getPresetMappingsByPlatform,
   getModelsByPlatform,
   commonErrorCodes,
@@ -3850,6 +3927,7 @@ const emit = defineEmits<{
   close: [];
   created: [];
 }>();
+const allModelValues = allModels.map((model) => model.value);
 
 const appStore = useAppStore();
 
@@ -3913,6 +3991,11 @@ const accountCategory = ref<
 const addMethod = ref<AddMethod>("oauth"); // For oauth-based: 'oauth' or 'setup-token'
 const apiKeyBaseUrl = ref("https://api.anthropic.com");
 const apiKeyValue = ref("");
+const fetchingUpstreamModels = ref(false);
+const fetchedUpstreamModels = ref<string[]>([]);
+const accountModelSuggestionValues = computed(() => [
+  ...new Set([...allModelValues, ...fetchedUpstreamModels.value]),
+]);
 const editQuotaLimit = ref<number | null>(null);
 const editQuotaDailyLimit = ref<number | null>(null);
 const editQuotaWeeklyLimit = ref<number | null>(null);
@@ -3927,6 +4010,140 @@ const openAICompactModelMappings = ref<ModelMapping[]>([]);
 const modelRestrictionMode = ref<"whitelist" | "mapping">("whitelist");
 const allowedModels = ref<string[]>([]);
 const DEFAULT_POOL_MODE_RETRY_COUNT = 3;
+
+const canFetchUpstreamModels = computed(() => {
+  if (form.platform === "antigravity") {
+    return (
+      antigravityAccountType.value === "upstream" &&
+      upstreamBaseUrl.value.trim() !== "" &&
+      upstreamApiKey.value.trim() !== ""
+    );
+  }
+  return (
+    form.type === "apikey" &&
+    apiKeyValue.value.trim() !== ""
+  );
+});
+
+function normalizeModelBaseUrl(baseUrl: string, fallback: string): string {
+  const raw = (baseUrl.trim() || fallback).replace(/\/+$/, "");
+  return raw.endsWith("/v1") || raw.endsWith("/v1beta") ? raw : `${raw}/v1`;
+}
+
+function extractModelIds(payload: unknown): string[] {
+  const data = payload as {
+    data?: Array<{ id?: string; name?: string }>;
+    models?: Array<{ id?: string; name?: string }>;
+  };
+  const items = Array.isArray(data.data)
+    ? data.data
+    : Array.isArray(data.models)
+      ? data.models
+      : Array.isArray(payload)
+        ? (payload as Array<{ id?: string; name?: string }>)
+        : [];
+  return [
+    ...new Set(
+      items
+        .map((model) => model.id || model.name || "")
+        .map((id) => id.replace(/^models\//, "").trim())
+        .filter(Boolean),
+    ),
+  ].sort();
+}
+
+async function fetchJsonModels(
+  url: string,
+  init: Parameters<typeof fetch>[1],
+): Promise<string[]> {
+  const response = await fetch(url, init);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = payload as { error?: { message?: string }; message?: string };
+    throw new Error(
+      error.error?.message || error.message || `${response.status} ${response.statusText}`,
+    );
+  }
+  return extractModelIds(payload);
+}
+
+async function fetchUpstreamModels(): Promise<string[]> {
+  if (form.platform === "gemini") {
+    const base = (apiKeyBaseUrl.value.trim() || "https://generativelanguage.googleapis.com").replace(
+      /\/+$/,
+      "",
+    );
+    return fetchJsonModels(
+      `${base}/v1beta/models?key=${encodeURIComponent(apiKeyValue.value.trim())}`,
+      { method: "GET" },
+    );
+  }
+
+  if (form.platform === "anthropic") {
+    const base = normalizeModelBaseUrl(apiKeyBaseUrl.value, "https://api.anthropic.com");
+    return fetchJsonModels(`${base}/models`, {
+      method: "GET",
+      headers: {
+        "x-api-key": apiKeyValue.value.trim(),
+        "anthropic-version": "2023-06-01",
+      },
+    });
+  }
+
+  const isAntigravityUpstream =
+    form.platform === "antigravity" && antigravityAccountType.value === "upstream";
+  const base = isAntigravityUpstream
+    ? normalizeModelBaseUrl(upstreamBaseUrl.value, "")
+    : normalizeModelBaseUrl(apiKeyBaseUrl.value, "https://api.openai.com");
+  const apiKey = isAntigravityUpstream
+    ? upstreamApiKey.value.trim()
+    : apiKeyValue.value.trim();
+  return fetchJsonModels(`${base}/models`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+}
+
+function applyFetchedModels(models: string[]) {
+  if (form.platform === "antigravity") {
+    antigravityModelMappings.value = models.map((model) => ({
+      from: model,
+      to: model,
+    }));
+    return;
+  }
+  if (modelRestrictionMode.value === "whitelist") {
+    allowedModels.value = models;
+    return;
+  }
+  modelMappings.value = models.map((model) => ({ from: model, to: model }));
+}
+
+async function fetchAndApplyUpstreamModels() {
+  if (!canFetchUpstreamModels.value || fetchingUpstreamModels.value) return;
+  fetchingUpstreamModels.value = true;
+  try {
+    const models = await fetchUpstreamModels();
+    if (models.length === 0) {
+      appStore.showError(t("admin.accounts.noUpstreamModels"));
+      return;
+    }
+    fetchedUpstreamModels.value = models;
+    applyFetchedModels(models);
+    appStore.showSuccess(
+      t("admin.accounts.fetchUpstreamModelsSuccess", { count: models.length }),
+    );
+  } catch (error: any) {
+    console.error("Failed to fetch upstream models: ", error);
+    appStore.showError(
+      error?.message || t("admin.accounts.fetchUpstreamModelsFailed"),
+    );
+  } finally {
+    fetchingUpstreamModels.value = false;
+  }
+}
 const MAX_POOL_MODE_RETRY_COUNT = 10;
 const poolModeEnabled = ref(false);
 const poolModeRetryCount = ref(DEFAULT_POOL_MODE_RETRY_COUNT);
@@ -4774,6 +4991,8 @@ const resetForm = () => {
   addMethod.value = "oauth";
   apiKeyBaseUrl.value = "https://api.anthropic.com";
   apiKeyValue.value = "";
+  fetchedUpstreamModels.value = [];
+  fetchingUpstreamModels.value = false;
   editQuotaLimit.value = null;
   editQuotaDailyLimit.value = null;
   editQuotaWeeklyLimit.value = null;

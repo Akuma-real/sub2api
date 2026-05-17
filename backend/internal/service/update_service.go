@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	updateCacheKey = "update_check_cache"
-	updateCacheTTL = 1200 // 20 minutes
-	githubRepo     = "Wei-Shaw/sub2api"
+	updateCacheKey    = "update_check_cache"
+	updateCacheTTL    = 1200 // 20 minutes
+	defaultGitHubRepo = "Akuma-real/sub2api"
 
 	// Security: allowed download domains for updates
 	allowedDownloadHost = "github.com"
@@ -53,15 +53,22 @@ type UpdateService struct {
 	githubClient   GitHubReleaseClient
 	currentVersion string
 	buildType      string // "source" for manual builds, "release" for CI builds
+	githubRepo     string
 }
 
 // NewUpdateService creates a new UpdateService
-func NewUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, version, buildType string) *UpdateService {
+func NewUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, version, buildType, githubRepo string) *UpdateService {
+	githubRepo = strings.TrimSpace(githubRepo)
+	if githubRepo == "" {
+		githubRepo = defaultGitHubRepo
+	}
+
 	return &UpdateService{
 		cache:          cache,
 		githubClient:   githubClient,
 		currentVersion: version,
 		buildType:      buildType,
+		githubRepo:     githubRepo,
 	}
 }
 
@@ -99,6 +106,8 @@ type GitHubRelease struct {
 	Body        string        `json:"body"`
 	PublishedAt string        `json:"published_at"`
 	HTMLURL     string        `json:"html_url"`
+	Draft       bool          `json:"draft"`
+	Prerelease  bool          `json:"prerelease"`
 	Assets      []GitHubAsset `json:"assets"`
 }
 
@@ -276,7 +285,7 @@ func (s *UpdateService) Rollback() error {
 }
 
 func (s *UpdateService) fetchLatestRelease(ctx context.Context) (*UpdateInfo, error) {
-	release, err := s.githubClient.FetchLatestRelease(ctx, githubRepo)
+	release, err := s.githubClient.FetchLatestRelease(ctx, s.githubRepo)
 	if err != nil {
 		return nil, err
 	}

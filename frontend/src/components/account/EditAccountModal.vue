@@ -199,6 +199,7 @@
                   <input
                     v-model="mapping.from"
                     type="text"
+                  list="account-model-suggestions"
                     class="input flex-1"
                     :placeholder="t('admin.accounts.requestModel')"
                   />
@@ -218,6 +219,7 @@
                   <input
                     v-model="mapping.to"
                     type="text"
+                  list="account-model-suggestions"
                     class="input flex-1"
                     :placeholder="t('admin.accounts.actualModel')"
                   />
@@ -546,6 +548,7 @@
                 <input
                   v-model="mapping.from"
                   type="text"
+                  list="account-model-suggestions"
                   class="input flex-1"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
@@ -565,6 +568,7 @@
                 <input
                   v-model="mapping.to"
                   type="text"
+                  list="account-model-suggestions"
                   class="input flex-1"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
@@ -805,6 +809,7 @@
                 <input
                   v-model="mapping.from"
                   type="text"
+                  list="account-model-suggestions"
                   class="input flex-1"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
@@ -824,6 +829,7 @@
                 <input
                   v-model="mapping.to"
                   type="text"
+                  list="account-model-suggestions"
                   class="input flex-1"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
@@ -1043,6 +1049,7 @@
               <input
                 v-model="mapping.from"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
               />
@@ -1050,6 +1057,7 @@
               <input
                 v-model="mapping.to"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.toModel')"
               />
@@ -1181,6 +1189,7 @@
                 <input
                   v-model="mapping.from"
                   type="text"
+                  list="account-model-suggestions"
                   :class="[
                     'input flex-1',
                     !isValidWildcardPattern(mapping.from)
@@ -1206,6 +1215,7 @@
                 <input
                   v-model="mapping.to"
                   type="text"
+                  list="account-model-suggestions"
                   :class="[
                     'input flex-1',
                     mapping.to.includes('*') ? 'border-error ' : '',
@@ -2016,6 +2026,7 @@
               <input
                 v-model="mapping.from"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
               />
@@ -2023,6 +2034,7 @@
               <input
                 v-model="mapping.to"
                 type="text"
+                  list="account-model-suggestions"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.toModel')"
               />
@@ -2698,6 +2710,10 @@
     </template>
   </BaseDialog>
 
+  <datalist id="account-model-suggestions">
+    <option v-for="model in allModelValues" :key="model" :value="model" />
+  </datalist>
+
   <!-- Mixed Channel Warning Dialog -->
   <ConfirmDialog
     :show="showMixedChannelWarning"
@@ -2752,6 +2768,7 @@ import {
 } from "@/utils/openaiWsMode";
 import {
   getPresetMappingsByPlatform,
+  allModels,
   commonErrorCodes,
   buildModelMappingObject,
   isValidWildcardPattern,
@@ -2769,6 +2786,7 @@ const emit = defineEmits<{
   close: [];
   updated: [account: Account];
 }>();
+const allModelValues = allModels.map((model) => model.value);
 
 const { t } = useI18n();
 const appStore = useAppStore();

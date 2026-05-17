@@ -28,7 +28,7 @@ type testTransport struct {
 
 func (t *testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// Rewrite the URL to point to our test server
-	testURL := t.testServerURL + req.URL.Path
+	testURL := t.testServerURL + req.URL.RequestURI()
 	newReq, err := http.NewRequestWithContext(req.Context(), req.Method, testURL, req.Body)
 	if err != nil {
 		return nil, err
@@ -243,6 +243,50 @@ func (s *GitHubReleaseServiceSuite) TestFetchLatestRelease_Success() {
 	require.Equal(s.T(), "Release 1.0.0", release.Name)
 	require.Len(s.T(), release.Assets, 1)
 	require.Equal(s.T(), "app-linux-amd64.tar.gz", release.Assets[0].Name)
+}
+
+func (s *GitHubReleaseServiceSuite) TestFetchLatestRelease_FallsBackToListedPrerelease() {
+	releasesJSON := `[
+		{
+			"tag_name": "v1.0.1-draft",
+			"name": "Draft Release",
+			"draft": true
+		},
+		{
+			"tag_name": "v1.0.1-akuma.1",
+			"name": "Sub2API 1.0.1-akuma.1",
+			"prerelease": true,
+			"html_url": "https://github.com/test/repo/releases/tag/v1.0.1-akuma.1",
+			"assets": []
+		}
+	]`
+
+	s.srv = newLocalTestServer(s.T(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(s.T(), "Sub2API-Updater", r.Header.Get("User-Agent"))
+		switch r.URL.Path {
+		case "/repos/test/repo/releases/latest":
+			w.WriteHeader(http.StatusNotFound)
+		case "/repos/test/repo/releases":
+			require.Equal(s.T(), "10", r.URL.Query().Get("per_page"))
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(releasesJSON))
+		default:
+			s.T().Fatalf("unexpected path: %s", r.URL.Path)
+		}
+	}))
+
+	s.client = &githubReleaseClient{
+		httpClient: &http.Client{
+			Transport: &testTransport{testServerURL: s.srv.URL},
+		},
+		downloadHTTPClient: &http.Client{},
+	}
+
+	release, err := s.client.FetchLatestRelease(context.Background(), "test/repo")
+	require.NoError(s.T(), err)
+	require.Equal(s.T(), "v1.0.1-akuma.1", release.TagName)
+	require.True(s.T(), release.Prerelease)
 }
 
 func (s *GitHubReleaseServiceSuite) TestFetchLatestRelease_Non200() {

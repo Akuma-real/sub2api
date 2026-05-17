@@ -248,6 +248,7 @@
       <template #table>
         <AccountBulkActionsBar
           :selected-ids="selIds"
+          :testing="bulkTestingAccounts"
           @delete="handleBulkDelete"
           @reset-status="handleBulkResetStatus"
           @refresh-token="handleBulkRefreshToken"
@@ -255,6 +256,7 @@
           @edit-filtered="openBulkEditFiltered"
           @clear="clearSelection"
           @select-page="selectPage"
+          @test-selected="handleBulkTestAccounts"
           @toggle-schedulable="handleBulkToggleSchedulable"
         />
         <div
@@ -789,6 +791,7 @@ const showTest = ref(false);
 const showStats = ref(false);
 const showErrorPassthrough = ref(false);
 const showTLSFingerprintProfiles = ref(false);
+const bulkTestingAccounts = ref(false);
 const edAcc = ref<Account | null>(null);
 const tempUnschedAcc = ref<Account | null>(null);
 const deletingAcc = ref<Account | null>(null);
@@ -2088,6 +2091,44 @@ const closeReAuthModal = () => {
 const handleTest = (a: Account) => {
   testingAcc.value = a;
   showTest.value = true;
+};
+
+const handleBulkTestAccounts = async () => {
+  if (bulkTestingAccounts.value) return;
+  const accountIds = [...selIds.value];
+  if (accountIds.length === 0) {
+    appStore.showError(t("admin.accounts.bulkActions.noSelected"));
+    return;
+  }
+  bulkTestingAccounts.value = true;
+  let success = 0;
+  let failed = 0;
+  try {
+    for (const id of accountIds) {
+      try {
+        const result = await adminAPI.accounts.testAccount(id);
+        if (result.success) success += 1;
+        else failed += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    if (failed > 0) {
+      appStore.showError(
+        t("admin.accounts.bulkActions.testFinishedWithErrors", {
+          success,
+          failed,
+        }),
+      );
+    } else {
+      appStore.showSuccess(
+        t("admin.accounts.bulkActions.testFinished", { count: success }),
+      );
+    }
+  } finally {
+    bulkTestingAccounts.value = false;
+    reload();
+  }
 };
 const handleViewStats = (a: Account) => {
   statsAcc.value = a;

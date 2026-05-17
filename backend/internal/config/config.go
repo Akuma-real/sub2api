@@ -152,6 +152,8 @@ type UpdateConfig struct {
 	// 支持 http/https/socks5/socks5h 协议
 	// 例如: "http://127.0.0.1:7890", "socks5://127.0.0.1:1080"
 	ProxyURL string `mapstructure:"proxy_url"`
+	// GitHubRepo 用于后台更新检查的 GitHub 仓库，格式: owner/repo
+	GitHubRepo string `mapstructure:"github_repo"`
 }
 
 type IdempotencyConfig struct {
@@ -1605,6 +1607,7 @@ func setDefaults() {
 	viper.SetDefault("pricing.fallback_file", "./resources/model-pricing/model_prices_and_context_window.json")
 	viper.SetDefault("pricing.update_interval_hours", 24)
 	viper.SetDefault("pricing.hash_check_interval_minutes", 10)
+	viper.SetDefault("update.github_repo", "Akuma-real/sub2api")
 
 	// Timezone (default to Asia/Shanghai for Chinese users)
 	viper.SetDefault("timezone", "Asia/Shanghai")

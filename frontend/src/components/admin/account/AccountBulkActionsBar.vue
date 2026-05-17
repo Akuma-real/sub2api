@@ -47,6 +47,17 @@
           {{ t("admin.accounts.bulkActions.refreshToken") }}
         </button>
         <button
+          @click="$emit('test-selected')"
+          class="btn btn-secondary btn-sm"
+          :disabled="testing"
+        >
+          {{
+            testing
+              ? t("admin.accounts.bulkActions.testingSelected")
+              : t("admin.accounts.bulkActions.testSelected")
+          }}
+        </button>
+        <button
           @click="$emit('toggle-schedulable', true)"
           class="btn btn-success btn-sm"
         >
@@ -71,13 +82,17 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-defineProps(["selectedIds"]);
+defineProps<{
+  selectedIds: number[];
+  testing?: boolean;
+}>();
 defineEmits([
   "delete",
   "edit-selected",
   "edit-filtered",
   "clear",
   "select-page",
+  "test-selected",
   "toggle-schedulable",
   "reset-status",
   "refresh-token",

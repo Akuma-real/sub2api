@@ -345,6 +345,7 @@ export default {
     announcements: 'Announcements',
     apiKeys: 'API Keys',
     usage: 'Usage',
+    playground: 'Playground',
     redeem: 'Redeem',
     affiliate: 'Affiliate Rebates',
     affiliateManagement: 'Affiliate Rebates',
@@ -804,6 +805,27 @@ export default {
     },
   },
 
+  playground: {
+    title: 'Playground',
+    description: 'Chat and image generation with your own API key',
+    apiKey: 'API Key',
+    manualKey: 'Manual Key',
+    manualKeyPlaceholder: 'Paste an API key',
+    model: 'Model',
+    chat: 'Chat',
+    image: 'Image',
+    systemPrompt: 'System Prompt',
+    messagePlaceholder: 'Message',
+    send: 'Send',
+    imageModel: 'Image Model',
+    imageSize: 'Size',
+    prompt: 'Prompt',
+    imagePromptPlaceholder: 'Describe the image',
+    generate: 'Generate',
+    noImage: 'No image',
+    keyRequired: 'Select or enter an API key first'
+  },
+
   // Usage
   usage: {
     title: 'Usage Records',
@@ -860,6 +882,7 @@ export default {
     stream: 'Stream',
     sync: 'Sync',
     unknown: 'Unknown',
+    default: 'Default',
     in: 'In',
     out: 'Out',
     inputTokenPrice: 'Input price',
@@ -1096,6 +1119,10 @@ export default {
   profile: {
     title: 'Profile Settings',
     description: 'Manage your account information and settings',
+    tabs: {
+      account: 'Account',
+      subscriptions: 'Subscriptions'
+    },
     accountBalance: 'Account Balance',
     concurrencyLimit: 'Concurrency Limit',
     rpmLimit: 'RPM Limit',
@@ -1983,6 +2010,13 @@ export default {
       accountsUnit: '',
       rateAndAccounts: '{rate}x rate · {count} accounts',
       accountsCount: '{count} accounts',
+      accounts: {
+        action: 'Accounts',
+        manageTitle: 'Manage accounts: {name}',
+        searchPlaceholder: 'Search account name',
+        selectedCount: '{count} selected',
+        failedToLoad: 'Failed to load accounts'
+      },
       form: {
         name: 'Name',
         description: 'Description',
@@ -3067,6 +3101,11 @@ export default {
         disableScheduling: 'Disable Scheduling',
         resetStatus: 'Reset Status',
         refreshToken: 'Refresh Token',
+        testSelected: 'Test',
+        testingSelected: 'Testing...',
+        noSelected: 'Please select accounts first',
+        testFinished: 'Tested {count} account(s)',
+        testFinishedWithErrors: 'Batch test completed: {success} succeeded, {failed} failed',
         resetStatusSuccess: 'Successfully reset {count} account(s) status',
         refreshTokenSuccess: 'Successfully refreshed {count} account(s) token',
         partialSuccess: 'Partially completed: {success} succeeded, {failed} failed'
@@ -3221,6 +3260,12 @@ export default {
         'Map request models to actual models. Left is the requested model, right is the actual model sent to API.',
       selectedModels: 'Selected {count} model(s)',
       supportsAllModels: '(supports all models)',
+      fetchUpstreamModels: 'Fetch upstream models',
+      fetchingUpstreamModels: 'Fetching...',
+      fetchedUpstreamModels: 'Fetched {count} upstream model(s)',
+      fetchUpstreamModelsSuccess: 'Fetched {count} upstream model(s)',
+      fetchUpstreamModelsFailed: 'Failed to fetch upstream models',
+      noUpstreamModels: 'No upstream models found',
       requestModel: 'Request model',
       actualModel: 'Actual model',
       addMapping: 'Add Mapping',
@@ -5473,6 +5518,9 @@ export default {
         namePlaceholder: 'e.g. Help Center',
         url: 'Page URL',
         urlPlaceholder: 'https://example.com/page',
+        urlPreviewHint: 'Preview opens the sidebar page exactly as users will see it.',
+        preview: 'Preview',
+        previewUnavailable: 'Save or fill ID and URL to preview',
         iconSvg: 'SVG Icon',
         iconSvgPlaceholder: '<svg>...</svg>',
         iconPreview: 'Icon Preview',

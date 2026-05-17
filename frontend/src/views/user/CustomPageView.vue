@@ -200,8 +200,7 @@ const markdownSlug = computed(() => {
   const item = menuItem.value;
   if (!item) return "";
   if (item.page_slug) return item.page_slug;
-  if (item.url?.startsWith("md: ")) return item.url.slice(3);
-  return "";
+  return parseMarkdownMenuSlug(item.url);
 });
 
 const isMarkdownMode = computed(() => !!markdownSlug.value);
@@ -246,6 +245,12 @@ function isRelativeMarkdownAsset(src: string): boolean {
     .split("/")
     .filter((part) => part && part !== ".")
     .every((part) => part !== ".." && !part.includes("\\"));
+}
+
+function parseMarkdownMenuSlug(url?: string): string {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed.startsWith("md:")) return "";
+  return trimmed.slice(3).trim();
 }
 
 function buildPageImageUrl(slug: string, src: string): string {
