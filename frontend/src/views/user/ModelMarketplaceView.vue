@@ -1,22 +1,6 @@
 <template>
   <AppLayout>
     <div class="model-marketplace">
-      <section class="summary-grid" aria-label="Model marketplace summary">
-        <div
-          v-for="card in summaryCards"
-          :key="card.key"
-          class="summary-card"
-        >
-          <div class="summary-icon">
-            <Icon :name="card.icon" size="md" />
-          </div>
-          <div>
-            <p class="summary-label">{{ card.label }}</p>
-            <p class="summary-value">{{ card.value }}</p>
-          </div>
-        </div>
-      </section>
-
       <section class="marketplace-toolbar">
         <div class="search-box">
           <Icon name="search" size="md" class="text-muted-soft" />
@@ -28,8 +12,8 @@
           />
         </div>
 
-        <div class="filter-grid">
-          <label class="filter-field">
+        <div v-if="visibleFilterCount > 0" class="filter-grid">
+          <label v-if="showPlatformFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.platform") }}</span>
             <select v-model="filters.platform">
               <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
@@ -39,7 +23,7 @@
             </select>
           </label>
 
-          <label class="filter-field">
+          <label v-if="showChannelFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.channel") }}</span>
             <select v-model="filters.channel">
               <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
@@ -49,7 +33,7 @@
             </select>
           </label>
 
-          <label class="filter-field">
+          <label v-if="showGroupFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.group") }}</span>
             <select v-model="filters.group">
               <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
@@ -59,23 +43,17 @@
             </select>
           </label>
 
-          <label class="filter-field">
+          <label v-if="showBillingFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.billing") }}</span>
             <select v-model="filters.billing">
               <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option value="token">
-                {{ t("modelMarketplace.billing.token") }}
-              </option>
-              <option value="per_request">
-                {{ t("modelMarketplace.billing.perRequest") }}
-              </option>
-              <option value="image">
-                {{ t("modelMarketplace.billing.image") }}
+              <option v-for="mode in billingModeOptions" :key="mode" :value="mode">
+                {{ billingModeLabel(mode) }}
               </option>
             </select>
           </label>
 
-          <label class="filter-field">
+          <label v-if="showPricingFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.pricing") }}</span>
             <select v-model="filters.pricing">
               <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
@@ -88,21 +66,16 @@
             </select>
           </label>
 
-          <label class="filter-field">
+          <label v-if="showCapabilityFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.capability") }}</span>
             <select v-model="filters.capability">
               <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option value="image">
-                {{ t("modelMarketplace.capabilities.image") }}
-              </option>
-              <option value="cache">
-                {{ t("modelMarketplace.capabilities.cache") }}
-              </option>
-              <option value="tiered">
-                {{ t("modelMarketplace.capabilities.tiered") }}
-              </option>
-              <option value="per_request">
-                {{ t("modelMarketplace.capabilities.perRequest") }}
+              <option
+                v-for="capability in capabilityOptions"
+                :key="capability"
+                :value="capability"
+              >
+                {{ capabilityFilterLabel(capability) }}
               </option>
             </select>
           </label>
@@ -519,34 +492,6 @@ const filters = reactive({
 });
 
 const models = computed(() => response.value.models);
-const summary = computed(() => response.value.summary);
-
-const summaryCards = computed(() => [
-  {
-    key: "models",
-    label: t("modelMarketplace.summary.models"),
-    value: summary.value.models,
-    icon: "cube" as const,
-  },
-  {
-    key: "platforms",
-    label: t("modelMarketplace.summary.platforms"),
-    value: summary.value.platforms,
-    icon: "grid" as const,
-  },
-  {
-    key: "channels",
-    label: t("modelMarketplace.summary.channels"),
-    value: summary.value.channels,
-    icon: "server" as const,
-  },
-  {
-    key: "priced",
-    label: t("modelMarketplace.summary.priced"),
-    value: summary.value.priced_models,
-    icon: "dollar" as const,
-  },
-]);
 
 const platformOptions = computed(() =>
   Array.from(new Set(models.value.map((m) => m.platform))).sort(),
@@ -568,25 +513,84 @@ const groupOptions = computed(() =>
   ).sort((a, b) => a.localeCompare(b)),
 );
 
+const billingModeOptions = computed(() =>
+  Array.from(new Set(models.value.map((m) => m.billing_mode))).sort(),
+);
+
+const capabilityOptions = computed(() => {
+  const values = new Set<string>();
+  for (const model of models.value) {
+    if (model.capabilities.supports_image) values.add("image");
+    if (model.capabilities.supports_cache_pricing) values.add("cache");
+    if (model.capabilities.has_tiered_pricing) values.add("tiered");
+    if (model.capabilities.has_per_request_pricing) values.add("per_request");
+  }
+  return Array.from(values);
+});
+
+const showPlatformFilter = computed(() => platformOptions.value.length > 1);
+const showChannelFilter = computed(() => channelOptions.value.length > 1);
+const showGroupFilter = computed(() => groupOptions.value.length > 1);
+const showBillingFilter = computed(() => billingModeOptions.value.length > 1);
+const showPricingFilter = computed(() => {
+  const hasPriced = models.value.some((model) => Boolean(model.pricing));
+  const hasUnpriced = models.value.some((model) => !model.pricing);
+  return hasPriced && hasUnpriced;
+});
+const showCapabilityFilter = computed(() =>
+  capabilityOptions.value.some((capability) => {
+    const matched = models.value.filter((model) =>
+      matchesCapability(model, capability),
+    ).length;
+    return matched > 0 && matched < models.value.length;
+  }),
+);
+const visibleFilterCount = computed(
+  () =>
+    Number(showPlatformFilter.value) +
+    Number(showChannelFilter.value) +
+    Number(showGroupFilter.value) +
+    Number(showBillingFilter.value) +
+    Number(showPricingFilter.value) +
+    Number(showCapabilityFilter.value),
+);
+
 const filteredModels = computed(() => {
   const q = filters.search.trim().toLowerCase();
   const rows = models.value.filter((model) => {
-    if (filters.platform !== "all" && model.platform !== filters.platform) {
-      return false;
-    }
-    if (filters.billing !== "all" && model.billing_mode !== filters.billing) {
-      return false;
-    }
-    if (filters.pricing === "priced" && !model.pricing) return false;
-    if (filters.pricing === "unpriced" && model.pricing) return false;
-    if (!matchesCapability(model, filters.capability)) return false;
     if (
+      showPlatformFilter.value &&
+      filters.platform !== "all" &&
+      model.platform !== filters.platform
+    ) {
+      return false;
+    }
+    if (
+      showBillingFilter.value &&
+      filters.billing !== "all" &&
+      model.billing_mode !== filters.billing
+    ) {
+      return false;
+    }
+    if (showPricingFilter.value) {
+      if (filters.pricing === "priced" && !model.pricing) return false;
+      if (filters.pricing === "unpriced" && model.pricing) return false;
+    }
+    if (
+      showCapabilityFilter.value &&
+      !matchesCapability(model, filters.capability)
+    ) {
+      return false;
+    }
+    if (
+      showChannelFilter.value &&
       filters.channel !== "all" &&
       !model.channels.some((c) => c.name === filters.channel)
     ) {
       return false;
     }
     if (
+      showGroupFilter.value &&
       filters.group !== "all" &&
       !model.channels.some((c) =>
         c.groups.some((g) => g.name === filters.group),
@@ -693,6 +697,21 @@ function billingModeLabel(mode: BillingMode | string) {
   }
 }
 
+function capabilityFilterLabel(capability: string) {
+  switch (capability) {
+    case "image":
+      return t("modelMarketplace.capabilities.image");
+    case "cache":
+      return t("modelMarketplace.capabilities.cache");
+    case "tiered":
+      return t("modelMarketplace.capabilities.tiered");
+    case "per_request":
+      return t("modelMarketplace.capabilities.perRequest");
+    default:
+      return capability;
+  }
+}
+
 function pricingSourceLabel(source: string) {
   switch (source) {
     case "channel":
@@ -761,26 +780,6 @@ onMounted(loadMarketplace);
   @apply mx-auto flex w-full max-w-7xl flex-col gap-6;
 }
 
-.summary-grid {
-  @apply grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
-}
-
-.summary-card {
-  @apply flex items-center gap-4 rounded-lg border border-hairline bg-canvas p-5;
-}
-
-.summary-icon {
-  @apply flex h-10 w-10 items-center justify-center rounded-md bg-surface-card text-primary-700;
-}
-
-.summary-label {
-  @apply text-xs font-medium uppercase tracking-wide text-muted;
-}
-
-.summary-value {
-  @apply mt-1 font-serif text-3xl font-normal leading-none text-ink;
-}
-
 .marketplace-toolbar {
   @apply flex flex-col gap-4 rounded-lg border border-hairline bg-surface-soft p-4;
 }
@@ -794,7 +793,7 @@ onMounted(loadMarketplace);
 }
 
 .filter-grid {
-  @apply grid gap-3 md:grid-cols-2 xl:grid-cols-6;
+  @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3;
 }
 
 .filter-field,
@@ -807,7 +806,7 @@ onMounted(loadMarketplace);
   @apply h-10 rounded-md border border-hairline bg-canvas py-0 pl-3 pr-10 text-sm normal-case tracking-normal text-ink outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23756f68' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-position: right 0.85rem center;
+  background-position: right 1rem center;
   background-repeat: no-repeat;
   background-size: 0.85rem;
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,9 +24,14 @@ import (
 //  4. 字段白名单：仅返回用户需要的字段（省略 BillingModelSource / RestrictModels
 //     / 内部 ID / Status 等管理字段）。
 type AvailableChannelHandler struct {
-	channelService *service.ChannelService
-	apiKeyService  *service.APIKeyService
-	settingService *service.SettingService
+	channelService          *service.ChannelService
+	apiKeyService           *service.APIKeyService
+	settingService          *service.SettingService
+	availableModelsProvider availableModelsProvider
+}
+
+type availableModelsProvider interface {
+	GetAvailableModels(ctx context.Context, groupID *int64, platform string) []string
 }
 
 // NewAvailableChannelHandler 创建用户侧可用渠道 handler。
@@ -33,11 +39,13 @@ func NewAvailableChannelHandler(
 	channelService *service.ChannelService,
 	apiKeyService *service.APIKeyService,
 	settingService *service.SettingService,
+	gatewayService *service.GatewayService,
 ) *AvailableChannelHandler {
 	return &AvailableChannelHandler{
-		channelService: channelService,
-		apiKeyService:  apiKeyService,
-		settingService: settingService,
+		channelService:          channelService,
+		apiKeyService:           apiKeyService,
+		settingService:          settingService,
+		availableModelsProvider: gatewayService,
 	}
 }
 
@@ -217,6 +225,7 @@ func (h *AvailableChannelHandler) List(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
+	channels = h.withUserAvailableModels(c.Request.Context(), channels, userGroups, allowedGroupIDs)
 
 	out := make([]userAvailableChannel, 0, len(channels))
 	for _, ch := range channels {
@@ -319,8 +328,139 @@ func (h *AvailableChannelHandler) buildModelMarketplace(c *gin.Context) (userMod
 		response.ErrorFrom(c, err)
 		return empty, false
 	}
+	channels = h.withUserAvailableModels(c.Request.Context(), channels, userGroups, allowedGroupIDs)
 	resp := buildUserModelMarketplace(channels, allowedGroupIDs, userRates)
 	return resp, true
+}
+
+type visibleModelCatalog map[int64]map[string][]string
+
+func (h *AvailableChannelHandler) withUserAvailableModels(
+	ctx context.Context,
+	channels []service.AvailableChannel,
+	userGroups []service.Group,
+	allowedGroupIDs map[int64]struct{},
+) []service.AvailableChannel {
+	if len(channels) == 0 || len(userGroups) == 0 {
+		return channels
+	}
+	catalog := h.buildVisibleModelCatalog(ctx, userGroups)
+	if len(catalog) == 0 {
+		return channels
+	}
+
+	out := make([]service.AvailableChannel, len(channels))
+	copy(out, channels)
+	for i := range out {
+		if out[i].RestrictModels {
+			continue
+		}
+		supported := addUserAvailableModels(
+			out[i].SupportedModels,
+			out[i].Groups,
+			allowedGroupIDs,
+			catalog,
+		)
+		if h.channelService != nil {
+			h.channelService.FillGlobalPricingFallback(supported)
+		}
+		out[i].SupportedModels = supported
+	}
+	return out
+}
+
+func (h *AvailableChannelHandler) buildVisibleModelCatalog(
+	ctx context.Context,
+	userGroups []service.Group,
+) visibleModelCatalog {
+	catalog := make(visibleModelCatalog, len(userGroups))
+	for _, group := range userGroups {
+		platform := strings.TrimSpace(group.Platform)
+		if platform == "" {
+			continue
+		}
+
+		var models []string
+		if h.availableModelsProvider != nil {
+			groupID := group.ID
+			models = h.availableModelsProvider.GetAvailableModels(ctx, &groupID, platform)
+		}
+		if len(models) == 0 {
+			models = service.DefaultModelIDsForPlatform(platform)
+		}
+		if len(models) == 0 {
+			continue
+		}
+		if catalog[group.ID] == nil {
+			catalog[group.ID] = map[string][]string{}
+		}
+		catalog[group.ID][platform] = models
+	}
+	return catalog
+}
+
+func addUserAvailableModels(
+	supported []service.SupportedModel,
+	groups []service.AvailableGroupRef,
+	allowedGroupIDs map[int64]struct{},
+	catalog visibleModelCatalog,
+) []service.SupportedModel {
+	if len(groups) == 0 || len(catalog) == 0 {
+		return supported
+	}
+
+	type dedupKey struct {
+		platform string
+		name     string
+	}
+	seen := make(map[dedupKey]struct{}, len(supported))
+	out := append([]service.SupportedModel(nil), supported...)
+	for _, model := range out {
+		seen[dedupKey{
+			platform: strings.ToLower(model.Platform),
+			name:     strings.ToLower(model.Name),
+		}] = struct{}{}
+	}
+
+	for _, group := range groups {
+		if allowedGroupIDs != nil {
+			if _, ok := allowedGroupIDs[group.ID]; !ok {
+				continue
+			}
+		}
+		platform := strings.TrimSpace(group.Platform)
+		if platform == "" {
+			continue
+		}
+		modelIDs := catalog[group.ID][platform]
+		for _, modelID := range modelIDs {
+			modelID = strings.TrimSpace(modelID)
+			if modelID == "" {
+				continue
+			}
+			key := dedupKey{
+				platform: strings.ToLower(platform),
+				name:     strings.ToLower(modelID),
+			}
+			if _, ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = struct{}{}
+			out = append(out, service.SupportedModel{
+				Name:          modelID,
+				Platform:      platform,
+				PricingSource: "none",
+			})
+		}
+	}
+
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Platform != out[j].Platform {
+			return strings.ToLower(out[i].Platform) < strings.ToLower(out[j].Platform)
+		}
+		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
+	})
+	return out
 }
 
 func buildUserModelMarketplace(

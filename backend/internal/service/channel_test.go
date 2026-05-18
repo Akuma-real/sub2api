@@ -482,7 +482,6 @@ func TestSupportedModels_WildcardExpandedFromPricing(t *testing.T) {
 	}
 }
 
-
 func TestSupportedModels_MissingPricingKeepsNilPricing(t *testing.T) {
 	ch := &Channel{
 		ModelMapping: map[string]map[string]string{
@@ -725,4 +724,22 @@ func TestSupportedModels_ExactMappingTargetMissingFromPricing(t *testing.T) {
 	require.Nil(t, got[0].Pricing, "target 在渠道定价中缺失时不虚假填充，留给 ListAvailable 走 LiteLLM 回落")
 	require.Equal(t, "some-priced-model", got[1].Name)
 	require.NotNil(t, got[1].Pricing)
+}
+
+func TestSupportedModels_ExactMappingWithoutPricingStillVisible(t *testing.T) {
+	ch := &Channel{
+		ModelMapping: map[string]map[string]string{
+			"openai": {
+				"custom-unpriced-model": "upstream-custom-model",
+			},
+		},
+	}
+
+	got := ch.SupportedModels()
+	require.Len(t, got, 1)
+	require.Equal(t, "custom-unpriced-model", got[0].Name)
+	require.Equal(t, "openai", got[0].Platform)
+	require.Nil(t, got[0].Pricing)
+	require.Equal(t, "none", got[0].PricingSource)
+	require.Equal(t, "upstream-custom-model", got[0].MappedModel)
 }

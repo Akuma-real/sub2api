@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -61,6 +62,101 @@ func TestToUserSupportedModels_NilAllowedPlatformsKeepsAll(t *testing.T) {
 		{Name: "b", Platform: "openai"},
 	}
 	require.Len(t, toUserSupportedModels(src, nil), 2)
+}
+
+type mockAvailableModelsProvider struct {
+	models []string
+	calls  int
+}
+
+func (m *mockAvailableModelsProvider) GetAvailableModels(ctx context.Context, groupID *int64, platform string) []string {
+	m.calls++
+	return m.models
+}
+
+func TestWithUserAvailableModels_UnrestrictedUsesAccountVisibleModels(t *testing.T) {
+	provider := &mockAvailableModelsProvider{models: []string{"gpt-5.3-codex", "custom-openai-model"}}
+	h := &AvailableChannelHandler{availableModelsProvider: provider}
+	channels := []service.AvailableChannel{{
+		ID:             1,
+		Name:           "openai",
+		Status:         service.StatusActive,
+		RestrictModels: false,
+		Groups: []service.AvailableGroupRef{
+			{ID: 10, Name: "payg_default", Platform: service.PlatformOpenAI},
+		},
+	}}
+	userGroups := []service.Group{{ID: 10, Name: "payg_default", Platform: service.PlatformOpenAI}}
+
+	out := h.withUserAvailableModels(
+		context.Background(),
+		channels,
+		userGroups,
+		map[int64]struct{}{10: {}},
+	)
+
+	require.Equal(t, 1, provider.calls)
+	require.Len(t, out[0].SupportedModels, 2)
+	require.Equal(t, "custom-openai-model", out[0].SupportedModels[0].Name)
+	require.Equal(t, "gpt-5.3-codex", out[0].SupportedModels[1].Name)
+	require.Equal(t, "none", out[0].SupportedModels[1].PricingSource)
+}
+
+func TestWithUserAvailableModels_UnrestrictedFallsBackToPlatformDefaults(t *testing.T) {
+	provider := &mockAvailableModelsProvider{}
+	h := &AvailableChannelHandler{availableModelsProvider: provider}
+	channels := []service.AvailableChannel{{
+		ID:             1,
+		Name:           "openai",
+		Status:         service.StatusActive,
+		RestrictModels: false,
+		Groups: []service.AvailableGroupRef{
+			{ID: 10, Name: "payg_default", Platform: service.PlatformOpenAI},
+		},
+	}}
+	userGroups := []service.Group{{ID: 10, Name: "payg_default", Platform: service.PlatformOpenAI}}
+
+	out := h.withUserAvailableModels(
+		context.Background(),
+		channels,
+		userGroups,
+		map[int64]struct{}{10: {}},
+	)
+
+	require.NotEmpty(t, out[0].SupportedModels)
+	require.Contains(t, modelNames(out[0].SupportedModels), "gpt-5.3-codex")
+}
+
+func TestWithUserAvailableModels_RestrictedDoesNotAddAccountVisibleModels(t *testing.T) {
+	provider := &mockAvailableModelsProvider{models: []string{"gpt-5.3-codex"}}
+	h := &AvailableChannelHandler{availableModelsProvider: provider}
+	channels := []service.AvailableChannel{{
+		ID:             1,
+		Name:           "openai",
+		Status:         service.StatusActive,
+		RestrictModels: true,
+		Groups: []service.AvailableGroupRef{
+			{ID: 10, Name: "payg_default", Platform: service.PlatformOpenAI},
+		},
+	}}
+	userGroups := []service.Group{{ID: 10, Name: "payg_default", Platform: service.PlatformOpenAI}}
+
+	out := h.withUserAvailableModels(
+		context.Background(),
+		channels,
+		userGroups,
+		map[int64]struct{}{10: {}},
+	)
+
+	require.Empty(t, out[0].SupportedModels)
+}
+
+func modelNames(models []service.SupportedModel) []string {
+	names := make([]string, 0, len(models))
+	for _, model := range models {
+		names = append(names, model.Name)
+	}
+	return names
 }
 
 func TestUserAvailableChannel_FieldWhitelist(t *testing.T) {

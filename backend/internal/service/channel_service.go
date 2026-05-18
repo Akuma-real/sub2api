@@ -162,6 +162,10 @@ func NewChannelService(repo ChannelRepository, groupRepo GroupRepository, authCa
 	return s
 }
 
+func (s *ChannelService) FillGlobalPricingFallback(models []SupportedModel) {
+	s.fillGlobalPricingFallback(models)
+}
+
 // loadCache 加载或返回缓存的渠道数据
 func (s *ChannelService) loadCache(ctx context.Context) (*channelCache, error) {
 	if cached, ok := s.cache.Load().(*channelCache); ok && cached != nil {
