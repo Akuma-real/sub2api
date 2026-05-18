@@ -5,15 +5,32 @@ import ProfileView from '@/views/user/ProfileView.vue'
 const {
   fetchPublicSettingsMock,
   refreshUserMock,
-  authState
+  authState,
+  routeState,
+  routerReplaceMock
 } = vi.hoisted(() => ({
   fetchPublicSettingsMock: vi.fn(),
   refreshUserMock: vi.fn(),
   authState: {
     user: null as Record<string, unknown> | null,
     refreshUser: vi.fn()
-  }
+  },
+  routeState: {
+    query: {} as Record<string, unknown>
+  },
+  routerReplaceMock: vi.fn()
 }))
+
+vi.mock('vue-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('vue-router')>()
+  return {
+    ...actual,
+    useRoute: () => routeState,
+    useRouter: () => ({
+      replace: routerReplaceMock
+    })
+  }
+})
 
 vi.mock('@/stores/auth', () => ({
   useAuthStore: () => authState
@@ -43,6 +60,8 @@ describe('ProfileView', () => {
   beforeEach(() => {
     refreshUserMock.mockReset()
     fetchPublicSettingsMock.mockReset()
+    routerReplaceMock.mockReset()
+    routeState.query = {}
     refreshUserMock.mockResolvedValue(undefined)
     authState.refreshUser = refreshUserMock
     authState.user = {
@@ -95,5 +114,28 @@ describe('ProfileView', () => {
     expect(wrapper.get('[data-testid="profile-shell"]').html()).toContain('profile-info-card')
     expect(wrapper.get('[data-testid="profile-shell"]').html()).toContain('profile-password-form')
     expect(wrapper.get('[data-testid="profile-shell"]').html()).toContain('profile-totp-card')
+  })
+
+  it('opens the subscriptions tab from the route query', async () => {
+    routeState.query = { section: 'subscriptions' }
+
+    const wrapper = mount(ProfileView, {
+      global: {
+        stubs: {
+          AppLayout: { template: '<div><slot /></div>' },
+          ProfileInfoCard: { template: '<div data-testid="profile-info-card" />' },
+          ProfileBalanceNotifyCard: { template: '<div data-testid="profile-balance-notify-card" />' },
+          ProfilePasswordForm: { template: '<div data-testid="profile-password-form" />' },
+          ProfileTotpCard: { template: '<div data-testid="profile-totp-card" />' },
+          UserSubscriptionsPanel: { template: '<div data-testid="subscriptions-panel" />' },
+          Icon: true
+        }
+      }
+    })
+
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="subscriptions-panel"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="profile-info-card"]').exists()).toBe(false)
   })
 })

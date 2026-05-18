@@ -186,3 +186,49 @@
 .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: #faf9f5 !important; }
 .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: #faf9f5 !important; }
 .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: #faf9f5 !important; }
+
+@media (max-width: 520px) {
+  .theme-tour-popover .driver-popover-title {
+    padding: 16px 16px 10px 16px !important;
+  }
+
+  .driver-popover-title-text {
+    padding-right: 48px !important;
+    font-size: 16px !important;
+  }
+
+  .theme-tour-popover .driver-popover-description {
+    padding: 0 16px 16px 16px !important;
+  }
+
+  .theme-tour-popover .driver-popover-footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+  }
+
+  .footer-left,
+  .footer-right {
+    width: 100% !important;
+  }
+
+  .footer-left {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .footer-shortcuts {
+    display: none !important;
+  }
+
+  .footer-right {
+    justify-content: space-between !important;
+  }
+
+  .theme-tour-popover .driver-popover-footer button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+  }
+}

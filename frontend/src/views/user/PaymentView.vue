@@ -164,93 +164,112 @@
           <template v-else-if="activeTab === 'subscription'">
             <!-- Subscription confirm (inline, replaces plan list) -->
             <template v-if="selectedPlan">
-              <div class="card p-5">
-                <!-- Header: platform badge + plan name -->
-                <div class="mb-3 flex flex-wrap items-center gap-2">
-                  <span
-                    :class="[
-                      'rounded-md border px-2 py-0.5 text-xs font-medium',
-                      planBadgeClass,
-                    ]"
-                  >
-                    {{ platformLabel(selectedPlan.group_platform || "") }}
-                  </span>
-                  <h3 class="text-lg font-bold text-ink">
-                    {{ selectedPlan.name }}
-                  </h3>
+              <div class="card p-8">
+                <div class="flex flex-wrap items-start justify-between gap-6">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="font-display text-lg font-medium leading-none text-ink">
+                        {{ selectedPlan.name }}
+                      </h3>
+                      <span
+                        class="shrink-0 rounded-full border border-hairline bg-surface-card px-2.5 py-0.5 text-[11px] font-medium text-muted"
+                      >
+                        {{ platformLabel(selectedPlan.group_platform || "") }}
+                      </span>
+                    </div>
+                    <p
+                      v-if="selectedPlan.description"
+                      class="mt-3 max-w-2xl text-sm leading-relaxed text-muted"
+                    >
+                      {{ selectedPlan.description }}
+                    </p>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <div class="flex flex-wrap items-baseline justify-end gap-x-2 gap-y-1">
+                      <span
+                        v-if="selectedPlan.original_price"
+                        class="text-sm text-muted-soft line-through"
+                      >
+                        {{
+                          formatSelectedPaymentAmount(
+                            selectedPlan.original_price,
+                          )
+                        }}
+                      </span>
+                      <span
+                        class="font-display text-4xl font-medium leading-none text-ink"
+                      >
+                        {{ formatSelectedPaymentAmount(selectedPlan.price) }}
+                      </span>
+                      <span class="text-sm text-muted"
+                        >/ {{ planValiditySuffix }}</span
+                      >
+                    </div>
+                    <p
+                      v-if="
+                        selectedPlan.original_price &&
+                        selectedPlan.original_price > selectedPlan.price
+                      "
+                      class="mt-1 text-xs font-medium text-primary-700"
+                    >
+                      -{{
+                        Math.round(
+                          (1 -
+                            selectedPlan.price / selectedPlan.original_price) *
+                            100,
+                        )
+                      }}%
+                    </p>
+                  </div>
                 </div>
-                <!-- Price -->
-                <div class="flex items-baseline gap-2">
-                  <span
-                    v-if="selectedPlan.original_price"
-                    class="text-sm text-muted-soft line-through"
-                  >
-                    {{
-                      formatSelectedPaymentAmount(selectedPlan.original_price)
-                    }}
-                  </span>
-                  <span :class="['text-3xl font-bold', planTextClass]">{{
-                    formatSelectedPaymentAmount(selectedPlan.price)
-                  }}</span>
-                  <span class="text-sm text-muted"
-                    >/ {{ planValiditySuffix }}</span
-                  >
-                </div>
-                <!-- Description -->
-                <p
-                  v-if="selectedPlan.description"
-                  class="mt-2 text-sm leading-relaxed text-muted"
-                >
-                  {{ selectedPlan.description }}
-                </p>
-                <!-- Rate + Limits grid -->
-                <div class="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <span class="text-xs text-muted-soft">{{
-                      t("payment.planCard.rate")
-                    }}</span>
-                    <div class="flex items-baseline">
-                      <span :class="['text-lg font-bold', planTextClass]"
+                <div class="mt-6 rounded-lg border border-hairline bg-surface-card p-4">
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-muted-soft">{{
+                        t("payment.planCard.rate")
+                      }}</span>
+                      <span class="font-medium text-body-strong"
                         >×{{ selectedPlan.rate_multiplier ?? 1 }}</span
                       >
                     </div>
-                  </div>
-                  <div v-if="selectedPlan.daily_limit_usd != null">
-                    <span class="text-xs text-muted-soft">{{
-                      t("payment.planCard.dailyLimit")
-                    }}</span>
-                    <div class="text-lg font-semibold text-body-strong">
-                      ${{ selectedPlan.daily_limit_usd }}
+                    <div v-if="selectedPlan.daily_limit_usd != null" class="flex items-center justify-between">
+                      <span class="text-xs text-muted-soft">{{
+                        t("payment.planCard.dailyLimit")
+                      }}</span>
+                      <span class="font-medium text-body-strong">
+                        ${{ selectedPlan.daily_limit_usd }}
+                      </span>
                     </div>
-                  </div>
-                  <div v-if="selectedPlan.weekly_limit_usd != null">
-                    <span class="text-xs text-muted-soft">{{
-                      t("payment.planCard.weeklyLimit")
-                    }}</span>
-                    <div class="text-lg font-semibold text-body-strong">
-                      ${{ selectedPlan.weekly_limit_usd }}
+                    <div v-if="selectedPlan.weekly_limit_usd != null" class="flex items-center justify-between">
+                      <span class="text-xs text-muted-soft">{{
+                        t("payment.planCard.weeklyLimit")
+                      }}</span>
+                      <span class="font-medium text-body-strong">
+                        ${{ selectedPlan.weekly_limit_usd }}
+                      </span>
                     </div>
-                  </div>
-                  <div v-if="selectedPlan.monthly_limit_usd != null">
-                    <span class="text-xs text-muted-soft">{{
-                      t("payment.planCard.monthlyLimit")
-                    }}</span>
-                    <div class="text-lg font-semibold text-body-strong">
-                      ${{ selectedPlan.monthly_limit_usd }}
+                    <div v-if="selectedPlan.monthly_limit_usd != null" class="flex items-center justify-between">
+                      <span class="text-xs text-muted-soft">{{
+                        t("payment.planCard.monthlyLimit")
+                      }}</span>
+                      <span class="font-medium text-body-strong">
+                        ${{ selectedPlan.monthly_limit_usd }}
+                      </span>
                     </div>
-                  </div>
-                  <div
-                    v-if="
-                      selectedPlan.daily_limit_usd == null &&
-                      selectedPlan.weekly_limit_usd == null &&
-                      selectedPlan.monthly_limit_usd == null
-                    "
-                  >
-                    <span class="text-xs text-muted-soft">{{
-                      t("payment.planCard.quota")
-                    }}</span>
-                    <div class="text-lg font-semibold text-body-strong">
-                      {{ t("payment.planCard.unlimited") }}
+                    <div
+                      v-if="
+                        selectedPlan.daily_limit_usd == null &&
+                        selectedPlan.weekly_limit_usd == null &&
+                        selectedPlan.monthly_limit_usd == null
+                      "
+                      class="flex items-center justify-between"
+                    >
+                      <span class="text-xs text-muted-soft">{{
+                        t("payment.planCard.quota")
+                      }}</span>
+                      <span class="font-medium text-body-strong">
+                        {{ t("payment.planCard.unlimited") }}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -552,8 +571,6 @@ import {
 import {
   platformAccentBarClass,
   platformBadgeLightClass,
-  platformBadgeClass,
-  platformTextClass,
   platformLabel,
 } from "@/utils/platformColors";
 import SubscriptionPlanCard from "@/components/payment/SubscriptionPlanCard.vue";
@@ -990,24 +1007,10 @@ watch(
   },
 );
 
-// Payment button class: follows selected payment method color
+// Payment button stays on the shared coral primary CTA style.
 const paymentButtonClass = computed(() => {
-  const m = selectedMethod.value;
-  if (!m) return "btn-primary";
-  if (m.includes("alipay")) return "btn-alipay";
-  if (m.includes("wxpay")) return "btn-wxpay";
-  if (m === "stripe") return "btn-stripe";
-  if (m === "airwallex") return "btn-airwallex";
   return "btn-primary";
 });
-
-// Subscription confirm: platform accent colors (clean card, no gradient)
-const planBadgeClass = computed(() =>
-  platformBadgeClass(selectedPlan.value?.group_platform || ""),
-);
-const planTextClass = computed(() =>
-  platformTextClass(selectedPlan.value?.group_platform || ""),
-);
 
 // Renewal modal state
 const showRenewalModal = ref(false);

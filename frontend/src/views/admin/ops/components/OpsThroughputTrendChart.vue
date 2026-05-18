@@ -236,7 +236,7 @@ function downloadChart() {
           :content="t('admin.ops.tooltips.throughputTrend')"
         />
       </h3>
-      <div class="flex items-center gap-2 text-xs text-muted">
+      <div class="flex flex-wrap items-center gap-2 text-xs text-muted">
         <span class="flex items-center gap-1"
           ><span class="h-2 w-2 rounded-full bg-accent-teal"></span>QPS</span
         >
@@ -245,33 +245,35 @@ function downloadChart() {
           >{{ t("admin.ops.tpsK") }}</span
         >
         <template v-if="!props.fullscreen">
-          <button
-            type="button"
-            class="ml-2 inline-flex items-center rounded-lg border border-hairline bg-canvas px-2 py-1 text-[11px] font-semibold text-body hover:bg-surface-soft disabled:opacity-50"
-            :disabled="state !== 'ready'"
-            :title="t('admin.ops.requestDetails.title')"
-            @click="emit('openDetails')"
-          >
-            {{ t("admin.ops.requestDetails.details") }}
-          </button>
-          <button
-            type="button"
-            class="ml-2 inline-flex items-center rounded-lg border border-hairline bg-canvas px-2 py-1 text-[11px] font-semibold text-body hover:bg-surface-soft disabled:opacity-50"
-            :disabled="state !== 'ready'"
-            :title="t('admin.ops.charts.resetZoomHint')"
-            @click="resetZoom"
-          >
-            {{ t("admin.ops.charts.resetZoom") }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center rounded-lg border border-hairline bg-canvas px-2 py-1 text-[11px] font-semibold text-body hover:bg-surface-soft disabled:opacity-50"
-            :disabled="state !== 'ready'"
-            :title="t('admin.ops.charts.downloadChartHint')"
-            @click="downloadChart"
-          >
-            {{ t("admin.ops.charts.downloadChart") }}
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center rounded-lg border border-hairline bg-canvas px-2 py-1 text-[11px] font-semibold text-body hover:bg-surface-soft disabled:opacity-50"
+              :disabled="state !== 'ready'"
+              :title="t('admin.ops.requestDetails.title')"
+              @click="emit('openDetails')"
+            >
+              {{ t("admin.ops.requestDetails.details") }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center rounded-lg border border-hairline bg-canvas px-2 py-1 text-[11px] font-semibold text-body hover:bg-surface-soft disabled:opacity-50"
+              :disabled="state !== 'ready'"
+              :title="t('admin.ops.charts.resetZoomHint')"
+              @click="resetZoom"
+            >
+              {{ t("admin.ops.charts.resetZoom") }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center rounded-lg border border-hairline bg-canvas px-2 py-1 text-[11px] font-semibold text-body hover:bg-surface-soft disabled:opacity-50"
+              :disabled="state !== 'ready'"
+              :title="t('admin.ops.charts.downloadChartHint')"
+              @click="downloadChart"
+            >
+              {{ t("admin.ops.charts.downloadChart") }}
+            </button>
+          </div>
         </template>
       </div>
     </div>

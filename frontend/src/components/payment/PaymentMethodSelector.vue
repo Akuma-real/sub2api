@@ -10,7 +10,7 @@
         type="button"
         :disabled="!method.available"
         :class="[
-          'relative flex h-[60px] flex-col items-center justify-center rounded-lg border px-3 transition-all sm:flex-1',
+          'relative flex h-[64px] min-w-0 flex-col items-center justify-center rounded-lg border px-3 text-center transition-all sm:flex-1',
           !method.available
             ? 'cursor-not-allowed border-hairline bg-surface-soft opacity-50 '
             : selected === method.type
@@ -25,13 +25,13 @@
             :alt="t(`payment.methods.${method.type}`)"
             class="h-7 w-7 object-contain"
           />
-          <span class="flex flex-col items-start leading-none">
-            <span class="text-base font-semibold">{{
+          <span class="flex min-w-0 flex-col items-start leading-none">
+            <span class="text-sm font-semibold leading-tight">{{
               t(`payment.methods.${method.type}`)
             }}</span>
             <span
               v-if="method.fee_rate > 0"
-              class="text-[10px] tracking-wide text-muted"
+              class="mt-0.5 text-[10px] tracking-wide text-muted"
             >
               {{ t("payment.fee") }} {{ method.fee_rate }}%
             </span>
@@ -93,13 +93,13 @@ function methodIcon(type: string): string {
 
 function methodSelectedClass(type: string): string {
   if (type.includes("alipay"))
-    return "border-primary-500 bg-primary-100 text-ink shadow-sm ";
+    return "border-primary-200 bg-surface-card text-ink shadow-card ";
   if (type.includes("wxpay"))
-    return "border-primary-500 bg-primary-100 text-ink shadow-sm ";
+    return "border-primary-200 bg-surface-card text-ink shadow-card ";
   if (type === "stripe")
-    return "border-primary-500 bg-primary-100 text-ink shadow-sm ";
+    return "border-primary-200 bg-surface-card text-ink shadow-card ";
   if (type === "airwallex")
-    return "border-primary-500 bg-primary-100 text-ink shadow-sm ";
-  return "border-primary-500 bg-primary-50 text-ink shadow-sm ";
+    return "border-primary-200 bg-surface-card text-ink shadow-card ";
+  return "border-primary-200 bg-surface-card text-ink shadow-card ";
 }
 </script>
