@@ -3919,12 +3919,11 @@ const confirmDelete = async () => {
   }
 };
 
-// 监听 subscription_type 变化，订阅模式时 is_exclusive 默认为 true
+// 订阅模式保持专属开关的用户选择，只清理不适用的 fallback 配置。
 watch(
   () => createForm.subscription_type,
   (newVal) => {
     if (newVal === "subscription") {
-      createForm.is_exclusive = true;
       createForm.fallback_group_id_on_invalid_request = null;
     }
   },
