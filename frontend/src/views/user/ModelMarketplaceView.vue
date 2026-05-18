@@ -23,16 +23,6 @@
             </select>
           </label>
 
-          <label v-if="showChannelFilter" class="filter-field">
-            <span>{{ t("modelMarketplace.filters.channel") }}</span>
-            <select v-model="filters.channel">
-              <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option v-for="channel in channelOptions" :key="channel">
-                {{ channel }}
-              </option>
-            </select>
-          </label>
-
           <label v-if="showGroupFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.group") }}</span>
             <select v-model="filters.group">
@@ -66,19 +56,6 @@
             </select>
           </label>
 
-          <label v-if="showCapabilityFilter" class="filter-field">
-            <span>{{ t("modelMarketplace.filters.capability") }}</span>
-            <select v-model="filters.capability">
-              <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option
-                v-for="capability in capabilityOptions"
-                :key="capability"
-                :value="capability"
-              >
-                {{ capabilityFilterLabel(capability) }}
-              </option>
-            </select>
-          </label>
         </div>
 
         <div class="toolbar-actions">
@@ -94,9 +71,6 @@
               </option>
               <option value="output">
                 {{ t("modelMarketplace.sort.output") }}
-              </option>
-              <option value="channels">
-                {{ t("modelMarketplace.sort.channels") }}
               </option>
             </select>
           </label>
@@ -179,11 +153,15 @@
             <div class="model-badges">
               <span>{{ billingModeLabel(model.billing_mode) }}</span>
               <span>{{ pricingSourceLabel(model.pricing_source) }}</span>
-              <span>{{
-                t("modelMarketplace.channelCount", {
-                  count: model.channel_count,
-                })
-              }}</span>
+            </div>
+            <div class="group-chip-list">
+              <span
+                v-for="group in modelGroupNames(model)"
+                :key="group"
+                class="group-chip"
+              >
+                {{ group }}
+              </span>
             </div>
           </div>
           <div class="model-card-actions">
@@ -202,9 +180,7 @@
               <th>{{ t("modelMarketplace.columns.model") }}</th>
               <th>{{ t("modelMarketplace.columns.platform") }}</th>
               <th>{{ t("modelMarketplace.columns.price") }}</th>
-              <th>{{ t("modelMarketplace.columns.channels") }}</th>
               <th>{{ t("modelMarketplace.columns.groups") }}</th>
-              <th>{{ t("modelMarketplace.columns.capabilities") }}</th>
               <th>{{ t("modelMarketplace.columns.actions") }}</th>
             </tr>
           </thead>
@@ -237,27 +213,14 @@
                   <span>{{ pricingSourceLabel(model.pricing_source) }}</span>
                 </div>
               </td>
-              <td>{{ model.channel_count }}</td>
-              <td>{{ model.group_count }}</td>
               <td>
-                <div class="capability-list">
-                  <span v-if="model.capabilities.supports_image">
-                    {{ t("modelMarketplace.capabilities.image") }}
-                  </span>
-                  <span v-if="model.capabilities.supports_cache_pricing">
-                    {{ t("modelMarketplace.capabilities.cache") }}
-                  </span>
-                  <span v-if="model.capabilities.has_tiered_pricing">
-                    {{ t("modelMarketplace.capabilities.tiered") }}
-                  </span>
-                  <span v-if="model.capabilities.has_per_request_pricing">
-                    {{ t("modelMarketplace.capabilities.perRequest") }}
-                  </span>
+                <div class="group-chip-list">
                   <span
-                    v-if="!hasCapabilities(model)"
-                    class="text-muted-soft"
+                    v-for="group in modelGroupNames(model)"
+                    :key="group"
+                    class="group-chip"
                   >
-                    -
+                    {{ group }}
                   </span>
                 </div>
               </td>
@@ -321,12 +284,16 @@
             <strong>{{ priceSummary(selectedModel) }}</strong>
           </div>
           <div class="detail-metric">
-            <span>{{ t("modelMarketplace.columns.channels") }}</span>
-            <strong>{{ selectedModel.channel_count }}</strong>
-          </div>
-          <div class="detail-metric">
             <span>{{ t("modelMarketplace.columns.groups") }}</span>
-            <strong>{{ selectedModel.group_count }}</strong>
+            <div class="group-chip-list">
+              <span
+                v-for="group in modelGroupNames(selectedModel)"
+                :key="group"
+                class="group-chip"
+              >
+                {{ group }}
+              </span>
+            </div>
           </div>
           <div class="detail-metric">
             <span>{{ t("modelMarketplace.columns.priceVariants") }}</span>
@@ -349,83 +316,74 @@
           <pre><code>{{ requestExample(selectedModel.id) }}</code></pre>
         </div>
 
-        <div class="channel-detail-list">
+        <div class="group-detail-list">
           <article
-            v-for="channel in selectedModel.channels"
-            :key="`${channel.id}:${channel.platform}`"
-            class="channel-detail"
+            v-for="detail in modelGroupDetails(selectedModel)"
+            :key="detail.group.id"
+            class="group-detail"
           >
-            <div class="channel-detail-header">
+            <div class="group-detail-header">
               <div>
-                <h3>{{ channel.name }}</h3>
-                <p v-if="channel.description">{{ channel.description }}</p>
+                <h3>{{ detail.group.name }}</h3>
+                <p>
+                  {{
+                    detail.group.is_exclusive
+                      ? t("modelMarketplace.groups.exclusive")
+                      : t("modelMarketplace.groups.public")
+                  }}
+                </p>
               </div>
-              <span>{{ pricingSourceLabel(channel.pricing_source) }}</span>
+              <span>{{ pricingSourceLabel(detail.pricingSource) }}</span>
             </div>
 
-            <div class="mapping-line">
-              <span>{{ t("modelMarketplace.mapping") }}</span>
-              <code>{{ channel.mapping.chain }}</code>
+            <div class="group-rate-summary">
+              <span>
+                {{
+                  t("modelMarketplace.groups.rate", {
+                    rate: formatMultiplier(detail.group.rate_multiplier),
+                  })
+                }}
+              </span>
+              <strong v-if="detail.group.user_rate_multiplier != null">
+                {{
+                  t("modelMarketplace.groups.userRate", {
+                    rate: formatMultiplier(detail.group.user_rate_multiplier),
+                  })
+                }}
+              </strong>
+              <strong v-else>
+                {{
+                  t("modelMarketplace.groups.effectiveRate", {
+                    rate: formatMultiplier(detail.group.effective_rate_multiplier),
+                  })
+                }}
+              </strong>
+              <span v-if="detail.priceVariantCount > 1">
+                {{ t("modelMarketplace.columns.priceVariants") }}:
+                {{ detail.priceVariantCount }}
+              </span>
             </div>
 
             <div class="pricing-grid">
               <div>
                 <span>{{ t("modelMarketplace.pricing.input") }}</span>
-                <strong>{{ formatMillion(channel.pricing?.input_price ?? null) }}</strong>
+                <strong>{{ formatMillion(detail.pricing?.input_price ?? null) }}</strong>
               </div>
               <div>
                 <span>{{ t("modelMarketplace.pricing.output") }}</span>
-                <strong>{{ formatMillion(channel.pricing?.output_price ?? null) }}</strong>
+                <strong>{{ formatMillion(detail.pricing?.output_price ?? null) }}</strong>
               </div>
               <div>
                 <span>{{ t("modelMarketplace.pricing.cacheWrite") }}</span>
-                <strong>{{ formatMillion(channel.pricing?.cache_write_price ?? null) }}</strong>
+                <strong>{{
+                  formatMillion(detail.pricing?.cache_write_price ?? null)
+                }}</strong>
               </div>
               <div>
                 <span>{{ t("modelMarketplace.pricing.cacheRead") }}</span>
-                <strong>{{ formatMillion(channel.pricing?.cache_read_price ?? null) }}</strong>
-              </div>
-            </div>
-
-            <div class="group-list">
-              <div
-                v-for="group in channel.groups"
-                :key="group.id"
-                class="group-row"
-              >
-                <div>
-                  <span class="group-name">{{ group.name }}</span>
-                  <span class="group-kind">
-                    {{
-                      group.is_exclusive
-                        ? t("modelMarketplace.groups.exclusive")
-                        : t("modelMarketplace.groups.public")
-                    }}
-                  </span>
-                </div>
-                <div class="group-rate">
-                  <span>
-                    {{
-                      t("modelMarketplace.groups.rate", {
-                        rate: formatMultiplier(group.rate_multiplier),
-                      })
-                    }}
-                  </span>
-                  <strong v-if="group.user_rate_multiplier != null">
-                    {{
-                      t("modelMarketplace.groups.userRate", {
-                        rate: formatMultiplier(group.user_rate_multiplier),
-                      })
-                    }}
-                  </strong>
-                  <strong v-else>
-                    {{
-                      t("modelMarketplace.groups.effectiveRate", {
-                        rate: formatMultiplier(group.effective_rate_multiplier),
-                      })
-                    }}
-                  </strong>
-                </div>
+                <strong>{{
+                  formatMillion(detail.pricing?.cache_read_price ?? null)
+                }}</strong>
               </div>
             </div>
           </article>
@@ -458,8 +416,18 @@ import {
   type BillingMode,
 } from "@/constants/channel";
 
-type SortKey = "name" | "platform" | "input" | "output" | "channels";
+type SortKey = "name" | "platform" | "input" | "output";
 type ViewMode = "table" | "cards";
+type ModelMarketplaceChannel = ModelMarketplaceModel["channels"][number];
+type ModelMarketplaceGroup = ModelMarketplaceChannel["groups"][number];
+type ModelMarketplacePricing = ModelMarketplaceChannel["pricing"];
+
+interface ModelGroupDetail {
+  group: ModelMarketplaceGroup;
+  pricing: ModelMarketplacePricing;
+  pricingSource: ModelMarketplaceChannel["pricing_source"];
+  priceVariantCount: number;
+}
 
 const { t } = useI18n();
 const appStore = useAppStore();
@@ -484,23 +452,15 @@ const viewMode = ref<ViewMode>("table");
 const filters = reactive({
   search: "",
   platform: "all",
-  channel: "all",
   group: "all",
   billing: "all",
   pricing: "all",
-  capability: "all",
 });
 
 const models = computed(() => response.value.models);
 
 const platformOptions = computed(() =>
   Array.from(new Set(models.value.map((m) => m.platform))).sort(),
-);
-
-const channelOptions = computed(() =>
-  Array.from(
-    new Set(models.value.flatMap((m) => m.channels.map((c) => c.name))),
-  ).sort((a, b) => a.localeCompare(b)),
 );
 
 const groupOptions = computed(() =>
@@ -517,19 +477,7 @@ const billingModeOptions = computed(() =>
   Array.from(new Set(models.value.map((m) => m.billing_mode))).sort(),
 );
 
-const capabilityOptions = computed(() => {
-  const values = new Set<string>();
-  for (const model of models.value) {
-    if (model.capabilities.supports_image) values.add("image");
-    if (model.capabilities.supports_cache_pricing) values.add("cache");
-    if (model.capabilities.has_tiered_pricing) values.add("tiered");
-    if (model.capabilities.has_per_request_pricing) values.add("per_request");
-  }
-  return Array.from(values);
-});
-
 const showPlatformFilter = computed(() => platformOptions.value.length > 1);
-const showChannelFilter = computed(() => channelOptions.value.length > 1);
 const showGroupFilter = computed(() => groupOptions.value.length > 1);
 const showBillingFilter = computed(() => billingModeOptions.value.length > 1);
 const showPricingFilter = computed(() => {
@@ -537,22 +485,12 @@ const showPricingFilter = computed(() => {
   const hasUnpriced = models.value.some((model) => !model.pricing);
   return hasPriced && hasUnpriced;
 });
-const showCapabilityFilter = computed(() =>
-  capabilityOptions.value.some((capability) => {
-    const matched = models.value.filter((model) =>
-      matchesCapability(model, capability),
-    ).length;
-    return matched > 0 && matched < models.value.length;
-  }),
-);
 const visibleFilterCount = computed(
   () =>
     Number(showPlatformFilter.value) +
-    Number(showChannelFilter.value) +
     Number(showGroupFilter.value) +
     Number(showBillingFilter.value) +
-    Number(showPricingFilter.value) +
-    Number(showCapabilityFilter.value),
+    Number(showPricingFilter.value),
 );
 
 const filteredModels = computed(() => {
@@ -577,19 +515,6 @@ const filteredModels = computed(() => {
       if (filters.pricing === "unpriced" && model.pricing) return false;
     }
     if (
-      showCapabilityFilter.value &&
-      !matchesCapability(model, filters.capability)
-    ) {
-      return false;
-    }
-    if (
-      showChannelFilter.value &&
-      filters.channel !== "all" &&
-      !model.channels.some((c) => c.name === filters.channel)
-    ) {
-      return false;
-    }
-    if (
       showGroupFilter.value &&
       filters.group !== "all" &&
       !model.channels.some((c) =>
@@ -602,31 +527,14 @@ const filteredModels = computed(() => {
     return (
       model.id.toLowerCase().includes(q) ||
       model.platform.toLowerCase().includes(q) ||
-      model.channels.some(
-        (channel) =>
-          channel.name.toLowerCase().includes(q) ||
-          channel.groups.some((g) => g.name.toLowerCase().includes(q)),
+      model.channels.some((channel) =>
+        channel.groups.some((g) => g.name.toLowerCase().includes(q)),
       )
     );
   });
 
   return [...rows].sort((a, b) => compareModels(a, b, sortKey.value));
 });
-
-function matchesCapability(model: ModelMarketplaceModel, capability: string) {
-  switch (capability) {
-    case "image":
-      return model.capabilities.supports_image;
-    case "cache":
-      return model.capabilities.supports_cache_pricing;
-    case "tiered":
-      return model.capabilities.has_tiered_pricing;
-    case "per_request":
-      return model.capabilities.has_per_request_pricing;
-    default:
-      return true;
-  }
-}
 
 function compareModels(
   a: ModelMarketplaceModel,
@@ -640,8 +548,6 @@ function compareModels(
       return priceForSort(a, "input_price") - priceForSort(b, "input_price");
     case "output":
       return priceForSort(a, "output_price") - priceForSort(b, "output_price");
-    case "channels":
-      return b.channel_count - a.channel_count || a.id.localeCompare(b.id);
     default:
       return a.id.localeCompare(b.id);
   }
@@ -655,14 +561,85 @@ function priceForSort(
   return value == null ? Number.POSITIVE_INFINITY : value;
 }
 
+function modelGroupNames(model: ModelMarketplaceModel) {
+  return Array.from(
+    new Set(
+      model.channels.flatMap((channel) =>
+        channel.groups.map((group) => group.name),
+      ),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+}
+
+function modelGroupDetails(model: ModelMarketplaceModel): ModelGroupDetail[] {
+  const groupMap = new Map<
+    number,
+    {
+      group: ModelMarketplaceGroup;
+      pricing: ModelMarketplacePricing;
+      pricingSource: ModelMarketplaceChannel["pricing_source"];
+      priceSignatures: Set<string>;
+    }
+  >();
+
+  for (const channel of model.channels) {
+    for (const group of channel.groups) {
+      const existing = groupMap.get(group.id);
+      const priceSignature = pricingSignature(
+        channel.pricing,
+        channel.pricing_source,
+      );
+      if (!existing) {
+        groupMap.set(group.id, {
+          group,
+          pricing: channel.pricing,
+          pricingSource: channel.pricing_source,
+          priceSignatures: new Set([priceSignature]),
+        });
+        continue;
+      }
+
+      existing.priceSignatures.add(priceSignature);
+      if (!existing.pricing && channel.pricing) {
+        existing.pricing = channel.pricing;
+        existing.pricingSource = channel.pricing_source;
+      }
+    }
+  }
+
+  return Array.from(groupMap.values())
+    .map((detail) => ({
+      group: detail.group,
+      pricing: detail.pricing,
+      pricingSource: detail.pricingSource,
+      priceVariantCount: detail.priceSignatures.size,
+    }))
+    .sort((a, b) => a.group.name.localeCompare(b.group.name));
+}
+
+function pricingSignature(
+  pricing: ModelMarketplacePricing,
+  source: ModelMarketplaceChannel["pricing_source"],
+) {
+  if (!pricing) return `${source}:none`;
+  return [
+    source,
+    pricing.billing_mode,
+    pricing.input_price,
+    pricing.output_price,
+    pricing.cache_write_price,
+    pricing.cache_read_price,
+    pricing.image_output_price,
+    pricing.per_request_price,
+  ].join(":");
+}
+
 function resetFilters() {
   filters.search = "";
   filters.platform = "all";
-  filters.channel = "all";
   filters.group = "all";
   filters.billing = "all";
   filters.pricing = "all";
-  filters.capability = "all";
   sortKey.value = "name";
 }
 
@@ -694,21 +671,6 @@ function billingModeLabel(mode: BillingMode | string) {
     case BILLING_MODE_TOKEN:
     default:
       return t("modelMarketplace.billing.token");
-  }
-}
-
-function capabilityFilterLabel(capability: string) {
-  switch (capability) {
-    case "image":
-      return t("modelMarketplace.capabilities.image");
-    case "cache":
-      return t("modelMarketplace.capabilities.cache");
-    case "tiered":
-      return t("modelMarketplace.capabilities.tiered");
-    case "per_request":
-      return t("modelMarketplace.capabilities.perRequest");
-    default:
-      return capability;
   }
 }
 
@@ -750,15 +712,6 @@ function formatMillion(value: number | null) {
 function formatMultiplier(value: number | null) {
   if (value == null) return "-";
   return `${value.toFixed(3).replace(/\.?0+$/, "")}x`;
-}
-
-function hasCapabilities(model: ModelMarketplaceModel) {
-  return (
-    model.capabilities.supports_image ||
-    model.capabilities.supports_cache_pricing ||
-    model.capabilities.has_tiered_pricing ||
-    model.capabilities.has_per_request_pricing
-  );
 }
 
 async function loadMarketplace() {
@@ -879,15 +832,21 @@ onMounted(loadMarketplace);
   @apply text-right font-medium text-ink;
 }
 
-.model-badges,
-.capability-list {
+.model-badges {
   @apply flex flex-wrap gap-1.5;
 }
 
 .model-badges span,
-.capability-list span,
 .platform-pill {
   @apply inline-flex items-center gap-1 rounded-full bg-surface-card px-2.5 py-1 text-xs font-medium text-body;
+}
+
+.group-chip-list {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.group-chip {
+  @apply inline-flex max-w-[12rem] items-center truncate rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700;
 }
 
 .model-card-actions {
@@ -899,7 +858,7 @@ onMounted(loadMarketplace);
 }
 
 .model-table {
-  @apply w-full min-w-[980px] border-collapse text-sm;
+  @apply w-full min-w-[860px] border-collapse text-sm;
 }
 
 .model-table th {
@@ -953,14 +912,14 @@ onMounted(loadMarketplace);
 }
 
 .detail-grid {
-  @apply grid gap-3 md:grid-cols-4;
+  @apply grid gap-3 md:grid-cols-3;
 }
 
 .detail-metric {
   @apply rounded-lg border border-hairline bg-canvas p-4;
 }
 
-.detail-metric span {
+.detail-metric > span {
   @apply text-xs font-medium uppercase tracking-wide text-muted;
 }
 
@@ -980,40 +939,40 @@ onMounted(loadMarketplace);
   @apply overflow-x-auto p-4 font-mono text-sm leading-6 text-on-dark-soft;
 }
 
-.channel-detail-list {
+.group-detail-list {
   @apply space-y-4;
 }
 
-.channel-detail {
+.group-detail {
   @apply rounded-lg border border-hairline bg-canvas p-5;
 }
 
-.channel-detail-header {
+.group-detail-header {
   @apply flex flex-col justify-between gap-3 md:flex-row md:items-start;
 }
 
-.channel-detail-header h3 {
+.group-detail-header h3 {
   @apply text-lg font-medium text-ink;
 }
 
-.channel-detail-header p {
+.group-detail-header p {
   @apply mt-1 text-sm text-muted;
 }
 
-.channel-detail-header > span {
+.group-detail-header > span {
   @apply inline-flex w-fit rounded-full bg-surface-card px-3 py-1 text-xs font-medium text-body;
 }
 
-.mapping-line {
-  @apply mt-4 flex flex-col gap-2 rounded-md bg-surface-soft p-3 text-sm md:flex-row md:items-center;
+.group-rate-summary {
+  @apply mt-4 flex flex-wrap items-center gap-2 text-sm;
 }
 
-.mapping-line span {
-  @apply text-xs font-medium uppercase tracking-wide text-muted;
+.group-rate-summary span {
+  @apply inline-flex rounded-full bg-surface-card px-3 py-1 text-xs font-medium text-body;
 }
 
-.mapping-line code {
-  @apply break-all font-mono text-sm text-ink;
+.group-rate-summary strong {
+  @apply inline-flex rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700;
 }
 
 .pricing-grid {
@@ -1032,27 +991,4 @@ onMounted(loadMarketplace);
   @apply mt-1 block text-sm font-medium text-ink;
 }
 
-.group-list {
-  @apply mt-4 divide-y divide-hairline rounded-md border border-hairline;
-}
-
-.group-row {
-  @apply flex flex-col justify-between gap-3 px-3 py-3 text-sm md:flex-row md:items-center;
-}
-
-.group-name {
-  @apply font-medium text-ink;
-}
-
-.group-kind {
-  @apply ml-2 rounded-full bg-surface-card px-2 py-0.5 text-xs text-muted;
-}
-
-.group-rate {
-  @apply flex flex-wrap items-center gap-2 text-xs text-muted;
-}
-
-.group-rate strong {
-  @apply rounded-full bg-primary-100 px-2 py-0.5 font-medium text-primary-800;
-}
 </style>

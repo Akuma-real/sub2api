@@ -1006,8 +1006,8 @@ export default {
   modelMarketplace: {
     kicker: 'Model Marketplace',
     title: 'Model Marketplace',
-    description: 'Browse the models this account can actually use, with channels, group multipliers, pricing sources, and copy-ready model IDs.',
-    searchPlaceholder: 'Search models, channels, or groups...',
+    description: 'Browse the models this account can actually use, with group multipliers, pricing sources, and copy-ready model IDs.',
+    searchPlaceholder: 'Search models or groups...',
     empty: 'No matching models',
     noPricing: 'Pricing not configured',
     copyModelId: 'Copy Model ID',
@@ -1072,7 +1072,7 @@ export default {
       perRequest: 'Per request'
     },
     pricingSource: {
-      channel: 'Channel pricing',
+      channel: 'Configured pricing',
       global: 'Global pricing',
       none: 'Not configured'
     },

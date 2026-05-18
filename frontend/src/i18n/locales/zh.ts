@@ -1010,8 +1010,8 @@ export default {
   modelMarketplace: {
     kicker: 'Model Marketplace',
     title: '模型广场',
-    description: '查看当前账号实际可访问的模型、渠道、分组倍率与价格口径，并复制可直接调用的模型 ID。',
-    searchPlaceholder: '搜索模型、渠道或分组...',
+    description: '查看当前账号实际可访问的模型、分组倍率与价格口径，并复制可直接调用的模型 ID。',
+    searchPlaceholder: '搜索模型或分组...',
     empty: '没有匹配的模型',
     noPricing: '未配置价格',
     copyModelId: '复制模型 ID',
@@ -1076,7 +1076,7 @@ export default {
       perRequest: '按次'
     },
     pricingSource: {
-      channel: '渠道定价',
+      channel: '配置定价',
       global: '全局价格',
       none: '未配置'
     },
