@@ -1054,11 +1054,8 @@ export default {
       model: 'Model',
       platform: 'Platform',
       price: 'Price',
-      channels: 'Channels',
       groups: 'Groups',
-      capabilities: 'Capabilities',
-      actions: 'Actions',
-      priceVariants: 'Price Variants'
+      actions: 'Actions'
     },
     billing: {
       token: 'Token',
@@ -1088,9 +1085,7 @@ export default {
     groups: {
       exclusive: 'Exclusive',
       public: 'Public',
-      rate: 'Default {rate}',
-      userRate: 'Custom {rate}',
-      effectiveRate: 'Effective {rate}'
+      effectiveRate: 'Rate {rate}'
     }
   },
 

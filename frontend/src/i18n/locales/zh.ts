@@ -1058,11 +1058,8 @@ export default {
       model: '模型',
       platform: '平台',
       price: '价格',
-      channels: '渠道',
       groups: '分组',
-      capabilities: '能力',
-      actions: '操作',
-      priceVariants: '价格版本'
+      actions: '操作'
     },
     billing: {
       token: 'Token',
@@ -1092,9 +1089,7 @@ export default {
     groups: {
       exclusive: '专属',
       public: '公开',
-      rate: '默认 {rate}',
-      userRate: '专属 {rate}',
-      effectiveRate: '实际 {rate}'
+      effectiveRate: '倍率 {rate}'
     }
   },
 

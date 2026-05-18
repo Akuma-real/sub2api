@@ -295,10 +295,6 @@
               </span>
             </div>
           </div>
-          <div class="detail-metric">
-            <span>{{ t("modelMarketplace.columns.priceVariants") }}</span>
-            <strong>{{ selectedModel.price_variant_count }}</strong>
-          </div>
         </div>
 
         <div class="request-sample">
@@ -337,31 +333,13 @@
             </div>
 
             <div class="group-rate-summary">
-              <span>
-                {{
-                  t("modelMarketplace.groups.rate", {
-                    rate: formatMultiplier(detail.group.rate_multiplier),
-                  })
-                }}
-              </span>
-              <strong v-if="detail.group.user_rate_multiplier != null">
-                {{
-                  t("modelMarketplace.groups.userRate", {
-                    rate: formatMultiplier(detail.group.user_rate_multiplier),
-                  })
-                }}
-              </strong>
-              <strong v-else>
+              <strong>
                 {{
                   t("modelMarketplace.groups.effectiveRate", {
                     rate: formatMultiplier(detail.group.effective_rate_multiplier),
                   })
                 }}
               </strong>
-              <span v-if="detail.priceVariantCount > 1">
-                {{ t("modelMarketplace.columns.priceVariants") }}:
-                {{ detail.priceVariantCount }}
-              </span>
             </div>
 
             <div class="pricing-grid">
@@ -426,7 +404,6 @@ interface ModelGroupDetail {
   group: ModelMarketplaceGroup;
   pricing: ModelMarketplacePricing;
   pricingSource: ModelMarketplaceChannel["pricing_source"];
-  priceVariantCount: number;
 }
 
 const { t } = useI18n();
@@ -578,28 +555,21 @@ function modelGroupDetails(model: ModelMarketplaceModel): ModelGroupDetail[] {
       group: ModelMarketplaceGroup;
       pricing: ModelMarketplacePricing;
       pricingSource: ModelMarketplaceChannel["pricing_source"];
-      priceSignatures: Set<string>;
     }
   >();
 
   for (const channel of model.channels) {
     for (const group of channel.groups) {
       const existing = groupMap.get(group.id);
-      const priceSignature = pricingSignature(
-        channel.pricing,
-        channel.pricing_source,
-      );
       if (!existing) {
         groupMap.set(group.id, {
           group,
           pricing: channel.pricing,
           pricingSource: channel.pricing_source,
-          priceSignatures: new Set([priceSignature]),
         });
         continue;
       }
 
-      existing.priceSignatures.add(priceSignature);
       if (!existing.pricing && channel.pricing) {
         existing.pricing = channel.pricing;
         existing.pricingSource = channel.pricing_source;
@@ -612,26 +582,8 @@ function modelGroupDetails(model: ModelMarketplaceModel): ModelGroupDetail[] {
       group: detail.group,
       pricing: detail.pricing,
       pricingSource: detail.pricingSource,
-      priceVariantCount: detail.priceSignatures.size,
     }))
     .sort((a, b) => a.group.name.localeCompare(b.group.name));
-}
-
-function pricingSignature(
-  pricing: ModelMarketplacePricing,
-  source: ModelMarketplaceChannel["pricing_source"],
-) {
-  if (!pricing) return `${source}:none`;
-  return [
-    source,
-    pricing.billing_mode,
-    pricing.input_price,
-    pricing.output_price,
-    pricing.cache_write_price,
-    pricing.cache_read_price,
-    pricing.image_output_price,
-    pricing.per_request_price,
-  ].join(":");
 }
 
 function resetFilters() {
@@ -912,7 +864,7 @@ onMounted(loadMarketplace);
 }
 
 .detail-grid {
-  @apply grid gap-3 md:grid-cols-3;
+  @apply grid gap-3 md:grid-cols-2;
 }
 
 .detail-metric {
