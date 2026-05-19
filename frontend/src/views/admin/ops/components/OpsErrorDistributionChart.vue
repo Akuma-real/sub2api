@@ -29,7 +29,14 @@ const colors = {
   text: "#6c6a64",
 };
 
-const hasData = computed(() => (props.data?.total ?? 0) > 0);
+const totalSlaErrors = computed(() =>
+  (props.data?.items ?? []).reduce(
+    (total, item) => total + Number(item.sla || 0),
+    0,
+  ),
+);
+
+const hasData = computed(() => totalSlaErrors.value > 0);
 
 const state = computed<ChartState>(() => {
   if (hasData.value) return "ready";
@@ -53,7 +60,7 @@ const categories = computed<ErrorCategory[]>(() => {
 
   for (const item of props.data.items || []) {
     const code = Number(item.status_code || 0);
-    const count = Number(item.total || 0);
+    const count = Number(item.sla || 0);
     if (!Number.isFinite(code) || !Number.isFinite(count)) continue;
 
     if ([502, 503, 504].includes(code)) upstream += count;

@@ -54,11 +54,7 @@ const colors = {
 };
 
 const totalRequestErrors = computed(() =>
-  sumNumbers(
-    props.points.map(
-      (p) => (p.error_count_sla ?? 0) + (p.business_limited_count ?? 0),
-    ),
-  ),
+  sumNumbers(props.points.map((p) => p.error_count_sla ?? 0)),
 );
 
 const totalUpstreamErrors = computed(() =>
