@@ -5,10 +5,12 @@
       'hover:-translate-y-0.5 hover:shadow-card-hover',
     ]"
   >
-    <div class="flex items-start justify-between gap-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2">
-          <h3 class="font-display text-lg font-medium leading-none text-ink">
+          <h3
+            class="min-w-0 break-words font-display text-lg font-medium leading-tight text-ink"
+          >
             {{ plan.name }}
           </h3>
           <span
@@ -25,22 +27,28 @@
         </p>
       </div>
 
-      <div class="shrink-0 text-right">
-        <div class="flex flex-wrap items-baseline justify-end gap-x-2 gap-y-1">
+      <div class="w-full shrink-0 text-left sm:w-auto sm:text-right">
+        <div
+          class="flex flex-wrap items-baseline gap-x-2 gap-y-1 sm:justify-end"
+        >
           <span
             v-if="originalPriceDisplay"
-            class="text-sm text-muted-soft line-through"
+            class="whitespace-nowrap text-sm text-muted-soft line-through"
           >
             {{ originalPriceDisplay }}
           </span>
-          <span class="font-display text-4xl font-medium leading-none text-ink">
+          <span
+            class="whitespace-nowrap font-display text-3xl font-medium leading-none text-ink sm:text-4xl"
+          >
             {{ priceDisplay }}
           </span>
-          <span class="text-sm text-muted">/ {{ validitySuffix }}</span>
+          <span class="whitespace-nowrap text-sm text-muted">
+            / {{ validitySuffix }}
+          </span>
         </div>
         <p
           v-if="discountText"
-          class="mt-1 text-xs font-medium text-primary-700"
+          class="mt-1 text-xs font-medium text-primary-700 sm:text-right"
         >
           {{ discountText }}
         </p>
