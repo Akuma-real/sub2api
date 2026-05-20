@@ -1428,6 +1428,92 @@
             </div>
           </div>
 
+          <div v-else-if="activeSettingsTab === 'keywords'" class="space-y-5">
+            <div
+              class="flex items-start gap-3 rounded-lg border p-4"
+              :class="keywordNotice.toneClass"
+            >
+              <Icon
+                :name="keywordNotice.icon"
+                size="md"
+                :class="keywordNotice.iconClass"
+              />
+              <div class="text-sm leading-6">
+                <p class="font-medium" :class="keywordNotice.titleClass">
+                  {{ keywordNotice.title }}
+                </p>
+                <p class="mt-1 text-xs text-muted">
+                  {{ keywordNotice.description }}
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="input-label">{{
+                t("admin.riskControl.keywordBlockingMode")
+              }}</label>
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <button
+                  v-for="option in keywordBlockingModeOptions"
+                  :key="option.value"
+                  type="button"
+                  class="rounded-lg border p-3 text-left transition-colors"
+                  :class="
+                    configForm.keyword_blocking_mode === option.value
+                      ? 'border-primary-200 bg-primary-500/10 text-primary-700 shadow-sm '
+                      : 'border-hairline bg-canvas text-body hover:bg-surface-card '
+                  "
+                  @click="configForm.keyword_blocking_mode = option.value"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-semibold">{{ option.label }}</span>
+                    <span
+                      class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border"
+                      :class="
+                        configForm.keyword_blocking_mode === option.value
+                          ? 'border-primary-500 bg-primary-500 text-on-primary'
+                          : 'border-hairline text-transparent'
+                      "
+                    >
+                      <Icon name="check" size="xs" :stroke-width="2" />
+                    </span>
+                  </div>
+                  <p class="mt-1 text-xs leading-5 text-muted">
+                    {{ option.description }}
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <label class="input-label mb-0">{{
+                  t("admin.riskControl.blockedKeywords")
+                }}</label>
+                <span class="inline-flex rounded-md bg-surface-card px-2 py-1 text-xs text-muted">
+                  {{
+                    t("admin.riskControl.blockedKeywordCount", {
+                      count: blockedKeywordCount,
+                    })
+                  }}
+                </span>
+              </div>
+              <textarea
+                v-model="configForm.blocked_keywords_text"
+                class="input min-h-52 resize-y font-mono text-sm"
+                :placeholder="t('admin.riskControl.blockedKeywordsPlaceholder')"
+                :disabled="configForm.keyword_blocking_mode === 'api_only'"
+              ></textarea>
+              <p class="mt-2 text-xs text-muted">
+                {{
+                  t("admin.riskControl.blockedKeywordsLimit", {
+                    max: blockedKeywordMax,
+                  })
+                }}
+              </p>
+            </div>
+          </div>
+
           <div v-else class="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div>
               <label class="input-label">{{
@@ -1613,6 +1699,7 @@ import type {
   ContentModerationLog,
   ContentModerationRuntimeStatus,
   ContentModerationTestAuditResult,
+  KeywordBlockingMode,
   ModerationMode,
   UpdateContentModerationConfig,
 } from "@/api/admin/riskControl";
@@ -1621,7 +1708,13 @@ import { useAppStore } from "@/stores/app";
 import { extractApiErrorMessage } from "@/utils/apiError";
 import { formatDateTime as formatDateTimeValue } from "@/utils/format";
 
-type SettingsTab = "basic" | "scope" | "runtime" | "response" | "retention";
+type SettingsTab =
+  | "basic"
+  | "scope"
+  | "runtime"
+  | "response"
+  | "keywords"
+  | "retention";
 type WorkerSlotState = "active" | "idle" | "disabled";
 type APIKeysWriteMode = "append" | "replace";
 type OverviewIcon = "shield" | "key" | "users" | "document";
@@ -1645,6 +1738,7 @@ type ModerationScoreRow = {
 const maxModerationTestImages = 1;
 const maxModerationTestImageSize = 8 * 1024 * 1024;
 const maxVisibleApiKeyRows: number = 3;
+const blockedKeywordMax = 10000;
 
 const { t } = useI18n();
 const appStore = useAppStore();
@@ -1702,6 +1796,8 @@ const configForm = reactive({
   hit_retention_days: 180,
   non_hit_retention_days: 3,
   pre_hash_check_enabled: false,
+  blocked_keywords_text: "",
+  keyword_blocking_mode: "keyword_and_api" as KeywordBlockingMode,
 });
 
 const pagination = reactive({
@@ -1725,6 +1821,7 @@ const settingsTabs = computed<Array<{ id: SettingsTab; label: string }>>(() => [
   { id: "scope", label: t("admin.riskControl.tabs.scope") },
   { id: "runtime", label: t("admin.riskControl.tabs.runtime") },
   { id: "response", label: t("admin.riskControl.tabs.response") },
+  { id: "keywords", label: t("admin.riskControl.tabs.keywords") },
   { id: "retention", label: t("admin.riskControl.tabs.retention") },
 ]);
 
@@ -1733,6 +1830,78 @@ const modeOptions = computed<SelectOption[]>(() => [
   { value: "observe", label: t("admin.riskControl.modeObserve") },
   { value: "off", label: t("admin.riskControl.modeOff") },
 ]);
+
+const keywordBlockingModeOptions = computed<Array<{ value: KeywordBlockingMode; label: string; description: string }>>(() => [
+  {
+    value: 'keyword_and_api',
+    label: t('admin.riskControl.keywordModeKeywordAndApi'),
+    description: t('admin.riskControl.keywordModeKeywordAndApiDesc'),
+  },
+  {
+    value: 'keyword_only',
+    label: t('admin.riskControl.keywordModeKeywordOnly'),
+    description: t('admin.riskControl.keywordModeKeywordOnlyDesc'),
+  },
+  {
+    value: 'api_only',
+    label: t('admin.riskControl.keywordModeApiOnly'),
+    description: t('admin.riskControl.keywordModeApiOnlyDesc'),
+  },
+])
+
+type KeywordNoticeView = {
+  title: string
+  description: string
+  icon: 'infoCircle' | 'exclamationTriangle'
+  toneClass: string
+  iconClass: string
+  titleClass: string
+}
+
+const keywordNoticeTones = {
+  info: {
+    icon: 'infoCircle' as const,
+    toneClass: 'border-primary-200 bg-primary-500/10',
+    iconClass: 'mt-0.5 flex-shrink-0 text-primary-600',
+    titleClass: 'text-primary-700',
+  },
+  warning: {
+    icon: 'exclamationTriangle' as const,
+    toneClass: 'border-accent-amber/30 bg-accent-amber/10',
+    iconClass: 'mt-0.5 flex-shrink-0 text-warning',
+    titleClass: 'text-warning',
+  },
+}
+
+const keywordNotice = computed<KeywordNoticeView>(() => {
+  const strategy = configForm.keyword_blocking_mode
+  if (strategy === 'api_only') {
+    return {
+      ...keywordNoticeTones.info,
+      title: t('admin.riskControl.keywordModeApiOnlyNotice'),
+      description: t('admin.riskControl.keywordModeApiOnlyDesc'),
+    }
+  }
+  if (configForm.mode !== 'pre_block') {
+    return {
+      ...keywordNoticeTones.warning,
+      title: t('admin.riskControl.blockedKeywordsModeWarning', { mode: modeLabel(configForm.mode) }),
+      description: t('admin.riskControl.blockedKeywordsDescription'),
+    }
+  }
+  if (strategy === 'keyword_only') {
+    return {
+      ...keywordNoticeTones.info,
+      title: t('admin.riskControl.keywordModeKeywordOnlyNotice'),
+      description: t('admin.riskControl.keywordModeKeywordOnlyDesc'),
+    }
+  }
+  return {
+    ...keywordNoticeTones.info,
+    title: t('admin.riskControl.blockedKeywordsPreBlockHint'),
+    description: t('admin.riskControl.blockedKeywordsDescription'),
+  }
+})
 
 const resultOptions = computed<SelectOption[]>(() => [
   { value: "", label: t("admin.riskControl.result.all") },
@@ -1776,6 +1945,12 @@ const filteredGroups = computed(() => {
 const inputApiKeyCount = computed(
   () => parseApiKeys(configForm.api_keys_text).length,
 );
+
+const blockedKeywordList = computed(() =>
+  parseBlockedKeywords(configForm.blocked_keywords_text),
+);
+
+const blockedKeywordCount = computed(() => blockedKeywordList.value.length);
 
 const pendingDeletedApiKeyCount = computed(
   () => pendingDeleteApiKeyHashes.value.length,
@@ -2049,6 +2224,12 @@ function applyConfig(config: ContentModerationConfig) {
     3,
   );
   configForm.pre_hash_check_enabled = config.pre_hash_check_enabled ?? false;
+  configForm.blocked_keywords_text = Array.isArray(config.blocked_keywords)
+    ? config.blocked_keywords.join("\n")
+    : "";
+  configForm.keyword_blocking_mode = normalizeKeywordBlockingMode(
+    config.keyword_blocking_mode,
+  );
 }
 
 async function loadAll() {
@@ -2126,6 +2307,8 @@ async function saveConfig() {
         3,
       ),
       pre_hash_check_enabled: configForm.pre_hash_check_enabled,
+      blocked_keywords: blockedKeywordList.value,
+      keyword_blocking_mode: configForm.keyword_blocking_mode,
     };
     const keys = parseApiKeys(configForm.api_keys_text);
     if (
@@ -2491,6 +2674,8 @@ function modeDescription(mode: ModerationMode): string {
 }
 
 function resultLabel(row: ContentModerationLog): string {
+  if (row.action === "keyword_block")
+    return t("admin.riskControl.action.keywordBlock");
   if (row.action === "block") return t("admin.riskControl.action.block");
   if (row.action === "error" || row.error)
     return t("admin.riskControl.action.error");
@@ -2499,7 +2684,8 @@ function resultLabel(row: ContentModerationLog): string {
 }
 
 function resultBadgeClass(row: ContentModerationLog): string {
-  if (row.action === "block") return "bg-error/15 text-error ";
+  if (row.action === "block" || row.action === "keyword_block")
+    return "bg-error/15 text-error ";
   if (row.action === "error" || row.error)
     return "bg-accent-amber/15 text-warning ";
   if (row.flagged) return "bg-primary-100 text-primary-700 ";
@@ -2620,6 +2806,27 @@ function parseApiKeys(value: string): string[] {
     .split(/\r?\n/)
     .map((item) => item.trim())
     .filter((item, index, arr) => item && arr.indexOf(item) === index);
+}
+
+function normalizeKeywordBlockingMode(value: unknown): KeywordBlockingMode {
+  if (value === 'keyword_only' || value === 'api_only' || value === 'keyword_and_api') {
+    return value
+  }
+  return 'keyword_and_api'
+}
+
+function parseBlockedKeywords(value: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const line of value.split(/\r?\n/)) {
+    const kw = line.trim()
+    if (!kw) continue
+    const key = kw.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(kw)
+  }
+  return out
 }
 
 function violationCountText(row: ContentModerationLog): string {
