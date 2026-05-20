@@ -10,7 +10,7 @@ export type Platform = "anthropic" | "openai" | "antigravity" | "gemini";
 // ── Badge (bg + text + border, for inline badges with border) ───────
 const BADGE: Record<Platform, string> = {
   anthropic: "bg-accent-amber/10 text-warning border-accent-amber/30 ",
-  openai: "bg-success/10 text-success border-success/30 ",
+  openai: "bg-primary-500/10 text-primary-700 border-primary-500/30 ",
   antigravity: "bg-primary-500/10 text-primary-700 border-primary-500/30 ",
   gemini: "bg-accent-teal/10 text-primary-700 border-accent-teal/30 ",
 };
@@ -19,7 +19,7 @@ const BADGE_DEFAULT = "bg-muted/10 text-body border-muted/30 ";
 // ── Light badge (softer bg, no border) ──────────────────────────────
 const BADGE_LIGHT: Record<Platform, string> = {
   anthropic: "bg-accent-amber/10 text-warning ",
-  openai: "bg-success/10 text-success ",
+  openai: "bg-primary-500/10 text-primary-700 ",
   antigravity: "bg-primary-500/10 text-primary-700 ",
   gemini: "bg-accent-teal/10 text-primary-700 ",
 };
@@ -27,7 +27,7 @@ const BADGE_LIGHT: Record<Platform, string> = {
 // ── Border ──────────────────────────────────────────────────────────
 const BORDER: Record<Platform, string> = {
   anthropic: "border-accent-amber/20 ",
-  openai: "border-success/20 ",
+  openai: "border-primary-500/20 ",
   antigravity: "border-primary-500/20 ",
   gemini: "border-accent-teal/20 ",
 };
@@ -36,7 +36,7 @@ const BORDER_DEFAULT = "border-hairline ";
 // ── Accent bar ──────────────────────────────────────────────────────
 const ACCENT_BAR: Record<Platform, string> = {
   anthropic: "bg-accent-amber",
-  openai: "bg-success",
+  openai: "bg-primary-500",
   antigravity: "bg-primary-500",
   gemini: "bg-accent-teal",
 };
@@ -45,7 +45,7 @@ const ACCENT_BAR_DEFAULT = "bg-primary-500";
 // ── Text (price, icon) ─────────────────────────────────────────────
 const TEXT: Record<Platform, string> = {
   anthropic: "text-warning ",
-  openai: "text-success ",
+  openai: "text-primary-700 ",
   antigravity: "text-primary-700 ",
   gemini: "text-primary-700 ",
 };
@@ -54,7 +54,7 @@ const TEXT_DEFAULT = "text-primary-600 ";
 // ── Icon (check mark etc.) ──────────────────────────────────────────
 const ICON: Record<Platform, string> = {
   anthropic: "text-warning ",
-  openai: "text-success ",
+  openai: "text-primary-500 ",
   antigravity: "text-primary-500 ",
   gemini: "text-accent-teal ",
 };
@@ -65,7 +65,7 @@ const BUTTON: Record<Platform, string> = {
   anthropic:
     "bg-accent-amber text-on-primary hover:bg-accent-amber active:bg-accent-amber ",
   openai:
-    "bg-success text-on-primary hover:bg-success active:bg-success ",
+    "bg-primary-500 text-on-primary hover:bg-primary-600 active:bg-primary-700 ",
   antigravity:
     "bg-primary-500 text-on-primary hover:bg-primary-600 active:bg-primary-700 ",
   gemini:
@@ -76,7 +76,7 @@ const BUTTON_DEFAULT = "bg-primary-500 text-on-primary hover:bg-primary-600 ";
 // ── Discount badge ──────────────────────────────────────────────────
 const DISCOUNT: Record<Platform, string> = {
   anthropic: "bg-accent-amber/15 text-warning ",
-  openai: "bg-success/15 text-success ",
+  openai: "bg-primary-100 text-primary-700 ",
   antigravity: "bg-primary-100 text-primary-700 ",
   gemini: "bg-accent-teal/15 text-primary-700 ",
 };

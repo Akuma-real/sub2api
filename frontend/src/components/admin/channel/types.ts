@@ -193,7 +193,7 @@ function checkIntervalOverlap(sorted: IntervalFormEntry[]): string | null {
 export function getPlatformTagClass(platform: string): string {
   switch (platform) {
     case 'anthropic': return 'bg-surface-card text-primary-600'
-    case 'openai': return 'bg-surface-card text-success'
+    case 'openai': return 'bg-surface-card text-primary-600'
     case 'gemini': return 'bg-surface-card text-accent-teal'
     case 'antigravity': return 'bg-surface-card text-accent-amber'
     default: return 'bg-surface-card text-body'
@@ -204,7 +204,7 @@ export function getPlatformTagClass(platform: string): string {
 export function getPlatformTextClass(platform: string): string {
   switch (platform) {
     case 'anthropic': return 'text-primary-600'
-    case 'openai': return 'text-success'
+    case 'openai': return 'text-primary-600'
     case 'gemini': return 'text-accent-teal'
     case 'antigravity': return 'text-accent-amber'
     default: return ''

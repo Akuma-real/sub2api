@@ -86,7 +86,7 @@ import MonitorAvailabilityRow from "./MonitorAvailabilityRow.vue";
 import MonitorTimeline from "./MonitorTimeline.vue";
 
 const PROVIDER_TINT: Record<string, string> = {
-  openai: "text-success ",
+  openai: "text-primary-600 ",
   anthropic: "text-warning ",
   gemini: "text-accent-teal ",
 };
