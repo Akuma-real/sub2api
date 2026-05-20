@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
         v-show="show"
         role="tooltip"
         :class="[
-          'fixed z-[99999] -translate-x-1/2 -translate-y-full rounded-lg bg-surface-dark p-3 text-xs leading-relaxed text-on-primary shadow-card ring-1 ring-on-dark/10 ',
+          'fixed z-[99999] -translate-x-1/2 -translate-y-full rounded-lg bg-surface-dark p-3 text-xs leading-relaxed text-on-dark shadow-card ring-1 ring-on-dark/10 ',
           props.widthClass,
         ]"
         :style="{
@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
         <button
           v-if="props.trigger === 'click'"
           type="button"
-          class="absolute right-1.5 top-1.5 rounded p-1 text-muted-soft transition-colors hover:bg-canvas/10 hover:text-on-primary"
+          class="absolute right-1.5 top-1.5 rounded p-1 text-muted-soft transition-colors hover:bg-canvas/10 hover:text-on-dark"
           aria-label="Close"
           @click.stop="closeTooltip"
         >

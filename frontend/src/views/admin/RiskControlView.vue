@@ -872,7 +872,7 @@
                           />
                           <button
                             type="button"
-                            class="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-on-primary opacity-0 transition-opacity group-hover:opacity-100"
+                            class="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
                             @click="removeModerationTestImage(index)"
                           >
                             <Icon name="x" size="xs" :stroke-width="2" />

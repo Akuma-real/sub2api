@@ -58,14 +58,14 @@
         >
           <template #cell-code="{ value }">
             <div class="flex items-center space-x-2">
-              <code class="font-mono text-sm text-gray-900 dark:text-gray-100">{{ value }}</code>
+              <code class="font-mono text-sm text-ink">{{ value }}</code>
               <button
                 @click="copyToClipboard(value)"
                 :class="[
                   'flex items-center transition-colors',
                   copiedCode === value
-                    ? 'text-green-500'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                    ? 'text-success'
+                    : 'text-muted-soft hover:text-body'
                 ]"
                 :title="copiedCode === value ? t('admin.redeem.copied') : t('keys.copyToClipboard')"
               >
@@ -98,11 +98,11 @@
           </template>
 
           <template #cell-value="{ value, row }">
-            <span class="text-sm font-medium text-gray-900 dark:text-white">
+            <span class="text-sm font-medium text-ink">
               <template v-if="row.type === 'balance'">${{ value.toFixed(2) }}</template>
               <template v-else-if="row.type === 'subscription'">
                 {{ row.validity_days || 30 }} {{ t('admin.redeem.days') }}
-                <span v-if="row.group" class="ml-1 text-xs text-gray-500 dark:text-gray-400"
+                <span v-if="row.group" class="ml-1 text-xs text-muted"
                   >({{ row.group.name }})</span
                 >
               </template>
@@ -126,13 +126,13 @@
           </template>
 
           <template #cell-used_by="{ value, row }">
-            <span class="text-sm text-gray-500 dark:text-dark-400">
+            <span class="text-sm text-muted">
               {{ row.user?.email || (value ? t('admin.redeem.userPrefix', { id: value }) : '-') }}
             </span>
           </template>
 
           <template #cell-used_at="{ value }">
-            <span class="text-sm text-gray-500 dark:text-dark-400">{{
+            <span class="text-sm text-muted">{{
               value ? formatDateTime(value) : '-'
             }}</span>
           </template>
@@ -142,8 +142,8 @@
               :class="[
                 'text-sm',
                 row.status === 'expired'
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-500 dark:text-dark-400'
+                  ? 'text-error'
+                  : 'text-muted'
               ]"
             >
               {{ value ? formatDateTime(value) : t('admin.redeem.neverExpires') }}
@@ -155,7 +155,7 @@
               <button
                 v-if="row.status === 'unused'"
                 @click="handleDelete(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-muted transition-colors hover:bg-error/15 hover:text-error"
               >
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -167,7 +167,7 @@
                 </svg>
                 <span class="text-xs">{{ t('common.delete') }}</span>
               </button>
-              <span v-else class="text-gray-400 dark:text-dark-500">-</span>
+              <span v-else class="text-muted-soft">-</span>
             </div>
           </template>
         </DataTable>
@@ -219,11 +219,11 @@
     <!-- Generate Codes Dialog -->
     <Teleport to="body">
       <div v-if="showGenerateDialog" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="fixed inset-0 bg-black/50" @click="showGenerateDialog = false"></div>
+        <div class="fixed inset-0 bg-ink/50" @click="showGenerateDialog = false"></div>
         <div
-          class="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800"
+          class="relative z-10 w-full max-w-md rounded-xl bg-canvas p-6 shadow-xl"
         >
-          <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 class="mb-4 text-lg font-semibold text-ink">
             {{ t('admin.redeem.generateCodesTitle') }}
           </h2>
           <form @submit.prevent="handleGenerateCodes" class="space-y-4">
@@ -250,8 +250,8 @@
               />
             </div>
             <!-- 邀请码类型：显示提示信息 -->
-            <div v-if="generateForm.type === 'invitation'" class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-              <p class="text-sm text-blue-700 dark:text-blue-300">
+            <div v-if="generateForm.type === 'invitation'" class="rounded-lg bg-surface-card p-3">
+              <p class="text-sm text-body">
                 {{ t('admin.redeem.invitationHint') }}
               </p>
             </div>
@@ -272,7 +272,7 @@
                       :subscription-type="(option as unknown as GroupOption).subscriptionType"
                       :rate-multiplier="(option as unknown as GroupOption).rate"
                     />
-                    <span v-else class="text-gray-400">{{
+                    <span v-else class="text-muted-soft">{{
                       t('admin.redeem.selectGroupPlaceholder')
                     }}</span>
                   </template>
@@ -311,8 +311,8 @@
                   :class="[
                     'rounded-lg border px-3 py-2 text-sm transition-colors',
                     generateForm.expiry_option === option.value
-                      ? 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-300'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-dark-600 dark:text-gray-300 dark:hover:bg-dark-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-hairline text-body hover:bg-cream'
                   ]"
                 >
                   {{ option.label }}
@@ -356,18 +356,18 @@
     <!-- Generated Codes Result Dialog -->
     <Teleport to="body">
       <div v-if="showResultDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50" @click="closeResultDialog"></div>
-        <div class="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-xl dark:bg-dark-800">
+        <div class="fixed inset-0 bg-ink/50" @click="closeResultDialog"></div>
+        <div class="relative z-10 w-full max-w-lg rounded-xl bg-canvas shadow-xl">
           <!-- Header -->
           <div
-            class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-dark-600"
+            class="flex items-center justify-between border-b border-hairline px-5 py-4"
           >
             <div class="flex items-center gap-3">
               <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-success/15"
               >
                 <svg
-                  class="h-5 w-5 text-green-600 dark:text-green-400"
+                  class="h-5 w-5 text-success"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -381,17 +381,17 @@
                 </svg>
               </div>
               <div>
-                <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                <h2 class="text-base font-semibold text-ink">
                   {{ t('admin.redeem.generatedSuccessfully') }}
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-muted">
                   {{ t('admin.redeem.codesCreated', { count: generatedCodes.length }) }}
                 </p>
               </div>
             </div>
             <button
               @click="closeResultDialog"
-              class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-dark-700 dark:hover:text-gray-300"
+              class="rounded-lg p-1.5 text-muted-soft transition-colors hover:bg-surface-card hover:text-body"
             >
               <Icon name="x" size="md" :stroke-width="2" />
             </button>
@@ -403,13 +403,13 @@
                 readonly
                 :value="generatedCodesText"
                 :style="{ height: textareaHeight }"
-                class="w-full resize-none rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-sm text-gray-800 focus:outline-none dark:border-dark-600 dark:bg-dark-700 dark:text-gray-200"
+                class="w-full resize-none rounded-lg border border-hairline bg-cream p-3 font-mono text-sm text-ink focus:outline-none"
               ></textarea>
             </div>
           </div>
           <!-- Footer -->
           <div
-            class="flex justify-end gap-2 rounded-b-xl border-t border-gray-200 bg-gray-50 px-5 py-4 dark:border-dark-600 dark:bg-dark-700/50"
+            class="flex justify-end gap-2 rounded-b-xl border-t border-hairline bg-cream px-5 py-4"
           >
             <button
               @click="copyGeneratedCodes"

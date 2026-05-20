@@ -341,7 +341,7 @@
         @mousedown.self="showR2Guide = false"
       >
         <div
-          class="fixed inset-0 bg-black/50"
+          class="fixed inset-0 bg-ink/50"
           @click="showR2Guide = false"
         ></div>
         <div

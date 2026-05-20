@@ -2239,22 +2239,22 @@
           <!-- DingTalk Connect OAuth 登录 -->
           <div class="card">
             <div
-              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
+              class="border-b border-hairline-soft px-6 py-4"
             >
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 class="text-lg font-semibold text-ink">
                 {{ t("admin.settings.dingtalk.title") }}
               </h2>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-muted">
                 {{ t("admin.settings.dingtalk.description") }}
               </p>
             </div>
             <div class="space-y-5 p-6">
               <div class="flex items-center justify-between">
                 <div>
-                  <label class="font-medium text-gray-900 dark:text-white">{{
+                  <label class="font-medium text-ink">{{
                     t("admin.settings.dingtalk.enable")
                   }}</label>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-muted">
                     {{ t("admin.settings.dingtalk.enableHint") }}
                   </p>
                 </div>
@@ -2263,12 +2263,12 @@
 
               <div
                 v-if="form.dingtalk_connect_enabled"
-                class="border-t border-gray-100 pt-4 dark:border-dark-700"
+                class="border-t border-hairline-soft pt-4"
               >
                 <div class="grid grid-cols-1 gap-6">
                   <div>
                     <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      class="mb-2 block text-sm font-medium text-body"
                     >
                       {{ t("admin.settings.dingtalk.clientId") }}
                     </label>
@@ -2280,14 +2280,14 @@
                         t('admin.settings.dingtalk.clientIdPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.dingtalk.clientIdHint") }}
                     </p>
                   </div>
 
                   <div>
                     <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      class="mb-2 block text-sm font-medium text-body"
                     >
                       {{ t("admin.settings.dingtalk.clientSecret") }}
                     </label>
@@ -2303,7 +2303,7 @@
                           : t('admin.settings.dingtalk.clientSecretPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{
                         form.dingtalk_connect_client_secret_configured
                           ? t(
@@ -2316,7 +2316,7 @@
 
                   <div>
                     <label
-                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      class="mb-2 block text-sm font-medium text-body"
                     >
                       {{ t("admin.settings.dingtalk.redirectUrl") }}
                     </label>
@@ -2328,17 +2328,17 @@
                         t('admin.settings.dingtalk.redirectUrlPlaceholder')
                       "
                     />
-                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.dingtalk.redirectUrlHint") }}
                     </p>
                   </div>
 
                   <!-- Corp Restriction Policy -->
-                  <div class="border-t border-gray-100 pt-4 dark:border-dark-700">
-                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div class="border-t border-hairline-soft pt-4">
+                    <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.dingtalk.corpPolicy.label") }}
                     </label>
-                    <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mb-3 text-xs text-muted">
                       {{ t("admin.settings.dingtalk.corpPolicy.hint") }}
                     </p>
                     <div class="space-y-2">
@@ -2349,7 +2349,7 @@
                           value="none"
                           class="h-4 w-4 text-primary-600"
                         />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.corpPolicy.none") }}
                         </span>
                       </label>
@@ -2360,7 +2360,7 @@
                           value="internal_only"
                           class="h-4 w-4 text-primary-600"
                         />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.corpPolicy.internalOnly") }}
                         </span>
                       </label>
@@ -2370,13 +2370,13 @@
                   <!-- bypass_registration toggle（仅 internal_only 模式下可见可用） -->
                   <div
                     v-if="form.dingtalk_connect_corp_restriction_policy === 'internal_only'"
-                    class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-dark-700"
+                    class="flex items-center justify-between pt-4 border-t border-hairline-soft"
                   >
                     <div>
-                      <label class="font-medium text-gray-900 dark:text-white">{{
+                      <label class="font-medium text-ink">{{
                         t("admin.settings.dingtalk.bypassRegistration")
                       }}</label>
-                      <p class="text-sm text-gray-500 dark:text-gray-400">
+                      <p class="text-sm text-muted">
                         {{ t("admin.settings.dingtalk.bypassRegistrationHint") }}
                       </p>
                     </div>
@@ -2386,14 +2386,14 @@
                   <!-- 身份同步开关（仅 internal_only 模式下可见） -->
                   <div
                     v-if="form.dingtalk_connect_corp_restriction_policy === 'internal_only'"
-                    class="pt-4 border-t border-gray-100 dark:border-dark-700 space-y-2"
+                    class="pt-4 border-t border-hairline-soft"
                   >
                     <div class="flex items-center justify-between">
                       <div>
-                        <label class="font-medium text-gray-900 dark:text-white">{{
+                        <label class="font-medium text-ink">{{
                           t("admin.settings.dingtalk.syncDisplayName")
                         }}</label>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-muted">
                           {{ t("admin.settings.dingtalk.syncDisplayNameHint") }}
                         </p>
                       </div>
@@ -2401,7 +2401,7 @@
                     </div>
                     <div v-if="form.dingtalk_connect_sync_display_name" class="space-y-2">
                       <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap min-w-[5rem]">
+                        <label class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.syncDisplayNameTarget") }}
                         </label>
                         <input
@@ -2412,7 +2412,7 @@
                         />
                       </div>
                       <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap min-w-[5rem]">
+                        <label class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.syncAttrDisplayName") }}
                         </label>
                         <input
@@ -2423,23 +2423,23 @@
                         />
                       </div>
                     </div>
-                    <p v-if="form.dingtalk_connect_sync_display_name" class="text-xs text-gray-400 dark:text-gray-500">
+                    <p v-if="form.dingtalk_connect_sync_display_name" class="text-xs text-muted-soft">
                       {{ t("admin.settings.dingtalk.syncDisplayNameTargetHint") }}
                     </p>
                   </div>
                   <div
                     v-if="form.dingtalk_connect_corp_restriction_policy === 'internal_only'"
-                    class="pt-4 border-t border-gray-100 dark:border-dark-700 space-y-2"
+                    class="pt-4 border-t border-hairline-soft"
                   >
                     <div class="flex items-center justify-between">
                       <div>
-                        <label class="font-medium text-gray-900 dark:text-white">{{
+                        <label class="font-medium text-ink">{{
                           t("admin.settings.dingtalk.syncCorpEmail")
                         }}</label>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-muted">
                           {{ t("admin.settings.dingtalk.syncCorpEmailHint") }}
                         </p>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        <p class="text-xs text-accent-amber">
                           {{ t("admin.settings.dingtalk.syncCorpEmailPermissionHint") }}
                         </p>
                       </div>
@@ -2447,7 +2447,7 @@
                     </div>
                     <div v-if="form.dingtalk_connect_sync_corp_email" class="space-y-2">
                       <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap min-w-[5rem]">
+                        <label class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.syncCorpEmailTarget") }}
                         </label>
                         <input
@@ -2458,7 +2458,7 @@
                         />
                       </div>
                       <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap min-w-[5rem]">
+                        <label class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.syncAttrDisplayName") }}
                         </label>
                         <input
@@ -2469,23 +2469,23 @@
                         />
                       </div>
                     </div>
-                    <p v-if="form.dingtalk_connect_sync_corp_email" class="text-xs text-gray-400 dark:text-gray-500">
+                    <p v-if="form.dingtalk_connect_sync_corp_email" class="text-xs text-muted-soft">
                       {{ t("admin.settings.dingtalk.syncCorpEmailTargetHint") }}
                     </p>
                   </div>
                   <div
                     v-if="form.dingtalk_connect_corp_restriction_policy === 'internal_only'"
-                    class="pt-4 border-t border-gray-100 dark:border-dark-700 space-y-2"
+                    class="pt-4 border-t border-hairline-soft"
                   >
                     <div class="flex items-center justify-between">
                       <div>
-                        <label class="font-medium text-gray-900 dark:text-white">{{
+                        <label class="font-medium text-ink">{{
                           t("admin.settings.dingtalk.syncDept")
                         }}</label>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-muted">
                           {{ t("admin.settings.dingtalk.syncDeptHint") }}
                         </p>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        <p class="text-xs text-accent-amber">
                           {{ t("admin.settings.dingtalk.syncDeptPermissionHint") }}
                         </p>
                       </div>
@@ -2493,7 +2493,7 @@
                     </div>
                     <div v-if="form.dingtalk_connect_sync_dept" class="space-y-2">
                       <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap min-w-[5rem]">
+                        <label class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.syncDeptTarget") }}
                         </label>
                         <input
@@ -2504,7 +2504,7 @@
                         />
                       </div>
                       <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap min-w-[5rem]">
+                        <label class="text-sm text-body">
                           {{ t("admin.settings.dingtalk.syncAttrDisplayName") }}
                         </label>
                         <input
@@ -2515,7 +2515,7 @@
                         />
                       </div>
                     </div>
-                    <p v-if="form.dingtalk_connect_sync_dept" class="text-xs text-gray-400 dark:text-gray-500">
+                    <p v-if="form.dingtalk_connect_sync_dept" class="text-xs text-muted-soft">
                       {{ t("admin.settings.dingtalk.syncDeptTargetHint") }}
                     </p>
                   </div>
@@ -3962,7 +3962,7 @@
           <!-- Web Search Test Dialog -->
           <div
             v-if="wsTestDialogOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-ink/50"
             @click.self="wsTestDialogOpen = false"
           >
             <div
@@ -5307,7 +5307,7 @@
           <!-- Affiliate add/edit modal -->
           <div
             v-if="affiliateModal.open"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
             @click.self="closeAffiliateModal"
           >
             <div class="w-full max-w-md rounded-lg bg-canvas p-6 shadow-card">
@@ -5479,7 +5479,7 @@
           <!-- Affiliate batch rate modal -->
           <div
             v-if="affiliateBatchModal.open"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
             @click.self="affiliateBatchModal.open = false"
           >
             <div class="w-full max-w-md rounded-lg bg-canvas p-6 shadow-card">
@@ -5912,7 +5912,7 @@
                           'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
                           form.payment_alipay_force_qrcode
                             ? 'bg-primary-500'
-                            : 'bg-gray-300 dark:bg-dark-600',
+                            : 'bg-hairline-soft',
                         ]"
                         @click="
                           form.payment_alipay_force_qrcode =
@@ -5921,14 +5921,14 @@
                       >
                         <span
                           :class="[
-                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                             form.payment_alipay_force_qrcode
                               ? 'translate-x-5'
                               : 'translate-x-0',
                           ]"
                         />
                       </button>
-                      <span class="text-sm text-gray-500 dark:text-gray-400">{{
+                      <span class="text-sm text-muted">{{
                         t("admin.settings.payment.alipayForceQRCodeHint")
                       }}</span>
                     </div>
@@ -9521,8 +9521,8 @@ watch(
   @apply sticky z-20 -mx-1 rounded-lg border border-hairline/80 bg-canvas/90 p-1.5 ;
   top: 4.75rem;
   box-shadow:
-    0 12px 28px rgb(15 23 42 / 0.07),
-    0 1px 0 rgb(255 255 255 / 0.9) inset;
+    0 12px 28px rgba(20, 20, 19, 0.07),
+    0 1px 0 rgba(250, 249, 245, 0.9) inset;
 }
 
 .settings-tabs-scroll {
@@ -9575,8 +9575,8 @@ watch(
 .settings-tab-active {
   @apply border-primary-200/80 bg-canvas text-primary-700 shadow-sm;
   box-shadow:
-    0 8px 18px rgb(15 23 42 / 0.08),
-    0 1px 0 rgb(255 255 255 / 0.92) inset;
+    0 8px 18px rgba(20, 20, 19, 0.08),
+    0 1px 0 rgba(250, 249, 245, 0.92) inset;
 }
 
 .settings-tab-active::before {
@@ -9609,28 +9609,5 @@ watch(
 
 .settings-tab-label {
   @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap leading-none;
-}
-</style>
-
-<style>
-/* Dark-mode overrides for the settings tabs shell. Kept in an UNSCOPED block
-   because Vue's scoped-CSS compiler was dropping the `:global(.dark) ...`
-   rules in the production build, leaving inactive tabs unreadable on dark. */
-.dark .settings-tabs-shell {
-  border-color: rgb(51 65 85 / 0.65);
-  background: rgb(15 23 42 / 0.86);
-  box-shadow:
-    0 16px 36px rgb(0 0 0 / 0.28),
-    0 1px 0 rgb(255 255 255 / 0.06) inset;
-}
-
-.dark .settings-tab::before {
-  background: linear-gradient(135deg, rgb(30 41 59 / 0.9), rgb(51 65 85 / 0.62));
-}
-
-.dark .settings-tab-active {
-  box-shadow:
-    0 12px 26px rgb(0 0 0 / 0.22),
-    0 1px 0 rgb(255 255 255 / 0.08) inset;
 }
 </style>

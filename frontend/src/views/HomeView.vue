@@ -82,7 +82,7 @@
           <router-link
             v-else
             to="/login"
-            class="inline-flex items-center rounded-full bg-surface-dark px-4 py-2 text-xs font-medium text-on-primary transition-colors hover:bg-surface-dark-elevated"
+            class="inline-flex items-center rounded-full bg-surface-dark px-4 py-2 text-xs font-medium text-on-dark transition-colors hover:bg-surface-dark-elevated"
           >
             {{ t("home.login") }}
           </router-link>
@@ -241,7 +241,7 @@
             class="group rounded-lg border border-hairline bg-surface-card p-7 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover"
           >
             <div
-              class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-surface-dark text-on-primary transition-transform group-hover:scale-105"
+              class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-surface-dark text-on-dark transition-transform group-hover:scale-105"
             >
               <Icon name="server" size="lg" class="text-on-primary" />
             </div>
@@ -681,7 +681,7 @@ onMounted(() => {
   background: #181715;
   border-radius: 12px;
   box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 25px 50px -12px rgba(20, 20, 19, 0.4),
     0 0 0 1px rgba(250, 249, 245, 0.1),
     inset 0 1px 0 rgba(250, 249, 245, 0.1);
   overflow: hidden;
@@ -803,11 +803,11 @@ onMounted(() => {
   font-style: italic;
 }
 .code-welcome {
-  color: #e8dfd5;
+  color: #faf9f5;
 }
 .code-success {
   color: #5db872;
-  background: rgba(34, 197, 94, 0.15);
+  background: rgba(93, 184, 114, 0.15);
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 600;

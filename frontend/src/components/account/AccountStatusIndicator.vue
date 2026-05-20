@@ -3,13 +3,13 @@
     <!-- Rate Limit Display (429) - Two-line layout -->
     <div v-if="isRateLimited" class="flex flex-col items-center gap-1">
       <span class="badge text-xs badge-warning">{{ t('admin.accounts.status.rateLimited') }}</span>
-      <span class="text-[11px] text-gray-400 dark:text-gray-500">{{ rateLimitResumeText }}</span>
+      <span class="text-[11px] text-muted-soft">{{ rateLimitResumeText }}</span>
     </div>
 
     <!-- Overload Display (529) - Two-line layout -->
     <div v-else-if="isOverloaded" class="flex flex-col items-center gap-1">
       <span class="badge text-xs badge-danger">{{ t('admin.accounts.status.overloaded') }}</span>
-      <span class="text-[11px] text-gray-400 dark:text-gray-500">{{ overloadCountdown }}</span>
+      <span class="text-[11px] text-muted-soft">{{ overloadCountdown }}</span>
     </div>
 
     <!-- Main Status Badge (shown when not rate limited/overloaded) -->
@@ -31,7 +31,7 @@
     <!-- Error Info Indicator -->
     <div v-if="hasError && account.error_message" class="group/error relative">
       <svg
-        class="h-4 w-4 cursor-help text-red-500 transition-colors hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+        class="h-4 w-4 cursor-help text-error transition-colors hover:text-error"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -45,14 +45,14 @@
       </svg>
       <!-- Tooltip - 向下显示 -->
       <div
-        class="invisible absolute left-0 top-full z-[100] mt-1.5 min-w-[200px] max-w-[300px] rounded-lg bg-gray-800 px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-all duration-200 group-hover/error:visible group-hover/error:opacity-100 dark:bg-gray-900"
+        class="invisible absolute left-0 top-full z-[100] mt-1.5 min-w-[200px] max-w-[300px] rounded-lg bg-surface-dark px-3 py-2 text-xs text-on-dark opacity-0 shadow-xl transition-all duration-200 group-hover/error:visible group-hover/error:opacity-100"
       >
-        <div class="whitespace-pre-wrap break-words leading-relaxed text-gray-300">
+        <div class="whitespace-pre-wrap break-words leading-relaxed text-on-dark-soft">
           {{ account.error_message }}
         </div>
         <!-- 上方小三角 -->
         <div
-          class="absolute bottom-full left-3 border-[6px] border-transparent border-b-gray-800 dark:border-b-gray-900"
+          class="absolute bottom-full left-3 border-[6px] border-transparent border-b-surface-dark"
         ></div>
       </div>
     </div>
@@ -60,18 +60,18 @@
     <!-- Rate Limit Indicator (429) -->
     <div v-if="isRateLimited" class="group relative">
       <span
-        class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+        class="inline-flex items-center gap-1 rounded bg-accent-amber/15 px-1.5 py-0.5 text-xs font-medium text-warning"
       >
         <Icon name="exclamationTriangle" size="xs" :stroke-width="2" />
         429
       </span>
       <!-- Tooltip -->
       <div
-        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded bg-gray-900 px-3 py-2 text-center text-xs leading-relaxed text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700"
+        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded bg-surface-dark px-3 py-2 text-center text-xs leading-relaxed text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
       >
         {{ t('admin.accounts.status.rateLimitedUntil', { time: formatDateTime(account.rate_limit_reset_at) }) }}
         <div
-          class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"
+          class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-surface-dark"
         ></div>
       </div>
     </div>
@@ -91,7 +91,7 @@
         <!-- 积分已用尽 -->
         <span
           v-if="item.kind === 'credits_exhausted'"
-          class="inline-flex items-center gap-1 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400"
+          class="inline-flex items-center gap-1 rounded bg-surface-card px-1.5 py-0.5 text-xs font-medium text-error"
         >
           <Icon name="exclamationTriangle" size="xs" :stroke-width="2" />
           {{ t('admin.accounts.status.creditsExhausted') }}
@@ -100,7 +100,7 @@
         <!-- 正在走积分（模型限流但积分可用）-->
         <span
           v-else-if="item.kind === 'credits_active'"
-          class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          class="inline-flex items-center gap-1 rounded bg-surface-card px-1.5 py-0.5 text-xs font-medium text-warning"
         >
           <span>⚡</span>
           {{ formatScopeName(item.model) }}
@@ -109,7 +109,7 @@
         <!-- 普通模型限流 -->
         <span
           v-else
-          class="inline-flex items-center gap-1 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+          class="inline-flex items-center gap-1 rounded bg-surface-card px-1.5 py-0.5 text-xs font-medium text-primary-600"
         >
           <Icon name="exclamationTriangle" size="xs" :stroke-width="2" />
           {{ formatScopeName(item.model) }}
@@ -117,7 +117,7 @@
         </span>
         <!-- Tooltip -->
         <div
-          class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded bg-gray-900 px-3 py-2 text-center text-xs leading-relaxed text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700"
+          class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded bg-surface-dark px-3 py-2 text-center text-xs leading-relaxed text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
         >
           {{
             item.kind === 'credits_exhausted'
@@ -127,7 +127,7 @@
                 : t('admin.accounts.status.modelRateLimitedUntil', { model: formatScopeName(item.model), time: formatTime(item.reset_at) })
           }}
           <div
-            class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"
+            class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-surface-dark"
           ></div>
         </div>
       </div>
@@ -136,18 +136,18 @@
     <!-- Overload Indicator (529) -->
     <div v-if="isOverloaded" class="group relative">
       <span
-        class="inline-flex items-center gap-1 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400"
+        class="inline-flex items-center gap-1 rounded bg-surface-card px-1.5 py-0.5 text-xs font-medium text-error"
       >
         <Icon name="exclamationTriangle" size="xs" :stroke-width="2" />
         529
       </span>
       <!-- Tooltip -->
       <div
-        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded bg-gray-900 px-3 py-2 text-center text-xs leading-relaxed text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700"
+        class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 whitespace-normal rounded bg-surface-dark px-3 py-2 text-center text-xs leading-relaxed text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
       >
         {{ t('admin.accounts.status.overloadedUntil', { time: formatTime(account.overload_until) }) }}
         <div
-          class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"
+          class="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-surface-dark"
         ></div>
       </div>
     </div>

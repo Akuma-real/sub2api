@@ -21,10 +21,10 @@ export function getBillingModeBadgeClass(
 ): string {
   switch (mode) {
     case BILLING_MODE_PER_REQUEST:
-      return "bg-primary-100 text-primary-700 ";
+      return "bg-surface-card text-primary-700";
     case BILLING_MODE_IMAGE:
-      return "bg-primary-100 text-primary-700 ";
+      return "bg-surface-card text-primary-700";
     default:
-      return "bg-accent-teal/15 text-primary-700 ";
+      return "bg-accent-teal/15 text-accent-teal";
   }
 }

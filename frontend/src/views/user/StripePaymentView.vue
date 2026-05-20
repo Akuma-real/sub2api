@@ -27,12 +27,12 @@
         <!-- 金额头部 -->
         <div v-if="order" class="card overflow-hidden">
           <div
-            class="bg-primary-500 px-6 py-6 text-center"
+            class="bg-surface-card px-6 py-6 text-center"
           >
-            <p class="text-sm font-medium text-primary-700">
+            <p class="text-sm font-medium text-muted">
               {{ t("payment.actualPay") }}
             </p>
-            <p class="mt-1 text-3xl font-bold text-on-primary">
+            <p class="mt-1 text-[28px] leading-none font-display text-ink">
               {{ formatGatewayAmount(order.pay_amount) }}
             </p>
           </div>
@@ -40,13 +40,13 @@
 
         <!-- 微信二维码展示 -->
         <template v-if="wechatQrUrl">
-          <div class="card p-6">
+          <div class="card p-8">
             <div class="flex flex-col items-center space-y-4">
-              <p class="text-lg font-semibold text-ink">
+              <p class="text-[22px] leading-tight text-ink">
                 {{ t("payment.qr.scanWxpay") }}
               </p>
               <div
-                class="relative rounded-lg border-2 border-primary-500 bg-primary-100 p-4"
+                class="relative rounded-lg border border-primary-200 bg-canvas p-4"
               >
                 <img
                   :src="wechatQrUrl"
@@ -85,7 +85,7 @@
 
         <!-- 支付宝跳转状态 -->
         <template v-else-if="redirecting">
-          <div class="card p-6">
+          <div class="card p-8">
             <div class="flex flex-col items-center space-y-4 py-4">
               <div
                 class="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"

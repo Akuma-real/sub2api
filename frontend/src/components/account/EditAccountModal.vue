@@ -70,14 +70,14 @@
         </div>
 
         <!-- Model Restriction Section (不适用于 Antigravity) -->
-        <div v-if="account.platform !== 'antigravity'" class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div v-if="account.platform !== 'antigravity'" class="border-t border-hairline pt-4">
           <label class="input-label">{{ t('admin.accounts.modelRestriction') }}</label>
 
           <div
             v-if="isOpenAIModelRestrictionDisabled"
-            class="mb-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20"
+            class="mb-3 rounded-lg bg-surface-soft p-3"
           >
-            <p class="text-xs text-amber-700 dark:text-amber-400">
+            <p class="text-xs text-warning">
               {{ t('admin.accounts.openai.modelRestrictionDisabledByPassthrough') }}
             </p>
           </div>
@@ -91,8 +91,8 @@
                 :class="[
                   'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'whitelist'
-                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-surface-card text-body hover:bg-hairline-soft'
                 ]"
               >
                 <svg
@@ -116,8 +116,8 @@
                 :class="[
                   'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                   modelRestrictionMode === 'mapping'
-                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                    ? 'bg-surface-card text-accent-amber'
+                    : 'bg-surface-card text-body hover:bg-hairline-soft'
                 ]"
               >
                 <svg
@@ -140,7 +140,7 @@
             <!-- Whitelist Mode -->
             <div v-if="modelRestrictionMode === 'whitelist'">
               <ModelWhitelistSelector v-model="allowedModels" :platform="account?.platform || 'anthropic'" :account-id="account?.id" />
-              <p class="text-xs text-gray-500 dark:text-gray-400">
+              <p class="text-xs text-muted">
                 {{ t('admin.accounts.selectedModels', { count: allowedModels.length }) }}
                 <span v-if="allowedModels.length === 0 && modelMappings.length === 0">{{
                   t('admin.accounts.supportsAllModels')
@@ -150,8 +150,8 @@
 
             <!-- Mapping Mode -->
             <div v-else>
-              <div class="mb-3 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
-                <p class="text-xs text-purple-700 dark:text-purple-400">
+              <div class="mb-3 rounded-lg bg-surface-card p-3">
+                <p class="text-xs text-accent-amber">
                   <svg
                     class="mr-1 inline h-4 w-4"
                     fill="none"
@@ -183,7 +183,7 @@
                   :placeholder="t('admin.accounts.requestModel')"
                 />
                 <svg
-                  class="h-4 w-4 flex-shrink-0 text-gray-400"
+                  class="h-4 w-4 flex-shrink-0 text-muted-soft"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -204,7 +204,7 @@
                 <button
                   type="button"
                   @click="removeModelMapping(index)"
-                  class="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                  class="rounded-lg p-2 text-error transition-colors hover:bg-surface-soft hover:text-error"
                 >
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -221,7 +221,7 @@
             <button
               type="button"
               @click="addModelMapping"
-              class="mb-3 w-full rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-dark-500 dark:text-gray-400 dark:hover:border-dark-400 dark:hover:text-gray-300"
+              class="mb-3 w-full rounded-lg border-2 border-dashed border-hairline px-4 py-2 text-body transition-colors hover:border-primary-300 hover:text-body"
             >
               <svg
                 class="mr-1 inline h-4 w-4"
@@ -256,11 +256,11 @@
         </div>
 
         <!-- Pool Mode Section -->
-        <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="border-t border-hairline pt-4">
           <div class="mb-3 flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.poolMode') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.poolModeHint') }}
               </p>
             </div>
@@ -269,19 +269,19 @@
               @click="poolModeEnabled = !poolModeEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                poolModeEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                poolModeEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   poolModeEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
             </button>
           </div>
-          <div v-if="poolModeEnabled" class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <p class="text-xs text-blue-700 dark:text-blue-400">
+          <div v-if="poolModeEnabled" class="rounded-lg bg-surface-card p-3">
+            <p class="text-xs text-primary-600">
               <Icon name="exclamationCircle" size="sm" class="mr-1 inline" :stroke-width="2" />
               {{ t('admin.accounts.poolModeInfo') }}
             </p>
@@ -296,7 +296,7 @@
               step="1"
               class="input"
             />
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{
                 t('admin.accounts.poolModeRetryCountHint', {
                   default: DEFAULT_POOL_MODE_RETRY_COUNT,
@@ -308,11 +308,11 @@
         </div>
 
         <!-- Custom Error Codes Section -->
-        <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="border-t border-hairline pt-4">
           <div class="mb-3 flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.customErrorCodes') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.customErrorCodesHint') }}
               </p>
             </div>
@@ -321,12 +321,12 @@
               @click="customErrorCodesEnabled = !customErrorCodesEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                customErrorCodesEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                customErrorCodesEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   customErrorCodesEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -334,8 +334,8 @@
           </div>
 
           <div v-if="customErrorCodesEnabled" class="space-y-3">
-            <div class="rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20">
-              <p class="text-xs text-amber-700 dark:text-amber-400">
+            <div class="rounded-lg bg-surface-soft p-3">
+              <p class="text-xs text-warning">
                 <Icon name="exclamationTriangle" size="sm" class="mr-1 inline" :stroke-width="2" />
                 {{ t('admin.accounts.customErrorCodesWarning') }}
               </p>
@@ -351,8 +351,8 @@
                 :class="[
                   'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
                   selectedErrorCodes.includes(code.value)
-                    ? 'bg-red-100 text-red-700 ring-1 ring-red-500 dark:bg-red-900/30 dark:text-red-400'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                    ? 'bg-surface-soft text-error ring-1 ring-error'
+                    : 'bg-surface-card text-body hover:bg-hairline-soft'
                 ]"
               >
                 {{ code.value }} {{ code.label }}
@@ -387,18 +387,18 @@
               <span
                 v-for="code in selectedErrorCodes.sort((a, b) => a - b)"
                 :key="code"
-                class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                class="inline-flex items-center gap-1 rounded-full bg-surface-soft px-2.5 py-0.5 text-sm font-medium text-error"
               >
                 {{ code }}
                 <button
                   type="button"
                   @click="removeErrorCode(code)"
-                  class="hover:text-red-900 dark:hover:text-red-300"
+                  class="hover:text-error/80"
                 >
                   <Icon name="x" size="sm" :stroke-width="2" />
                 </button>
               </span>
-              <span v-if="selectedErrorCodes.length === 0" class="text-xs text-gray-400">
+              <span v-if="selectedErrorCodes.length === 0" class="text-xs text-muted-soft">
                 {{ t('admin.accounts.noneSelectedUsesDefault') }}
               </span>
             </div>
@@ -410,15 +410,15 @@
       <!-- OpenAI OAuth Model Mapping (OAuth 类型没有 apikey 容器，需要独立的模型映射区域) -->
       <div
         v-if="account.platform === 'openai' && account.type === 'oauth'"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <label class="input-label">{{ t('admin.accounts.modelRestriction') }}</label>
 
         <div
           v-if="isOpenAIModelRestrictionDisabled"
-          class="mb-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20"
+          class="mb-3 rounded-lg bg-surface-soft p-3"
         >
-          <p class="text-xs text-amber-700 dark:text-amber-400">
+          <p class="text-xs text-warning">
             {{ t('admin.accounts.openai.modelRestrictionDisabledByPassthrough') }}
           </p>
         </div>
@@ -432,8 +432,8 @@
               :class="[
                 'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-surface-card text-body hover:bg-hairline-soft'
               ]"
             >
               {{ t('admin.accounts.modelWhitelist') }}
@@ -444,8 +444,8 @@
               :class="[
                 'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                  ? 'bg-surface-card text-accent-amber'
+                  : 'bg-surface-card text-body hover:bg-hairline-soft'
               ]"
             >
               {{ t('admin.accounts.modelMapping') }}
@@ -455,7 +455,7 @@
           <!-- Whitelist Mode -->
           <div v-if="modelRestrictionMode === 'whitelist'">
             <ModelWhitelistSelector v-model="allowedModels" :platform="account?.platform || 'anthropic'" :account-id="account?.id" />
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-muted">
               {{ t('admin.accounts.selectedModels', { count: allowedModels.length }) }}
               <span v-if="allowedModels.length === 0 && modelMappings.length === 0">{{
                 t('admin.accounts.supportsAllModels')
@@ -465,8 +465,8 @@
 
           <!-- Mapping Mode -->
           <div v-else>
-            <div class="mb-3 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
-              <p class="text-xs text-purple-700 dark:text-purple-400">
+            <div class="mb-3 rounded-lg bg-surface-card p-3">
+              <p class="text-xs text-accent-amber">
                 {{ t('admin.accounts.mapRequestModels') }}
               </p>
             </div>
@@ -484,7 +484,7 @@
                   :placeholder="t('admin.accounts.requestModel')"
                 />
                 <svg
-                  class="h-4 w-4 flex-shrink-0 text-gray-400"
+                  class="h-4 w-4 flex-shrink-0 text-muted-soft"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -505,7 +505,7 @@
                 <button
                   type="button"
                   @click="removeModelMapping(index)"
-                  class="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                  class="rounded-lg p-2 text-error transition-colors hover:bg-surface-soft hover:text-error"
                 >
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -522,7 +522,7 @@
             <button
               type="button"
               @click="addModelMapping"
-              class="mb-3 w-full rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-dark-500 dark:text-gray-400 dark:hover:border-dark-400 dark:hover:text-gray-300"
+              class="mb-3 w-full rounded-lg border-2 border-dashed border-hairline px-4 py-2 text-body transition-colors hover:border-primary-300 hover:text-body"
             >
               + {{ t('admin.accounts.addMapping') }}
             </button>
@@ -607,7 +607,7 @@
         </div>
 
         <!-- Model Restriction Section for Service Account -->
-        <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="border-t border-hairline pt-4">
           <label class="input-label">{{ t('admin.accounts.modelRestriction') }}</label>
 
           <!-- Mode Toggle -->
@@ -618,8 +618,8 @@
               :class="[
                 'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-surface-card text-body hover:bg-hairline-soft'
               ]"
             >
               <svg
@@ -643,8 +643,8 @@
               :class="[
                 'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                  ? 'bg-surface-card text-accent-amber'
+                  : 'bg-surface-card text-body hover:bg-hairline-soft'
               ]"
             >
               <svg
@@ -667,7 +667,7 @@
           <!-- Whitelist Mode -->
           <div v-if="modelRestrictionMode === 'whitelist'">
             <ModelWhitelistSelector v-model="allowedModels" :platform="account?.platform || 'anthropic'" :account-id="account?.id" />
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-muted">
               {{ t('admin.accounts.selectedModels', { count: allowedModels.length }) }}
               <span v-if="allowedModels.length === 0 && modelMappings.length === 0">{{
                 t('admin.accounts.supportsAllModels')
@@ -677,8 +677,8 @@
 
           <!-- Mapping Mode -->
           <div v-else>
-            <div class="mb-3 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
-              <p class="text-xs text-purple-700 dark:text-purple-400">
+            <div class="mb-3 rounded-lg bg-surface-card p-3">
+              <p class="text-xs text-accent-amber">
                 <svg
                   class="mr-1 inline h-4 w-4"
                   fill="none"
@@ -710,7 +710,7 @@
                   :placeholder="t('admin.accounts.requestModel')"
                 />
                 <svg
-                  class="h-4 w-4 flex-shrink-0 text-gray-400"
+                  class="h-4 w-4 flex-shrink-0 text-muted-soft"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -731,7 +731,7 @@
                 <button
                   type="button"
                   @click="removeModelMapping(index)"
-                  class="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                  class="rounded-lg p-2 text-error transition-colors hover:bg-surface-soft hover:text-error"
                 >
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -748,7 +748,7 @@
             <button
               type="button"
               @click="addModelMapping"
-              class="mb-3 w-full rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-dark-500 dark:text-gray-400 dark:hover:border-dark-400 dark:hover:text-gray-300"
+              class="mb-3 w-full rounded-lg border-2 border-dashed border-hairline px-4 py-2 text-body transition-colors hover:border-primary-300 hover:text-body"
             >
               <svg
                 class="mr-1 inline h-4 w-4"
@@ -847,15 +847,15 @@
             <input
               v-model="editBedrockForceGlobal"
               type="checkbox"
-              class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-500"
+              class="rounded border-hairline text-primary-600 focus:ring-primary-500"
             />
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('admin.accounts.bedrockForceGlobal') }}</span>
+            <span class="text-sm text-body">{{ t('admin.accounts.bedrockForceGlobal') }}</span>
           </label>
           <p class="input-hint mt-1">{{ t('admin.accounts.bedrockForceGlobalHint') }}</p>
         </div>
 
         <!-- Model Restriction for Bedrock -->
-        <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="border-t border-hairline pt-4">
           <label class="input-label">{{ t('admin.accounts.modelRestriction') }}</label>
 
           <!-- Mode Toggle -->
@@ -866,8 +866,8 @@
               :class="[
                 'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'whitelist'
-                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-surface-card text-body hover:bg-hairline-soft'
               ]"
             >
               {{ t('admin.accounts.modelWhitelist') }}
@@ -878,8 +878,8 @@
               :class="[
                 'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all',
                 modelRestrictionMode === 'mapping'
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                  ? 'bg-surface-card text-accent-amber'
+                  : 'bg-surface-card text-body hover:bg-hairline-soft'
               ]"
             >
               {{ t('admin.accounts.modelMapping') }}
@@ -889,7 +889,7 @@
           <!-- Whitelist Mode -->
           <div v-if="modelRestrictionMode === 'whitelist'">
             <ModelWhitelistSelector v-model="allowedModels" platform="anthropic" />
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-muted">
               {{ t('admin.accounts.selectedModels', { count: allowedModels.length }) }}
               <span v-if="allowedModels.length === 0 && modelMappings.length === 0">{{ t('admin.accounts.supportsAllModels') }}</span>
             </p>
@@ -899,9 +899,9 @@
           <div v-else class="space-y-3">
             <div v-for="(mapping, index) in modelMappings" :key="getModelMappingKey(mapping)" class="flex items-center gap-2">
               <input v-model="mapping.from" type="text" class="input flex-1" :placeholder="t('admin.accounts.fromModel')" />
-              <span class="text-gray-400">→</span>
+              <span class="text-muted-soft">→</span>
               <input v-model="mapping.to" type="text" class="input flex-1" :placeholder="t('admin.accounts.toModel')" />
-              <button type="button" @click="modelMappings.splice(index, 1)" class="text-red-500 hover:text-red-700">
+              <button type="button" @click="modelMappings.splice(index, 1)" class="text-error hover:text-error/80">
                 <Icon name="trash" size="sm" />
               </button>
             </div>
@@ -924,11 +924,11 @@
         </div>
 
         <!-- Pool Mode Section for Bedrock -->
-        <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="border-t border-hairline pt-4">
           <div class="mb-3 flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.poolMode') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.poolModeHint') }}
               </p>
             </div>
@@ -937,19 +937,19 @@
               @click="poolModeEnabled = !poolModeEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                poolModeEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                poolModeEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   poolModeEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
             </button>
           </div>
-          <div v-if="poolModeEnabled" class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <p class="text-xs text-blue-700 dark:text-blue-400">
+          <div v-if="poolModeEnabled" class="rounded-lg bg-surface-card p-3">
+            <p class="text-xs text-primary-600">
               <Icon name="exclamationCircle" size="sm" class="mr-1 inline" :stroke-width="2" />
               {{ t('admin.accounts.poolModeInfo') }}
             </p>
@@ -964,7 +964,7 @@
               step="1"
               class="input"
             />
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{
                 t('admin.accounts.poolModeRetryCountHint', {
                   default: DEFAULT_POOL_MODE_RETRY_COUNT,
@@ -978,13 +978,13 @@
 
       <!-- Antigravity model restriction (applies to all antigravity types) -->
       <!-- Antigravity 只支持模型映射模式，不支持白名单模式 -->
-      <div v-if="account.platform === 'antigravity'" class="border-t border-gray-200 pt-4 dark:border-dark-600">
+      <div v-if="account.platform === 'antigravity'" class="border-t border-hairline pt-4">
         <label class="input-label">{{ t('admin.accounts.modelRestriction') }}</label>
 
         <!-- Mapping Mode Only (no toggle for Antigravity) -->
         <div>
-          <div class="mb-3 rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
-            <p class="text-xs text-purple-700 dark:text-purple-400">{{ t('admin.accounts.mapRequestModels') }}</p>
+          <div class="mb-3 rounded-lg bg-surface-card p-3">
+            <p class="text-xs text-accent-amber">{{ t('admin.accounts.mapRequestModels') }}</p>
           </div>
 
           <div class="mb-3 flex flex-wrap gap-2">
@@ -992,7 +992,7 @@
               type="button"
               @click="syncAntigravityUpstreamModels"
               :disabled="isSyncingAntigravityUpstream || !account?.id"
-              class="rounded-lg border border-emerald-200 px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
+              class="rounded-lg border border-success/25 px-3 py-1.5 text-sm text-success hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ isSyncingAntigravityUpstream ? t('admin.accounts.syncUpstreamModelsLoading') : t('admin.accounts.syncUpstreamModels') }}
             </button>
@@ -1010,12 +1010,12 @@
                   type="text"
                   :class="[
                     'input flex-1',
-                    !isValidWildcardPattern(mapping.from) ? 'border-red-500 dark:border-red-500' : '',
+                    !isValidWildcardPattern(mapping.from) ? 'border-error' : '',
                     mapping.to.includes('*') ? '' : ''
                   ]"
                   :placeholder="t('admin.accounts.requestModel')"
                 />
-                <svg class="h-4 w-4 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="h-4 w-4 flex-shrink-0 text-muted-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
                 <input
@@ -1023,14 +1023,14 @@
                   type="text"
                   :class="[
                     'input flex-1',
-                    mapping.to.includes('*') ? 'border-red-500 dark:border-red-500' : ''
+                    mapping.to.includes('*') ? 'border-error' : ''
                   ]"
                   :placeholder="t('admin.accounts.actualModel')"
                 />
                 <button
                   type="button"
                   @click="removeAntigravityModelMapping(index)"
-                  class="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                  class="rounded-lg p-2 text-error transition-colors hover:bg-surface-soft hover:text-error"
                 >
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -1043,10 +1043,10 @@
                 </button>
               </div>
               <!-- 校验错误提示 -->
-              <p v-if="!isValidWildcardPattern(mapping.from)" class="text-xs text-red-500">
+              <p v-if="!isValidWildcardPattern(mapping.from)" class="text-xs text-error">
                 {{ t('admin.accounts.wildcardOnlyAtEnd') }}
               </p>
-              <p v-if="mapping.to.includes('*')" class="text-xs text-red-500">
+              <p v-if="mapping.to.includes('*')" class="text-xs text-error">
                 {{ t('admin.accounts.targetNoWildcard') }}
               </p>
             </div>
@@ -1055,7 +1055,7 @@
           <button
             type="button"
             @click="addAntigravityModelMapping"
-            class="mb-3 w-full rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-dark-500 dark:text-gray-400 dark:hover:border-dark-400 dark:hover:text-gray-300"
+            class="mb-3 w-full rounded-lg border-2 border-dashed border-hairline px-4 py-2 text-body transition-colors hover:border-primary-300 hover:text-body"
           >
             <svg class="mr-1 inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -1078,11 +1078,11 @@
       </div>
 
       <!-- Temp Unschedulable Rules -->
-      <div class="border-t border-gray-200 pt-4 dark:border-dark-600 space-y-4">
+      <div class="border-t border-hairline pt-4">
         <div class="mb-3 flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.tempUnschedulable.title') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.tempUnschedulable.hint') }}
             </p>
           </div>
@@ -1091,12 +1091,12 @@
             @click="tempUnschedEnabled = !tempUnschedEnabled"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-              tempUnschedEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              tempUnschedEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
             ]"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                 tempUnschedEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -1104,8 +1104,8 @@
         </div>
 
         <div v-if="tempUnschedEnabled" class="space-y-3">
-          <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <p class="text-xs text-blue-700 dark:text-blue-400">
+          <div class="rounded-lg bg-surface-card p-3">
+            <p class="text-xs text-primary-600">
               <Icon name="exclamationTriangle" size="sm" class="mr-1 inline" :stroke-width="2" />
               {{ t('admin.accounts.tempUnschedulable.notice') }}
             </p>
@@ -1117,7 +1117,7 @@
               :key="preset.label"
               type="button"
               @click="addTempUnschedRule(preset.rule)"
-              class="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-300 dark:hover:bg-dark-500"
+              class="rounded-lg bg-surface-card px-3 py-1.5 text-xs font-medium text-body transition-colors hover:bg-hairline-soft"
             >
               + {{ preset.label }}
             </button>
@@ -1127,10 +1127,10 @@
             <div
               v-for="(rule, index) in tempUnschedRules"
               :key="getTempUnschedRuleKey(rule)"
-              class="rounded-lg border border-gray-200 p-3 dark:border-dark-600"
+              class="rounded-lg border border-hairline p-3"
             >
               <div class="mb-2 flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <span class="text-xs font-medium text-muted">
                   {{ t('admin.accounts.tempUnschedulable.ruleIndex', { index: index + 1 }) }}
                 </span>
                 <div class="flex items-center gap-2">
@@ -1138,7 +1138,7 @@
                     type="button"
                     :disabled="index === 0"
                     @click="moveTempUnschedRule(index, -1)"
-                    class="rounded p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:text-gray-200"
+                    class="rounded p-1 text-muted-soft transition-colors hover:text-body disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Icon name="chevronUp" size="sm" :stroke-width="2" />
                   </button>
@@ -1146,7 +1146,7 @@
                     type="button"
                     :disabled="index === tempUnschedRules.length - 1"
                     @click="moveTempUnschedRule(index, 1)"
-                    class="rounded p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:text-gray-200"
+                    class="rounded p-1 text-muted-soft transition-colors hover:text-body disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -1155,7 +1155,7 @@
                   <button
                     type="button"
                     @click="removeTempUnschedRule(index)"
-                    class="rounded p-1 text-red-500 transition-colors hover:text-red-600"
+                    class="rounded p-1 text-error transition-colors hover:text-error"
                   >
                     <Icon name="x" size="sm" :stroke-width="2" />
                   </button>
@@ -1210,7 +1210,7 @@
           <button
             type="button"
             @click="addTempUnschedRule()"
-            class="w-full rounded-lg border-2 border-dashed border-gray-300 px-4 py-2 text-sm text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-dark-500 dark:text-gray-400 dark:hover:border-dark-400 dark:hover:text-gray-300"
+            class="w-full rounded-lg border-2 border-dashed border-hairline px-4 py-2 text-sm text-body transition-colors hover:border-primary-300 hover:text-body"
           >
             <svg
               class="mr-1 inline h-4 w-4"
@@ -1228,14 +1228,14 @@
       <!-- Intercept Warmup Requests (Anthropic/Antigravity) -->
       <div
         v-if="account?.platform === 'anthropic' || account?.platform === 'antigravity'"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{
               t('admin.accounts.interceptWarmupRequests')
             }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.interceptWarmupRequestsDesc') }}
             </p>
           </div>
@@ -1244,12 +1244,12 @@
             @click="interceptWarmupRequests = !interceptWarmupRequests"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-              interceptWarmupRequests ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              interceptWarmupRequests ? 'bg-primary-600' : 'bg-hairline-soft'
             ]"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                 interceptWarmupRequests ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -1292,7 +1292,7 @@
           <p class="input-hint">{{ t('admin.accounts.billingRateMultiplierHint') }}</p>
         </div>
       </div>
-      <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+      <div class="border-t border-hairline pt-4">
         <label class="input-label">{{ t('admin.accounts.expiresAt') }}</label>
         <input v-model="expiresAtInput" type="datetime-local" class="input" />
         <p class="input-hint">{{ t('admin.accounts.expiresAtHint') }}</p>
@@ -1301,12 +1301,12 @@
       <!-- OpenAI 自动透传开关（OAuth/API Key） -->
       <div
         v-if="account?.platform === 'openai' && (account?.type === 'oauth' || account?.type === 'apikey')"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.openai.oauthPassthrough') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.openai.oauthPassthroughDesc') }}
             </p>
           </div>
@@ -1315,12 +1315,12 @@
             @click="openaiPassthroughEnabled = !openaiPassthroughEnabled"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-              openaiPassthroughEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              openaiPassthroughEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
             ]"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                 openaiPassthroughEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -1331,11 +1331,11 @@
       <!-- OpenAI Codex 图片生成桥接账号级覆盖 -->
       <div
         v-if="account?.platform === 'openai' && (account?.type === 'oauth' || account?.type === 'apikey')"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
-        <div class="overflow-hidden rounded-lg border border-sky-100 bg-sky-50/60 shadow-sm dark:border-sky-900/50 dark:bg-sky-950/20">
+        <div class="overflow-hidden rounded-lg border border-hairline bg-surface-card shadow-sm">
           <div class="flex items-start gap-3 px-4 py-3">
-            <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-sky-600 shadow-sm ring-1 ring-sky-100 dark:bg-dark-800 dark:text-sky-300 dark:ring-sky-900/60">
+            <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-canvas text-accent-teal shadow-sm ring-1 ring-hairline">
               <Icon name="sparkles" size="sm" />
             </div>
             <div class="min-w-0 flex-1">
@@ -1348,12 +1348,12 @@
                   {{ codexImageGenerationBridgeBadgeLabel }}
                 </span>
               </div>
-              <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
+              <p class="mt-1 text-xs leading-5 text-muted">
                 {{ t('admin.accounts.openai.codexImageGenerationBridgeDesc') }}
               </p>
             </div>
           </div>
-          <div class="border-t border-sky-100 bg-white/70 p-2 dark:border-sky-900/50 dark:bg-dark-800/70">
+          <div class="border-t border-hairline bg-canvas/70 p-2">
             <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
                 v-for="option in codexImageGenerationBridgeOptions"
@@ -1364,23 +1364,23 @@
                 :class="[
                   'group flex min-h-[68px] items-start gap-2 rounded-md border px-3 py-2 text-left transition-all',
                   codexImageGenerationBridgeMode === option.value
-                    ? 'border-sky-300 bg-sky-50 text-sky-900 shadow-sm ring-1 ring-sky-200 dark:border-sky-700 dark:bg-sky-900/25 dark:text-sky-100 dark:ring-sky-800'
-                    : 'border-transparent bg-transparent text-slate-600 hover:border-gray-200 hover:bg-gray-50 dark:text-slate-300 dark:hover:border-dark-500 dark:hover:bg-dark-700'
+                    ? 'border-primary-300 bg-surface-card text-accent-teal shadow-sm ring-1 ring-hairline'
+                    : 'border-transparent bg-transparent text-muted hover:border-hairline hover:bg-cream'
                 ]"
               >
                 <span
                   :class="[
                     'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors',
                     codexImageGenerationBridgeMode === option.value
-                      ? 'border-sky-500 bg-sky-500 text-white'
-                      : 'border-gray-300 text-transparent group-hover:border-gray-400 dark:border-dark-500'
+                      ? 'border-primary-500 bg-primary-500 text-on-primary'
+                      : 'border-hairline text-transparent group-hover:border-primary-300'
                   ]"
                 >
                   <Icon name="check" size="xs" :stroke-width="2" />
                 </span>
                 <span class="min-w-0">
                   <span class="block text-sm font-medium">{{ option.label }}</span>
-                  <span class="mt-0.5 block text-xs leading-4 text-slate-500 dark:text-slate-400">{{ option.description }}</span>
+                  <span class="mt-0.5 block text-xs leading-4 text-muted-soft">{{ option.description }}</span>
                 </span>
               </button>
             </div>
@@ -1391,15 +1391,15 @@
       <!-- OpenAI WS Mode 三态（off/ctx_pool/passthrough） -->
       <div
         v-if="account?.platform === 'openai' && (account?.type === 'oauth' || account?.type === 'apikey')"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.openai.wsMode') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.openai.wsModeDesc') }}
             </p>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t(openAIWSModeConcurrencyHintKey) }}
             </p>
           </div>
@@ -1412,12 +1412,12 @@
       <!-- OpenAI APIKey Responses API support mode -->
       <div
         v-if="account?.platform === 'openai' && account?.type === 'apikey'"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600 space-y-3"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between gap-4">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.openai.responsesMode') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.openai.responsesModeDesc') }}
             </p>
           </div>
@@ -1429,7 +1429,7 @@
             />
           </div>
         </div>
-        <div class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-dark-700 dark:text-gray-300">
+        <div class="rounded-lg bg-cream px-3 py-2 text-xs text-body">
           <span class="font-medium">{{ t(openAIResponsesStatusKey) }}</span>
         </div>
       </div>
@@ -1437,12 +1437,12 @@
       <!-- Anthropic API Key 自动透传开关 -->
       <div
         v-if="account?.platform === 'anthropic' && account?.type === 'apikey'"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.anthropic.apiKeyPassthrough') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.anthropic.apiKeyPassthroughDesc') }}
             </p>
           </div>
@@ -1451,12 +1451,12 @@
             @click="anthropicPassthroughEnabled = !anthropicPassthroughEnabled"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-              anthropicPassthroughEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              anthropicPassthroughEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
             ]"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                 anthropicPassthroughEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -1467,12 +1467,12 @@
       <!-- Anthropic API Key: Web Search Emulation (hidden when global disabled) -->
       <div
         v-if="account?.platform === 'anthropic' && account?.type === 'apikey' && webSearchGlobalEnabled"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.anthropic.webSearchEmulation') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.anthropic.webSearchEmulationDesc') }}
             </p>
           </div>
@@ -1487,11 +1487,11 @@
       <!-- 配额控制 (Anthropic apikey/bedrock: 配额限制 + 亲和) -->
       <div
         v-if="account?.platform === 'anthropic' && (account?.type === 'apikey' || account?.type === 'bedrock')"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600 space-y-4"
+        class="border-t border-hairline pt-4"
       >
         <div class="mb-3">
           <h3 class="input-label mb-0 text-base font-semibold">{{ t('admin.accounts.quotaControl.title') }}</h3>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p class="mt-1 text-xs text-muted">
             {{ t('admin.accounts.quotaControl.hint') }}
           </p>
         </div>
@@ -1538,11 +1538,11 @@
       <!-- 配额控制 (非 Anthropic apikey/bedrock) -->
       <div
         v-else-if="account?.type === 'apikey' || account?.type === 'bedrock'"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600 space-y-4"
+        class="border-t border-hairline pt-4"
       >
         <div class="mb-3">
           <h3 class="input-label mb-0 text-base font-semibold">{{ t('admin.accounts.quotaControl.title') }}</h3>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p class="mt-1 text-xs text-muted">
             {{ t('admin.accounts.quotaLimitHint') }}
           </p>
         </div>
@@ -1590,12 +1590,12 @@
       <!-- OpenAI OAuth Codex 官方客户端限制开关 -->
       <div
         v-if="account?.platform === 'openai' && account?.type === 'oauth'"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.openai.codexCLIOnly') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.openai.codexCLIOnlyDesc') }}
             </p>
           </div>
@@ -1604,12 +1604,12 @@
             @click="codexCLIOnlyEnabled = !codexCLIOnlyEnabled"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-              codexCLIOnlyEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              codexCLIOnlyEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
             ]"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                 codexCLIOnlyEnabled ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -1619,12 +1619,12 @@
 
       <div
         v-if="account?.platform === 'openai' && (account?.type === 'oauth' || account?.type === 'apikey')"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600 space-y-4"
+        class="border-t border-hairline pt-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <label class="input-label mb-0">{{ t('admin.accounts.openai.compactMode') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.openai.compactModeDesc') }}
             </p>
           </div>
@@ -1632,11 +1632,11 @@
             <Select v-model="openAICompactMode" :options="openAICompactModeOptions" />
           </div>
         </div>
-        <div class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-dark-700 dark:text-gray-300">
+        <div class="rounded-lg bg-cream px-3 py-2 text-xs text-body">
           <span class="font-medium">{{ t(openAICompactStatusKey) }}</span>
           <span
             v-if="account?.extra?.openai_compact_checked_at"
-            class="ml-2 text-gray-500 dark:text-gray-400"
+            class="ml-2 text-muted"
           >
             {{ t('admin.accounts.openai.compactLastChecked') }}:
             {{ formatDateTime(new Date(String(account.extra.openai_compact_checked_at))) }}
@@ -1657,14 +1657,14 @@
                 class="input flex-1"
                 :placeholder="t('admin.accounts.fromModel')"
               />
-              <span class="text-gray-400">→</span>
+              <span class="text-muted-soft">→</span>
               <input
                 v-model="mapping.to"
                 type="text"
                 class="input flex-1"
                 :placeholder="t('admin.accounts.toModel')"
               />
-              <button type="button" @click="removeOpenAICompactModelMapping(index)" class="text-red-500 hover:text-red-700">
+              <button type="button" @click="removeOpenAICompactModelMapping(index)" class="text-error hover:text-error/80">
                 <Icon name="trash" size="sm" />
               </button>
             </div>
@@ -1681,7 +1681,7 @@
             <label class="input-label mb-0">{{
               t('admin.accounts.autoPauseOnExpired')
             }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.autoPauseOnExpiredDesc') }}
             </p>
           </div>
@@ -1690,12 +1690,12 @@
             @click="autoPauseOnExpired = !autoPauseOnExpired"
             :class="[
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-              autoPauseOnExpired ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+              autoPauseOnExpired ? 'bg-primary-600' : 'bg-hairline-soft'
             ]"
           >
             <span
               :class="[
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                 autoPauseOnExpired ? 'translate-x-5' : 'translate-x-0'
               ]"
             />
@@ -1706,21 +1706,21 @@
       <!-- 配额控制 (Anthropic OAuth/SetupToken: 亲和 + 窗口费用 + 会话 + RPM 等) -->
       <div
         v-if="account?.platform === 'anthropic' && (account?.type === 'oauth' || account?.type === 'setup-token')"
-        class="border-t border-gray-200 pt-4 dark:border-dark-600 space-y-4"
+        class="border-t border-hairline pt-4"
       >
         <div class="mb-3">
           <h3 class="input-label mb-0 text-base font-semibold">{{ t('admin.accounts.quotaControl.title') }}</h3>
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p class="mt-1 text-xs text-muted">
             {{ t('admin.accounts.quotaControl.hint') }}
           </p>
         </div>
 
         <!-- Window Cost Limit -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="mb-3 flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.windowCost.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.windowCost.hint') }}
               </p>
             </div>
@@ -1729,12 +1729,12 @@
               @click="windowCostEnabled = !windowCostEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                windowCostEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                windowCostEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   windowCostEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -1745,7 +1745,7 @@
             <div>
               <label class="input-label">{{ t('admin.accounts.quotaControl.windowCost.limit') }}</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted">$</span>
                 <input
                   v-model.number="windowCostLimit"
                   type="number"
@@ -1760,7 +1760,7 @@
             <div>
               <label class="input-label">{{ t('admin.accounts.quotaControl.windowCost.stickyReserve') }}</label>
               <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted">$</span>
                 <input
                   v-model.number="windowCostStickyReserve"
                   type="number"
@@ -1776,11 +1776,11 @@
         </div>
 
         <!-- Session Limit -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="mb-3 flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.sessionLimit.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.sessionLimit.hint') }}
               </p>
             </div>
@@ -1789,12 +1789,12 @@
               @click="sessionLimitEnabled = !sessionLimitEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                sessionLimitEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                sessionLimitEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   sessionLimitEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -1825,7 +1825,7 @@
                   class="input pr-12"
                   :placeholder="t('admin.accounts.quotaControl.sessionLimit.idleTimeoutPlaceholder')"
                 />
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">{{ t('common.minutes') }}</span>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted">{{ t('common.minutes') }}</span>
               </div>
               <p class="input-hint">{{ t('admin.accounts.quotaControl.sessionLimit.idleTimeoutHint') }}</p>
             </div>
@@ -1833,11 +1833,11 @@
         </div>
 
         <!-- RPM Limit -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="mb-3 flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.rpmLimit.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.rpmLimit.hint') }}
               </p>
             </div>
@@ -1846,12 +1846,12 @@
               @click="rpmLimitEnabled = !rpmLimitEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                rpmLimitEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                rpmLimitEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   rpmLimitEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -1882,8 +1882,8 @@
                   :class="[
                     'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                     rpmStrategy === 'tiered'
-                      ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'bg-surface-card text-body hover:bg-hairline-soft'
                   ]"
                 >
                   <div class="text-center">
@@ -1897,8 +1897,8 @@
                   :class="[
                     'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                     rpmStrategy === 'sticky_exempt'
-                      ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'bg-surface-card text-body hover:bg-hairline-soft'
                   ]"
                 >
                   <div class="text-center">
@@ -1927,7 +1927,7 @@
           <!-- 用户消息限速模式（独立于 RPM 开关，始终可见） -->
           <div class="mt-4">
             <label class="input-label">{{ t('admin.accounts.quotaControl.rpmLimit.userMsgQueue') }}</label>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.quotaControl.rpmLimit.userMsgQueueHint') }}
             </p>
             <div class="flex space-x-2">
@@ -1936,8 +1936,8 @@
                 :class="[
                   'px-3 py-1.5 text-sm rounded-md border transition-colors',
                   userMsgQueueMode === opt.value
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white dark:bg-dark-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-dark-500 hover:bg-gray-50 dark:hover:bg-dark-600'
+                    ? 'bg-primary-600 text-on-primary border-primary-600'
+                    : 'bg-canvas'
                 ]">
                 {{ opt.label }}
               </button>
@@ -1946,11 +1946,11 @@
         </div>
 
         <!-- TLS Fingerprint -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.tlsFingerprint.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.tlsFingerprint.hint') }}
               </p>
             </div>
@@ -1959,12 +1959,12 @@
               @click="tlsFingerprintEnabled = !tlsFingerprintEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                tlsFingerprintEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                tlsFingerprintEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   tlsFingerprintEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -1981,11 +1981,11 @@
         </div>
 
         <!-- Session ID Masking -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.sessionIdMasking.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.sessionIdMasking.hint') }}
               </p>
             </div>
@@ -1994,12 +1994,12 @@
               @click="sessionIdMaskingEnabled = !sessionIdMaskingEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                sessionIdMaskingEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                sessionIdMaskingEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   sessionIdMaskingEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -2008,11 +2008,11 @@
         </div>
 
         <!-- Cache TTL Override -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.cacheTTLOverride.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.cacheTTLOverride.hint') }}
               </p>
             </div>
@@ -2021,12 +2021,12 @@
               @click="cacheTTLOverrideEnabled = !cacheTTLOverrideEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                cacheTTLOverrideEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                cacheTTLOverrideEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   cacheTTLOverrideEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -2036,23 +2036,23 @@
             <label class="input-label text-xs">{{ t('admin.accounts.quotaControl.cacheTTLOverride.target') }}</label>
             <select
               v-model="cacheTTLOverrideTarget"
-              class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-dark-500 dark:bg-dark-700 dark:text-white"
+              class="mt-1 block w-full rounded-md border border-hairline bg-canvas px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             >
               <option value="5m">5m</option>
               <option value="1h">1h</option>
             </select>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.quotaControl.cacheTTLOverride.targetHint') }}
             </p>
           </div>
         </div>
 
         <!-- Custom Base URL Relay -->
-        <div class="rounded-lg border border-gray-200 p-4 dark:border-dark-600">
+        <div class="rounded-lg border border-hairline p-4">
           <div class="flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.accounts.quotaControl.customBaseUrl.label') }}</label>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-muted">
                 {{ t('admin.accounts.quotaControl.customBaseUrl.hint') }}
               </p>
             </div>
@@ -2061,12 +2061,12 @@
               @click="customBaseUrlEnabled = !customBaseUrlEnabled"
               :class="[
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
-                customBaseUrlEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+                customBaseUrlEnabled ? 'bg-primary-600' : 'bg-hairline-soft'
               ]"
             >
               <span
                 :class="[
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
                   customBaseUrlEnabled ? 'translate-x-5' : 'translate-x-0'
                 ]"
               />
@@ -2083,7 +2083,7 @@
         </div>
       </div>
 
-      <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+      <div class="border-t border-hairline pt-4">
         <div>
           <label class="input-label">{{ t('common.status') }}</label>
           <Select v-model="form.status" :options="statusOptions" />
@@ -2096,25 +2096,25 @@
               type="checkbox"
               v-model="mixedScheduling"
               disabled
-              class="h-4 w-4 cursor-not-allowed rounded border-gray-300 text-primary-500 focus:ring-primary-500 dark:border-dark-500"
+              class="h-4 w-4 cursor-not-allowed rounded border-hairline text-primary-500 focus:ring-primary-500"
             />
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span class="text-sm font-medium text-body">
               {{ t('admin.accounts.mixedScheduling') }}
             </span>
           </label>
           <div class="group relative">
             <span
-              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-gray-200 text-xs text-gray-500 hover:bg-gray-300 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500"
+              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-hairline-soft text-xs text-muted hover:bg-surface-card"
             >
               ?
             </span>
             <!-- Tooltip（向下显示避免被弹窗裁剪） -->
             <div
-              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded bg-gray-900 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700"
+              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded bg-surface-dark px-3 py-2 text-xs text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
             >
               {{ t('admin.accounts.mixedSchedulingTooltip') }}
               <div
-                class="absolute bottom-full left-3 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700"
+                class="absolute bottom-full left-3 border-4 border-transparent border-b-surface-dark"
               ></div>
             </div>
           </div>
@@ -2124,24 +2124,24 @@
             <input
               type="checkbox"
               v-model="allowOverages"
-              class="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500 dark:border-dark-500"
+              class="h-4 w-4 rounded border-hairline text-primary-500 focus:ring-primary-500"
             />
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span class="text-sm font-medium text-body">
               {{ t('admin.accounts.allowOverages') }}
             </span>
           </label>
           <div class="group relative">
             <span
-              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-gray-200 text-xs text-gray-500 hover:bg-gray-300 dark:bg-dark-600 dark:text-gray-400 dark:hover:bg-dark-500"
+              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-hairline-soft text-xs text-muted hover:bg-surface-card"
             >
               ?
             </span>
             <div
-              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded bg-gray-900 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700"
+              class="pointer-events-none absolute left-0 top-full z-[100] mt-1.5 w-72 rounded bg-surface-dark px-3 py-2 text-xs text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
             >
               {{ t('admin.accounts.allowOveragesTooltip') }}
               <div
-                class="absolute bottom-full left-3 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700"
+                class="absolute bottom-full left-3 border-4 border-transparent border-b-surface-dark"
               ></div>
             </div>
           </div>
@@ -2460,11 +2460,11 @@ const codexImageGenerationBridgeBadgeLabel = computed(() => {
 const codexImageGenerationBridgeBadgeClass = computed(() => {
   switch (codexImageGenerationBridgeMode.value) {
     case 'enabled':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+      return 'bg-success/15 text-success'
     case 'disabled':
-      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+      return 'bg-error/15 text-error'
     default:
-      return 'bg-slate-100 text-slate-600 dark:bg-dark-600 dark:text-slate-300'
+      return 'bg-surface-card text-muted'
   }
 })
 const openAICompactModeOptions = computed(() => [

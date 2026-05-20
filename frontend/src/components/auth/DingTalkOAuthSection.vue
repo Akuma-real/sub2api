@@ -10,14 +10,14 @@
         aria-hidden="true"
         style="flex-shrink: 0"
       >
-        <circle cx="12" cy="12" r="12" fill="#1677FF" />
+        <circle cx="12" cy="12" r="12" fill="#cc785c" />
         <text
           x="12"
           y="17"
           font-family="sans-serif"
           font-size="13"
           font-weight="bold"
-          fill="white"
+          fill="#faf9f5"
           text-anchor="middle"
         >钉</text>
       </svg>
@@ -25,11 +25,11 @@
     </button>
 
     <div v-if="showDivider" class="flex items-center gap-3">
-      <div class="h-px flex-1 bg-gray-200 dark:bg-dark-700"></div>
-      <span class="text-xs text-gray-500 dark:text-dark-400">
+      <div class="h-px flex-1 bg-hairline-soft"></div>
+      <span class="text-xs text-muted">
         {{ t('auth.oauthOrContinue') }}
       </span>
-      <div class="h-px flex-1 bg-gray-200 dark:bg-dark-700"></div>
+      <div class="h-px flex-1 bg-hairline-soft"></div>
     </div>
   </div>
 </template>

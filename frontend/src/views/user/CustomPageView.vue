@@ -574,9 +574,9 @@ onMounted(async () => {
   padding: 4px 10px;
   font-size: 12px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(250, 249, 245, 0.15);
+  color: #faf9f5;
+  border: 1px solid rgba(250, 249, 245, 0.2);
   cursor: pointer;
   opacity: 0;
   transition:
@@ -585,7 +585,7 @@ onMounted(async () => {
   font-family: inherit;
 }
 .copy-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(250, 249, 245, 0.25);
 }
 pre:hover .copy-btn {
   opacity: 1;
