@@ -8,13 +8,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,8 +23,6 @@ import (
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/geminicli"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/proxyurl"
-	"github.com/Wei-Shaw/sub2api/internal/pkg/proxyutil"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/timezone"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -136,20 +130,6 @@ type UpdateAccountRequest struct {
 	ExpiresAt               *int64         `json:"expires_at"`
 	AutoPauseOnExpired      *bool          `json:"auto_pause_on_expired"`
 	ConfirmMixedChannelRisk *bool          `json:"confirm_mixed_channel_risk"` // 用户确认混合渠道风险
-}
-
-// DiscoverUpstreamModelsRequest represents an admin-only model discovery probe.
-type DiscoverUpstreamModelsRequest struct {
-	Platform string `json:"platform" binding:"required"`
-	Type     string `json:"type"`
-	BaseURL  string `json:"base_url"`
-	APIKey   string `json:"api_key" binding:"required"`
-	ProxyID  *int64 `json:"proxy_id"`
-}
-
-// DiscoverUpstreamModelsResponse contains model IDs discovered from an upstream.
-type DiscoverUpstreamModelsResponse struct {
-	Models []string `json:"models"`
 }
 
 // BulkUpdateAccountsRequest represents the payload for bulk editing accounts
@@ -1663,7 +1643,7 @@ func (h *OAuthHandler) SetupTokenCookieAuth(c *gin.Context) {
 }
 
 // GetUsage handles getting account usage information
-// GET /api/v1/admin/accounts/:id/usage?source=passive|active
+// GET /api/v1/admin/accounts/:id/usage?source=passive|active&force=true
 func (h *AccountHandler) GetUsage(c *gin.Context) {
 	accountID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -1672,12 +1652,13 @@ func (h *AccountHandler) GetUsage(c *gin.Context) {
 	}
 
 	source := c.DefaultQuery("source", "active")
+	force := c.Query("force") == "true"
 
 	var usage *service.UsageInfo
 	if source == "passive" {
 		usage, err = h.accountUsageService.GetPassiveUsage(c.Request.Context(), accountID)
 	} else {
-		usage, err = h.accountUsageService.GetUsage(c.Request.Context(), accountID)
+		usage, err = h.accountUsageService.GetUsage(c.Request.Context(), accountID, force)
 	}
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -2014,249 +1995,46 @@ func (h *AccountHandler) GetAvailableModels(c *gin.Context) {
 	response.Success(c, models)
 }
 
-const maxDiscoverModelsResponseBytes = 2 << 20
-
-var modelDiscoverySecretQueryPattern = regexp.MustCompile(`(?i)([?&](?:key|api_key|api-key|access_token|token|authorization|x-api-key)=)[^&\s"']+`)
-
-// DiscoverUpstreamModels fetches model IDs from a configured upstream through the backend.
-// POST /api/v1/admin/accounts/discover-models
-func (h *AccountHandler) DiscoverUpstreamModels(c *gin.Context) {
-	var req DiscoverUpstreamModelsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request: "+err.Error())
+// SyncUpstreamModels handles syncing live supported models from an account's upstream.
+// POST /api/v1/admin/accounts/:id/models/sync-upstream
+func (h *AccountHandler) SyncUpstreamModels(c *gin.Context) {
+	accountID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid account ID")
 		return
 	}
 
-	apiKey := strings.TrimSpace(req.APIKey)
-	if apiKey == "" {
-		response.BadRequest(c, "API key is required")
+	account, err := h.adminService.GetAccount(c.Request.Context(), accountID)
+	if err != nil {
+		response.NotFound(c, "Account not found")
 		return
 	}
 
-	endpoint, headers, err := buildUpstreamModelsRequest(req, apiKey)
-	if err != nil {
-		response.BadRequest(c, err.Error())
+	if h.accountTestService == nil {
+		response.InternalError(c, "Account test service is not configured")
 		return
 	}
 
-	client, err := h.newModelDiscoveryHTTPClient(c.Request.Context(), req.ProxyID)
+	models, err := h.accountTestService.FetchUpstreamSupportedModels(c.Request.Context(), account)
 	if err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
-
-	models, err := requestUpstreamModelIDs(c.Request.Context(), client, endpoint, headers)
-	if err != nil {
-		response.Error(c, http.StatusBadGateway, err.Error())
-		return
-	}
-
-	response.Success(c, DiscoverUpstreamModelsResponse{Models: models})
-}
-
-func buildUpstreamModelsRequest(req DiscoverUpstreamModelsRequest, apiKey string) (string, map[string]string, error) {
-	platform := strings.ToLower(strings.TrimSpace(req.Platform))
-	headers := map[string]string{}
-
-	switch platform {
-	case service.PlatformGemini:
-		base, err := normalizeModelDiscoveryBaseURL(req.BaseURL, "https://generativelanguage.googleapis.com", "v1beta")
-		if err != nil {
-			return "", nil, err
-		}
-		return fmt.Sprintf("%s/models?key=%s", base, url.QueryEscape(apiKey)), headers, nil
-	case service.PlatformAnthropic:
-		base, err := normalizeModelDiscoveryBaseURL(req.BaseURL, "https://api.anthropic.com", "v1")
-		if err != nil {
-			return "", nil, err
-		}
-		headers["x-api-key"] = apiKey
-		headers["anthropic-version"] = "2023-06-01"
-		return base + "/models", headers, nil
-	case service.PlatformOpenAI, service.PlatformAntigravity:
-		fallback := "https://api.openai.com"
-		if platform == service.PlatformAntigravity {
-			fallback = ""
-		}
-		base, err := normalizeModelDiscoveryBaseURL(req.BaseURL, fallback, "v1")
-		if err != nil {
-			return "", nil, err
-		}
-		headers["Authorization"] = "Bearer " + apiKey
-		return base + "/models", headers, nil
-	default:
-		return "", nil, fmt.Errorf("unsupported platform: %s", req.Platform)
-	}
-}
-
-func normalizeModelDiscoveryBaseURL(raw, fallback, version string) (string, error) {
-	base := strings.TrimRight(strings.TrimSpace(raw), "/")
-	if base == "" {
-		base = strings.TrimRight(strings.TrimSpace(fallback), "/")
-	}
-	if base == "" {
-		return "", errors.New("base URL is required")
-	}
-
-	parsed, err := url.Parse(base)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return "", errors.New("invalid base URL")
-	}
-	if parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return "", errors.New("base URL must use http or https")
-	}
-
-	if strings.HasSuffix(parsed.Path, "/v1") || strings.HasSuffix(parsed.Path, "/v1beta") {
-		return base, nil
-	}
-	return base + "/" + version, nil
-}
-
-func (h *AccountHandler) newModelDiscoveryHTTPClient(ctx context.Context, proxyID *int64) (*http.Client, error) {
-	client := &http.Client{Timeout: 15 * time.Second}
-	if proxyID == nil || *proxyID <= 0 {
-		return client, nil
-	}
-
-	proxy, err := h.adminService.GetProxy(ctx, *proxyID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load proxy: %w", err)
-	}
-	proxyURL := strings.TrimSpace(proxy.URL())
-	if proxyURL == "" {
-		return client, nil
-	}
-
-	_, parsedProxy, err := proxyurl.Parse(proxyURL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid proxy URL: %w", err)
-	}
-	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
-	if !ok {
-		return nil, fmt.Errorf("unexpected default transport type %T", http.DefaultTransport)
-	}
-	transport := defaultTransport.Clone()
-	transport.Proxy = nil
-	if err := proxyutil.ConfigureTransportProxy(transport, parsedProxy); err != nil {
-		return nil, fmt.Errorf("configure proxy: %w", err)
-	}
-	client.Transport = transport
-	return client, nil
-}
-
-func requestUpstreamModelIDs(ctx context.Context, client *http.Client, endpoint string, headers map[string]string) ([]string, error) {
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-	for key, value := range headers {
-		httpReq.Header.Set(key, value)
-	}
-
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("upstream request failed: %s", sanitizeModelDiscoveryError(err.Error()))
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxDiscoverModelsResponseBytes+1))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read upstream response: %w", err)
-	}
-	if len(body) > maxDiscoverModelsResponseBytes {
-		return nil, errors.New("upstream response is too large")
-	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("upstream returned %d: %s", resp.StatusCode, sanitizeModelDiscoveryError(extractUpstreamErrorMessage(body, http.StatusText(resp.StatusCode))))
-	}
-
-	models, err := extractUpstreamModelIDs(body)
-	if err != nil {
-		return nil, err
-	}
-	return models, nil
-}
-
-func sanitizeModelDiscoveryError(message string) string {
-	return modelDiscoverySecretQueryPattern.ReplaceAllString(message, `${1}[REDACTED]`)
-}
-
-func extractUpstreamModelIDs(body []byte) ([]string, error) {
-	var payload any
-	if err := json.Unmarshal(body, &payload); err != nil {
-		return nil, fmt.Errorf("invalid upstream model response: %w", err)
-	}
-
-	ids := map[string]struct{}{}
-	addModel := func(item any) {
-		obj, ok := item.(map[string]any)
-		if !ok {
-			return
-		}
-		if id, ok := obj["id"].(string); ok {
-			id = strings.TrimSpace(strings.TrimPrefix(id, "models/"))
-			if id != "" {
-				ids[id] = struct{}{}
+		var syncErr *service.UpstreamModelSyncError
+		if errors.As(err, &syncErr) {
+			switch syncErr.Kind {
+			case service.UpstreamModelSyncErrorConfiguration, service.UpstreamModelSyncErrorUnsupported:
+				response.BadRequest(c, syncErr.SafeMessage())
+			default:
+				slog.Warn("sync_upstream_models_failed", "account_id", accountID, "kind", syncErr.Kind)
+				response.Error(c, http.StatusBadGateway, syncErr.SafeMessage())
 			}
 			return
 		}
-		if name, ok := obj["name"].(string); ok {
-			name = strings.TrimSpace(strings.TrimPrefix(name, "models/"))
-			if name != "" {
-				ids[name] = struct{}{}
-			}
-		}
+
+		slog.Warn("sync_upstream_models_failed", "account_id", accountID)
+		response.Error(c, http.StatusBadGateway, "Failed to sync upstream models from upstream")
+		return
 	}
 
-	switch data := payload.(type) {
-	case []any:
-		for _, item := range data {
-			addModel(item)
-		}
-	case map[string]any:
-		if items, ok := data["data"].([]any); ok {
-			for _, item := range items {
-				addModel(item)
-			}
-		}
-		if items, ok := data["models"].([]any); ok {
-			for _, item := range items {
-				addModel(item)
-			}
-		}
-	}
-
-	models := make([]string, 0, len(ids))
-	for id := range ids {
-		models = append(models, id)
-	}
-	sort.Strings(models)
-	return models, nil
-}
-
-func extractUpstreamErrorMessage(body []byte, fallback string) string {
-	var payload struct {
-		Message string `json:"message"`
-		Error   struct {
-			Message string `json:"message"`
-		} `json:"error"`
-	}
-	if err := json.Unmarshal(body, &payload); err == nil {
-		if payload.Error.Message != "" {
-			return payload.Error.Message
-		}
-		if payload.Message != "" {
-			return payload.Message
-		}
-	}
-	text := strings.TrimSpace(string(body))
-	if text == "" {
-		return fallback
-	}
-	if len(text) > 300 {
-		return text[:300]
-	}
-	return text
+	response.Success(c, gin.H{"models": models})
 }
 
 // SetPrivacy handles setting privacy for a single OpenAI/Antigravity OAuth account

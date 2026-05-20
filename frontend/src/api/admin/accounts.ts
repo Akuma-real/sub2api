@@ -232,9 +232,12 @@ export async function clearError(id: number): Promise<Account> {
  * @param id - Account ID
  * @returns Account usage info
  */
-export async function getUsage(id: number, source?: 'passive' | 'active'): Promise<AccountUsageInfo> {
+export async function getUsage(id: number, source?: 'passive' | 'active', force?: boolean): Promise<AccountUsageInfo> {
+  const params: Record<string, string> = {}
+  if (source) params.source = source
+  if (force) params.force = 'true'
   const { data } = await apiClient.get<AccountUsageInfo>(`/admin/accounts/${id}/usage`, {
-    params: source ? { source } : undefined
+    params: Object.keys(params).length > 0 ? params : undefined
   })
   return data
 }
@@ -446,28 +449,17 @@ export async function getAvailableModels(id: number): Promise<ClaudeModel[]> {
   return data
 }
 
-export interface DiscoverUpstreamModelsRequest {
-  platform: string
-  type?: string
-  base_url?: string
-  api_key: string
-  proxy_id?: number | null
-}
-
-export interface DiscoverUpstreamModelsResponse {
+export interface SyncUpstreamModelsResult {
   models: string[]
 }
 
 /**
- * Discover models from an upstream through the backend to avoid browser CORS/private network limits.
+ * Sync live supported models from the account's upstream model-list endpoint
+ * @param id - Account ID
+ * @returns List of model IDs returned by the upstream
  */
-export async function discoverUpstreamModels(
-  request: DiscoverUpstreamModelsRequest
-): Promise<DiscoverUpstreamModelsResponse> {
-  const { data } = await apiClient.post<DiscoverUpstreamModelsResponse>(
-    '/admin/accounts/discover-models',
-    request
-  )
+export async function syncUpstreamModels(id: number): Promise<SyncUpstreamModelsResult> {
+  const { data } = await apiClient.post<SyncUpstreamModelsResult>(`/admin/accounts/${id}/models/sync-upstream`)
   return data
 }
 
@@ -685,7 +677,7 @@ export const accountsAPI = {
   resetTempUnschedulable,
   setSchedulable,
   getAvailableModels,
-  discoverUpstreamModels,
+  syncUpstreamModels,
   generateAuthUrl,
   exchangeCode,
   refreshOpenAIToken,
