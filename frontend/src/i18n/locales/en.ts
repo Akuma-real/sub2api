@@ -5432,7 +5432,15 @@ export default {
         siteKeyHint: 'Get this from your Cloudflare Dashboard',
         cloudflareDashboard: 'Cloudflare Dashboard',
         secretKeyHint: 'Server-side verification key (keep this secret)',
-        secretKeyConfiguredHint: 'Secret key configured. Leave empty to keep the current value.'      },
+        secretKeyConfiguredHint: 'Secret key configured. Leave empty to keep the current value.'
+      },
+      apiKeyAcl: {
+        title: 'API Key IP Access Control',
+        description: 'Choose which client IP is used by API Key allowlists and denylists',
+        trustForwardedIp: 'Trust forwarded client IP',
+        trustForwardedIpHint:
+          'Disabled by default. Enable only when the origin is reachable only through Cloudflare or Nginx reverse proxy. When enabled, API Key IP allowlists and denylists use CF-Connecting-IP, X-Real-IP, or X-Forwarded-For, matching the request IP shown in usage records.'
+      },
       linuxdo: {
         title: 'LinuxDo Connect Login',
         description: 'Configure LinuxDo Connect OAuth for Sub2API end-user login',
@@ -5912,6 +5920,12 @@ export default {
         emailsHint: 'Leave empty to disable notifications',
         addEmail: 'Add Email',
         emailPlaceholder: 'Enter email address',
+      },
+      subscriptionExpiryNotify: {
+        title: 'Subscription Expiry Reminder',
+        description: 'Control whether users receive subscription expiry reminder emails.',
+        enabled: 'Enable Subscription Expiry Reminder',
+        enabledHint: 'When enabled, the system sends reminders 7, 3, and 1 day before expiry.'
       },
       smtp: {
         title: 'SMTP Settings',
