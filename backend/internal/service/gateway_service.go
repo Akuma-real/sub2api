@@ -5415,8 +5415,14 @@ func (s *GatewayService) handleStreamingResponseAnthropicAPIKeyPassthrough(
 			}
 
 			line := ev.line
+			lineToWrite := line
 			if data, ok := extractAnthropicSSEDataLine(line); ok {
 				trimmed := strings.TrimSpace(data)
+				if normalizedData, changed := normalizeAnthropicStreamUsageForClaudeCode(trimmed); changed {
+					data = normalizedData
+					trimmed = strings.TrimSpace(data)
+					lineToWrite = "data: " + data
+				}
 				if anthropicStreamEventIsTerminal("", trimmed) {
 					sawTerminalEvent = true
 				}
@@ -5433,7 +5439,7 @@ func (s *GatewayService) handleStreamingResponseAnthropicAPIKeyPassthrough(
 			}
 
 			if !clientDisconnected {
-				restored := string(reverseToolNamesIfPresent(c, []byte(line)))
+				restored := string(reverseToolNamesIfPresent(c, []byte(lineToWrite)))
 				if _, err := io.WriteString(w, restored); err != nil {
 					clientDisconnected = true
 					logger.LegacyPrintf("service.gateway", "[Anthropic passthrough] Client disconnected during streaming, continue draining upstream for usage: account=%d", account.ID)
@@ -7388,7 +7394,7 @@ func (s *GatewayService) handleStreamingResponse(ctx context.Context, resp *http
 		if eventName == "" {
 			eventName = eventType
 		}
-		eventChanged := false
+		eventChanged := ensureAnthropicStreamUsageForClaudeCode(event)
 
 		// 兼容 Kimi cached_tokens → cache_read_input_tokens
 		if eventType == "message_start" {
@@ -7606,6 +7612,84 @@ func (s *GatewayService) parseSSEUsage(data string, usage *ClaudeUsage) {
 
 	if patch := s.extractSSEUsagePatch(event); patch != nil {
 		mergeSSEUsagePatch(usage, patch)
+	}
+}
+
+func normalizeAnthropicStreamUsageForClaudeCode(data string) (string, bool) {
+	if data == "" || data == "[DONE]" {
+		return data, false
+	}
+	var event map[string]any
+	if err := json.Unmarshal([]byte(data), &event); err != nil {
+		return data, false
+	}
+	if !ensureAnthropicStreamUsageForClaudeCode(event) {
+		return data, false
+	}
+	normalized, err := json.Marshal(event)
+	if err != nil {
+		return data, false
+	}
+	return string(normalized), true
+}
+
+func ensureAnthropicStreamUsageForClaudeCode(event map[string]any) bool {
+	if event == nil {
+		return false
+	}
+	switch event["type"] {
+	case "message_start":
+		msg, ok := event["message"].(map[string]any)
+		if !ok || msg == nil {
+			return false
+		}
+		usage, ok := msg["usage"].(map[string]any)
+		changed := false
+		if !ok || usage == nil {
+			usage = make(map[string]any, 4)
+			msg["usage"] = usage
+			changed = true
+		}
+		return ensureClaudeCodeUsageFields(usage) || changed
+	case "message_delta":
+		usage, ok := event["usage"].(map[string]any)
+		changed := false
+		if !ok || usage == nil {
+			usage = make(map[string]any, 4)
+			event["usage"] = usage
+			changed = true
+		}
+		return ensureClaudeCodeUsageFields(usage) || changed
+	default:
+		return false
+	}
+}
+
+func ensureClaudeCodeUsageFields(usage map[string]any) bool {
+	if usage == nil {
+		return false
+	}
+	changed := false
+	for _, field := range []string{
+		"input_tokens",
+		"output_tokens",
+		"cache_creation_input_tokens",
+		"cache_read_input_tokens",
+	} {
+		if !isJSONNumber(usage[field]) {
+			usage[field] = 0
+			changed = true
+		}
+	}
+	return changed
+}
+
+func isJSONNumber(value any) bool {
+	switch value.(type) {
+	case float64, float32, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, json.Number:
+		return true
+	default:
+		return false
 	}
 }
 

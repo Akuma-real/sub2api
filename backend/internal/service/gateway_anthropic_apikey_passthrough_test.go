@@ -819,6 +819,48 @@ func TestGatewayService_AnthropicAPIKeyPassthrough_StreamingStillCollectsUsageAf
 	require.Equal(t, 5, result.usage.OutputTokens)
 }
 
+func TestGatewayService_AnthropicAPIKeyPassthrough_StreamingAddsUsageForClaudeCodeWhenUpstreamOmitsIt(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	rec := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(rec)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/messages", nil)
+
+	svc := &GatewayService{
+		cfg: &config.Config{
+			Gateway: config.GatewayConfig{
+				MaxLineSize: defaultMaxLineSize,
+			},
+		},
+		rateLimitService: &RateLimitService{},
+	}
+
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body: io.NopCloser(strings.NewReader(strings.Join([]string{
+			`data: {"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","content":[],"model":"claude-3-7-sonnet"}}`,
+			"",
+			`data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null}}`,
+			"",
+			"data: [DONE]",
+			"",
+			"",
+		}, "\n"))),
+	}
+
+	result, err := svc.handleStreamingResponseAnthropicAPIKeyPassthrough(context.Background(), resp, c, &Account{ID: 1}, time.Now(), "claude-3-7-sonnet-20250219")
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	body := rec.Body.String()
+	require.Contains(t, body, `"type":"message_start"`)
+	require.Contains(t, body, `"type":"message_delta"`)
+	require.GreaterOrEqual(t, strings.Count(body, `"usage"`), 2)
+	require.Contains(t, body, `"input_tokens":0`)
+	require.Contains(t, body, `"output_tokens":0`)
+}
+
 func TestGatewayService_AnthropicAPIKeyPassthrough_MissingTerminalEventReturnsError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
