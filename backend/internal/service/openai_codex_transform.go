@@ -92,7 +92,7 @@ var openAIChatGPTInternalUnsupportedFields = []string{
 	"stream_options",
 }
 
-var openAICodexOAuthUnsupportedFields = append([]string{
+var openAIChatGPTInternalResponsesUnsupportedFields = append([]string{
 	"max_output_tokens",
 	"max_completion_tokens",
 	"temperature",
@@ -100,6 +100,8 @@ var openAICodexOAuthUnsupportedFields = append([]string{
 	"frequency_penalty",
 	"presence_penalty",
 }, openAIChatGPTInternalUnsupportedFields...)
+
+var openAICodexOAuthUnsupportedFields = openAIChatGPTInternalResponsesUnsupportedFields
 
 func applyCodexOAuthTransform(reqBody map[string]any, isCodexCLI bool, isCompact bool) codexTransformResult {
 	return applyCodexOAuthTransformWithOptions(reqBody, codexOAuthTransformOptions{
