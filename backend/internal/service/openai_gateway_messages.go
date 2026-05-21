@@ -179,7 +179,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 		}); err != nil {
 			return nil, err
 		}
-		ensureCodexOAuthInstructionsField(reqBody)
+		ensureCodexOAuthInstructionsField(reqBody, existingInstructions)
 		if shouldAutoInjectPromptCacheKeyForCompat(upstreamModel) {
 			appendOpenAICompatClaudeCodeTodoGuardToRequestBody(reqBody)
 		}
@@ -395,16 +395,20 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 	return result, handleErr
 }
 
-func ensureCodexOAuthInstructionsField(reqBody map[string]any) {
+func ensureCodexOAuthInstructionsField(reqBody map[string]any, fallback string) {
 	if reqBody == nil {
 		return
 	}
-	if value, ok := reqBody["instructions"]; !ok || value == nil {
-		reqBody["instructions"] = ""
+	fallback = strings.TrimSpace(fallback)
+	if fallback == "" {
+		fallback = codexOAuthDefaultInstructions
+	}
+	if isInstructionsEmpty(reqBody) {
+		reqBody["instructions"] = fallback
 		return
 	}
 	if _, ok := reqBody["instructions"].(string); !ok {
-		reqBody["instructions"] = ""
+		reqBody["instructions"] = fallback
 	}
 }
 

@@ -2289,7 +2289,24 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 				SkipDefaultInstructions: true,
 				PreserveToolCallIDs:     true,
 			})
-			ensureCodexOAuthInstructionsField(reqBody)
+			forcedTemplateText := ""
+			if s.cfg != nil {
+				forcedTemplateText = s.cfg.Gateway.ForcedCodexInstructionsTemplate
+			}
+			existingInstructions, _ := reqBody["instructions"].(string)
+			if strings.TrimSpace(existingInstructions) == "" {
+				existingInstructions = extractPromptLikeInstructionsFromInput(reqBody)
+			}
+			if _, err := applyForcedCodexInstructionsTemplate(reqBody, forcedTemplateText, forcedCodexInstructionsTemplateData{
+				ExistingInstructions: strings.TrimSpace(existingInstructions),
+				OriginalModel:        originalModel,
+				NormalizedModel:      originalModel,
+				BillingModel:         billingModel,
+				UpstreamModel:        upstreamModel,
+			}); err != nil {
+				return nil, err
+			}
+			ensureCodexOAuthInstructionsField(reqBody, existingInstructions)
 			bodyModified = true
 			disablePatch()
 		} else {

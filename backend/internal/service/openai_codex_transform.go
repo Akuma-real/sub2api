@@ -957,6 +957,9 @@ func extractPromptLikeInstructionsFromInput(reqBody map[string]any) string {
 		switch role {
 		case "developer", "system":
 			if text := strings.TrimSpace(extractTextFromContent(m["content"])); text != "" {
+				if strings.Contains(text, openAICompatClaudeCodeTodoGuardMarker) {
+					continue
+				}
 				texts = append(texts, text)
 			}
 		}
@@ -964,12 +967,14 @@ func extractPromptLikeInstructionsFromInput(reqBody map[string]any) string {
 	return strings.Join(texts, "\n\n")
 }
 
+const codexOAuthDefaultInstructions = "You are a helpful coding assistant."
+
 // applyInstructions 处理 instructions 字段：仅在 instructions 为空时填充默认值。
 func applyInstructions(reqBody map[string]any, isCodexCLI bool) bool {
 	if !isInstructionsEmpty(reqBody) {
 		return false
 	}
-	reqBody["instructions"] = "You are a helpful coding assistant."
+	reqBody["instructions"] = codexOAuthDefaultInstructions
 	return true
 }
 
