@@ -179,7 +179,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 		}); err != nil {
 			return nil, err
 		}
-		ensureCodexOAuthInstructionsField(reqBody, existingInstructions)
+		ensureResponsesInstructionsField(reqBody, existingInstructions)
 		if shouldAutoInjectPromptCacheKeyForCompat(upstreamModel) {
 			appendOpenAICompatClaudeCodeTodoGuardToRequestBody(reqBody)
 		}
@@ -203,25 +203,35 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 	}
 
 	// For API key accounts (including OpenAI-compatible upstream gateways),
-	// ensure promptCacheKey is also propagated via the request body so that
-	// upstreams using the Responses API can derive a stable session identifier
-	// from prompt_cache_key. This makes our Anthropic /v1/messages compatibility
-	// path behave more like a native Responses client.
+	// ensure the Responses request is accepted by strict upstreams. Some Codex
+	// relays require a non-empty top-level instructions field even though the
+	// Anthropic system prompt is also kept as developer input to preserve
+	// conversation/cache shape.
 	if account.Type == AccountTypeAPIKey {
+		var reqBody map[string]any
+		if err := json.Unmarshal(responsesBody, &reqBody); err != nil {
+			return nil, fmt.Errorf("unmarshal for api key responses normalization: %w", err)
+		}
+		existingInstructions, _ := reqBody["instructions"].(string)
+		if strings.TrimSpace(existingInstructions) == "" {
+			existingInstructions = extractPromptLikeInstructionsFromInput(reqBody)
+		}
+		ensureResponsesInstructionsField(reqBody, existingInstructions)
+
+		// Also propagate promptCacheKey via the request body so upstreams using
+		// the Responses API can derive a stable session identifier from
+		// prompt_cache_key. This makes our Anthropic /v1/messages compatibility
+		// path behave more like a native Responses client.
 		if trimmedKey := strings.TrimSpace(promptCacheKey); trimmedKey != "" {
-			var reqBody map[string]any
-			if err := json.Unmarshal(responsesBody, &reqBody); err != nil {
-				return nil, fmt.Errorf("unmarshal for prompt cache key injection: %w", err)
-			}
 			if existing, ok := reqBody["prompt_cache_key"].(string); !ok || strings.TrimSpace(existing) == "" {
 				reqBody["prompt_cache_key"] = trimmedKey
-				updated, err := json.Marshal(reqBody)
-				if err != nil {
-					return nil, fmt.Errorf("remarshal after prompt cache key injection: %w", err)
-				}
-				responsesBody = updated
 			}
 		}
+		updated, err := json.Marshal(reqBody)
+		if err != nil {
+			return nil, fmt.Errorf("remarshal after api key responses normalization: %w", err)
+		}
+		responsesBody = updated
 	}
 
 	// 4c. Apply OpenAI fast policy (may filter service_tier or block the request).
@@ -395,7 +405,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 	return result, handleErr
 }
 
-func ensureCodexOAuthInstructionsField(reqBody map[string]any, fallback string) {
+func ensureResponsesInstructionsField(reqBody map[string]any, fallback string) {
 	if reqBody == nil {
 		return
 	}

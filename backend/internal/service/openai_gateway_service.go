@@ -2306,7 +2306,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 			}); err != nil {
 				return nil, err
 			}
-			ensureCodexOAuthInstructionsField(reqBody, existingInstructions)
+			ensureResponsesInstructionsField(reqBody, existingInstructions)
 			bodyModified = true
 			disablePatch()
 		} else {
