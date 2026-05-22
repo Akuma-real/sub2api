@@ -15,7 +15,7 @@
             {{ pLabel }}
           </span>
         </div>
-        <p v-if="plan.description" class="mt-3 line-clamp-2 text-sm leading-relaxed text-muted">
+        <p v-if="plan.description" class="mt-3 whitespace-pre-line break-words text-sm leading-relaxed text-muted">
           {{ plan.description }}
         </p>
         <div v-else class="mt-3 hidden min-h-[2.75rem] sm:block" aria-hidden="true"></div>

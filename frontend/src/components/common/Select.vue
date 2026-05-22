@@ -9,7 +9,7 @@
       :disabled="disabled"
       :aria-expanded="isOpen"
       :aria-haspopup="true"
-      aria-label="Select option"
+      :aria-label="selectAriaLabel"
       :class="[
         'select-trigger',
         isOpen && 'select-trigger-open',
@@ -141,7 +141,9 @@ const triggerId = computed(() =>
 );
 const triggerAttrs = computed(() =>
   Object.fromEntries(
-    Object.entries(attrs).filter(([key]) => key !== "class" && key !== "id"),
+    Object.entries(attrs).filter(
+      ([key]) => key !== "class" && key !== "id" && key !== "aria-label",
+    ),
   ),
 );
 
@@ -223,10 +225,20 @@ const dropdownStyle = computed(() => {
   if (!triggerRect.value) return {};
 
   const rect = triggerRect.value;
+  const viewportMargin = 12;
+  const availableWidth = Math.max(160, window.innerWidth - viewportMargin * 2);
+  const dropdownWidth = Math.min(Math.max(200, rect.width), availableWidth);
+  const maxLeft = window.innerWidth - viewportMargin - dropdownWidth;
+  const left = Math.min(
+    Math.max(rect.left, viewportMargin),
+    Math.max(viewportMargin, maxLeft),
+  );
   const style: Record<string, string> = {
     position: "fixed",
-    left: `${rect.left}px`,
-    minWidth: `${rect.width}px`,
+    left: `${left}px`,
+    width: `${dropdownWidth}px`,
+    minWidth: `${dropdownWidth}px`,
+    maxWidth: `${availableWidth}px`,
     zIndex: "100000020",
   };
 
@@ -283,6 +295,14 @@ const selectedLabel = computed(() => {
     return String(props.modelValue);
   }
   return placeholderText.value;
+});
+
+const selectAriaLabel = computed(() => {
+  const explicitLabel = attrs["aria-label"];
+  if (typeof explicitLabel === "string" && explicitLabel.trim()) {
+    return explicitLabel;
+  }
+  return selectedLabel.value || placeholderText.value;
 });
 
 const filteredOptions = computed(() => {

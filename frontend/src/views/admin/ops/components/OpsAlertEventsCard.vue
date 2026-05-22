@@ -393,43 +393,43 @@ const empty = computed(() => events.value.length === 0 && !loading.value);
 
 <template>
   <div class="rounded-lg bg-canvas p-6 shadow-sm ring-1 ring-ink/5">
-    <div class="mb-4 flex items-start justify-between gap-4">
-      <div>
+    <div class="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="min-w-0">
         <h3 class="text-sm font-bold text-ink">
           {{ t("admin.ops.alertEvents.title") }}
         </h3>
-        <p class="mt-1 text-xs text-muted">
+        <p class="mt-1 max-w-xl text-xs leading-relaxed text-muted">
           {{ t("admin.ops.alertEvents.description") }}
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="grid grid-cols-3 gap-2 sm:grid-cols-[120px_88px_110px_110px_auto] sm:items-center">
         <Select
           :model-value="timeRange"
           :options="timeRangeOptions"
-          class="w-[120px]"
+          class="min-w-0"
           @change="timeRange = String($event || '24h')"
         />
         <Select
           :model-value="severity"
           :options="severityOptions"
-          class="w-[88px]"
+          class="min-w-0"
           @change="severity = String($event || '')"
         />
         <Select
           :model-value="status"
           :options="statusOptions"
-          class="w-[110px]"
+          class="min-w-0"
           @change="status = String($event || '')"
         />
         <Select
           :model-value="emailSent"
           :options="emailSentOptions"
-          class="w-[110px]"
+          class="min-w-0"
           @change="emailSent = String($event || '')"
         />
         <button
-          class="flex items-center gap-1.5 rounded-lg bg-surface-card px-3 py-1.5 text-xs font-bold text-body transition-colors hover:bg-hairline disabled:cursor-not-allowed disabled:opacity-50"
+          class="col-span-2 flex items-center justify-center gap-1.5 rounded-lg bg-surface-card px-3 py-1.5 text-xs font-bold text-body transition-colors hover:bg-hairline disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1"
           :disabled="loading"
           @click="loadFirstPage"
         >

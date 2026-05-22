@@ -21,7 +21,11 @@
     </button>
 
     <Transition name="date-picker-dropdown">
-      <div v-if="isOpen" class="date-picker-dropdown">
+      <div
+        v-if="isOpen"
+        class="date-picker-dropdown"
+        :style="dropdownStyle"
+      >
         <!-- Quick presets -->
         <div class="date-picker-presets">
           <button
@@ -79,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import Icon from "@/components/icons/Icon.vue";
 
@@ -113,6 +117,7 @@ const containerRef = ref<HTMLElement | null>(null);
 const localStartDate = ref(props.startDate);
 const localEndDate = ref(props.endDate);
 const activePreset = ref<string | null>("last24Hours");
+const dropdownStyle = ref<Record<string, string>>({});
 
 const today = computed(() => {
   // Use local timezone to avoid UTC timezone issues
@@ -281,8 +286,38 @@ const onDateChange = () => {
   }
 };
 
-const toggle = () => {
+const updateDropdownPosition = () => {
+  if (!isOpen.value || !containerRef.value) return;
+
+  const trigger = containerRef.value.querySelector(
+    ".date-picker-trigger",
+  ) as HTMLElement | null;
+  if (!trigger) return;
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
+  const viewportMargin = 16;
+  const preferredWidth = Math.max(320, triggerRect.width);
+  const availableWidth = Math.max(240, viewportWidth - viewportMargin * 2);
+  const dropdownWidth = Math.min(preferredWidth, availableWidth);
+  const maxLeft = viewportWidth - viewportMargin - dropdownWidth;
+  const viewportLeft = Math.min(
+    Math.max(triggerRect.left, viewportMargin),
+    Math.max(viewportMargin, maxLeft),
+  );
+
+  dropdownStyle.value = {
+    width: `${dropdownWidth}px`,
+    left: `${viewportLeft - triggerRect.left}px`,
+  };
+};
+
+const toggle = async () => {
   isOpen.value = !isOpen.value;
+  if (isOpen.value) {
+    await nextTick();
+    updateDropdownPosition();
+  }
 };
 
 const apply = () => {
@@ -311,6 +346,10 @@ const handleEscape = (event: KeyboardEvent) => {
   }
 };
 
+const handleViewportChange = () => {
+  updateDropdownPosition();
+};
+
 // Sync local state with props
 watch(
   () => props.startDate,
@@ -331,6 +370,8 @@ watch(
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
   document.addEventListener("keydown", handleEscape);
+  window.addEventListener("resize", handleViewportChange);
+  window.addEventListener("scroll", handleViewportChange, true);
   // Initialize active preset detection
   onDateChange();
 });
@@ -338,6 +379,8 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
   document.removeEventListener("keydown", handleEscape);
+  window.removeEventListener("resize", handleViewportChange);
+  window.removeEventListener("scroll", handleViewportChange, true);
 });
 </script>
 
@@ -377,7 +420,7 @@ onUnmounted(() => {
   @apply border border-hairline;
   @apply shadow-card shadow-black/10;
   @apply overflow-hidden;
-  @apply min-w-[320px];
+  @apply min-w-0;
 }
 
 .date-picker-presets {
@@ -405,7 +448,7 @@ onUnmounted(() => {
 }
 
 .date-picker-field {
-  @apply flex-1;
+  @apply min-w-0 flex-1;
 }
 
 .date-picker-label {
@@ -413,7 +456,7 @@ onUnmounted(() => {
 }
 
 .date-picker-input {
-  @apply w-full rounded-md px-2 py-1.5 text-sm;
+  @apply min-w-0 w-full rounded-md px-2 py-1.5 text-sm;
   @apply bg-surface-soft;
   @apply border border-hairline;
   @apply text-ink;

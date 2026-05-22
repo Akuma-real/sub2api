@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 
@@ -34,6 +34,10 @@ const formatLocalDate = (date: Date): string => {
 }
 
 describe('DateRangePicker', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('uses last 24 hours as the default recognized preset', () => {
     const now = new Date()
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
@@ -92,5 +96,43 @@ describe('DateRangePicker', () => {
         preset: 'last24Hours'
       }
     ])
+  })
+
+  it('keeps the dropdown inside a narrow viewport', async () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(376)
+    // Arbitrary layout-only dates; the app default range is computed elsewhere.
+    const layoutOnlyStartDate = '2026-05-21'
+    const layoutOnlyEndDate = '2026-05-22'
+
+    const wrapper = mount(DateRangePicker, {
+      props: {
+        startDate: layoutOnlyStartDate,
+        endDate: layoutOnlyEndDate
+      },
+      global: {
+        stubs: {
+          Icon: true
+        }
+      }
+    })
+
+    const trigger = wrapper.find('.date-picker-trigger').element as HTMLElement
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      right: 236,
+      top: 0,
+      bottom: 40,
+      width: 136,
+      height: 40,
+      x: 100,
+      y: 0,
+      toJSON: () => ({})
+    } as DOMRect)
+
+    await wrapper.find('.date-picker-trigger').trigger('click')
+
+    const dropdown = wrapper.find('.date-picker-dropdown')
+    expect(dropdown.attributes('style')).toContain('width: 320px')
+    expect(dropdown.attributes('style')).toContain('left: -60px')
   })
 })

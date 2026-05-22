@@ -225,7 +225,7 @@ watch(
     <div class="flex h-full min-h-0 flex-col">
       <!-- Filters -->
       <div class="mb-4 flex-shrink-0 border-b border-hairline pb-4">
-        <div class="grid grid-cols-8 gap-2">
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
           <div class="col-span-2 compact-select">
             <div class="relative group">
               <div
@@ -286,10 +286,10 @@ watch(
             />
           </div>
 
-          <div class="flex items-center justify-end">
+          <div class="col-span-2 flex items-center justify-end sm:col-span-4 lg:col-span-1">
             <button
               type="button"
-              class="rounded-lg bg-surface-card px-3 py-1.5 text-xs font-semibold text-body transition-colors hover:bg-hairline"
+              class="w-full rounded-lg bg-surface-card px-3 py-1.5 text-xs font-semibold text-body transition-colors hover:bg-hairline sm:w-auto"
               @click="resetFilters"
             >
               {{ t("common.reset") }}
@@ -322,6 +322,10 @@ watch(
 
 <style>
 .compact-select .select-trigger {
-  @apply py-1.5 px-3 text-xs rounded-lg;
+  @apply min-w-0 py-1.5 px-3 text-xs rounded-lg;
+}
+
+.compact-select .select-value {
+  @apply min-w-0;
 }
 </style>
