@@ -289,6 +289,52 @@ func (s *GitHubReleaseServiceSuite) TestFetchLatestRelease_FallsBackToListedPrer
 	require.True(s.T(), release.Prerelease)
 }
 
+func (s *GitHubReleaseServiceSuite) TestFetchLatestRelease_FallbackSelectsHighestSemver() {
+	releasesJSON := `[
+		{
+			"tag_name": "v0.1.130-akuma.9",
+			"name": "Sub2API 0.1.130-akuma.9",
+			"prerelease": true
+		},
+		{
+			"tag_name": "v0.1.130-akuma.8",
+			"name": "Sub2API 0.1.130-akuma.8",
+			"prerelease": true
+		},
+		{
+			"tag_name": "v0.1.130-akuma.10",
+			"name": "Sub2API 0.1.130-akuma.10",
+			"prerelease": true,
+			"html_url": "https://github.com/test/repo/releases/tag/v0.1.130-akuma.10",
+			"assets": []
+		}
+	]`
+
+	s.srv = newLocalTestServer(s.T(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/repos/test/repo/releases/latest":
+			w.WriteHeader(http.StatusNotFound)
+		case "/repos/test/repo/releases":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(releasesJSON))
+		default:
+			s.T().Fatalf("unexpected path: %s", r.URL.Path)
+		}
+	}))
+
+	s.client = &githubReleaseClient{
+		httpClient: &http.Client{
+			Transport: &testTransport{testServerURL: s.srv.URL},
+		},
+		downloadHTTPClient: &http.Client{},
+	}
+
+	release, err := s.client.FetchLatestRelease(context.Background(), "test/repo")
+	require.NoError(s.T(), err)
+	require.Equal(s.T(), "v0.1.130-akuma.10", release.TagName)
+}
+
 func (s *GitHubReleaseServiceSuite) TestFetchLatestRelease_Non200() {
 	s.srv = newLocalTestServer(s.T(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)

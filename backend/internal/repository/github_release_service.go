@@ -14,6 +14,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/httpclient"
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"golang.org/x/mod/semver"
 )
 
 type githubReleaseClient struct {
@@ -150,13 +151,50 @@ func (c *githubReleaseClient) fetchLatestListedRelease(ctx context.Context, repo
 		return nil, err
 	}
 
+	var latest *service.GitHubRelease
 	for i := range releases {
-		if !releases[i].Draft {
-			return &releases[i], nil
+		if releases[i].Draft {
+			continue
+		}
+		if latest == nil || compareReleaseTags(releases[i].TagName, latest.TagName) > 0 {
+			latest = &releases[i]
 		}
 	}
 
+	if latest != nil {
+		return latest, nil
+	}
+
 	return nil, errors.New("no GitHub releases found")
+}
+
+func compareReleaseTags(a, b string) int {
+	aSemver := normalizeReleaseTag(a)
+	bSemver := normalizeReleaseTag(b)
+
+	aValid := semver.IsValid(aSemver)
+	bValid := semver.IsValid(bSemver)
+	if aValid && bValid {
+		return semver.Compare(aSemver, bSemver)
+	}
+	if aValid {
+		return 1
+	}
+	if bValid {
+		return -1
+	}
+	return strings.Compare(strings.TrimSpace(a), strings.TrimSpace(b))
+}
+
+func normalizeReleaseTag(tag string) string {
+	tag = strings.TrimSpace(tag)
+	if tag == "" {
+		return ""
+	}
+	if !strings.HasPrefix(tag, "v") {
+		tag = "v" + tag
+	}
+	return tag
 }
 
 func (c *githubReleaseClient) DownloadFile(ctx context.Context, url, dest string, maxSize int64) error {
