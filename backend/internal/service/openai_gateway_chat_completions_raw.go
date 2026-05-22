@@ -82,10 +82,32 @@ func (s *OpenAIGatewayService) forwardAsRawChatCompletions(
 	billingModel := resolveOpenAIForwardModel(account, originalModel, defaultMappedModel)
 	upstreamModel := normalizeOpenAIModelForUpstream(account, billingModel)
 
-	// 3. Rewrite model in body (no protocol conversion)
+	// 3. Prepare the upstream Chat Completions body.
 	upstreamBody := body
-	if upstreamModel != originalModel {
+	responsesShape := isOpenAIChatCompletionsResponsesShape(body)
+	if responsesShape {
+		var responsesReq apicompat.ResponsesRequest
+		if err := json.Unmarshal(body, &responsesReq); err != nil {
+			writeChatCompletionsError(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
+			return nil, fmt.Errorf("parse responses-shape chat completions body: %w", err)
+		}
+		chatReq, err := apicompat.ResponsesToChatCompletionsRequest(&responsesReq)
+		if err != nil {
+			writeChatCompletionsError(c, http.StatusBadRequest, "invalid_request_error", err.Error())
+			return nil, fmt.Errorf("convert responses-shape body to chat completions: %w", err)
+		}
+		chatReq.Model = upstreamModel
+		upstreamBody, err = json.Marshal(chatReq)
+		if err != nil {
+			return nil, fmt.Errorf("marshal responses-shape chat completions body: %w", err)
+		}
+	} else if upstreamModel != originalModel {
 		upstreamBody = ReplaceModelInBody(body, upstreamModel)
+	}
+	if normalizedBody, normalized, err := normalizeRawChatCompletionsBody(upstreamBody); err != nil {
+		return nil, err
+	} else if normalized {
+		upstreamBody = normalizedBody
 	}
 
 	// 4. Apply OpenAI fast policy on the CC body
@@ -112,6 +134,7 @@ func (s *OpenAIGatewayService) forwardAsRawChatCompletions(
 		zap.String("billing_model", billingModel),
 		zap.String("upstream_model", upstreamModel),
 		zap.Bool("stream", clientStream),
+		zap.Bool("responses_shape", responsesShape),
 	)
 
 	// 5. Build upstream request
@@ -378,6 +401,40 @@ func (s *OpenAIGatewayService) streamRawChatCompletions(
 		Duration:        time.Since(startTime),
 		FirstTokenMs:    firstTokenMs,
 	}, nil
+}
+
+// normalizeRawChatCompletionsBody strips or rewrites request fields that are
+// not valid for plain /v1/chat/completions upstreams.
+func normalizeRawChatCompletionsBody(body []byte) ([]byte, bool, error) {
+	if len(body) == 0 {
+		return body, false, nil
+	}
+	if !gjson.GetBytes(body, "max_output_tokens").Exists() {
+		return body, false, nil
+	}
+
+	normalized := body
+
+	if !gjson.GetBytes(normalized, "max_completion_tokens").Exists() {
+		maxOutputTokens := gjson.GetBytes(normalized, "max_output_tokens").Int()
+		next, err := sjson.SetBytes(normalized, "max_completion_tokens", maxOutputTokens)
+		if err != nil {
+			return body, false, fmt.Errorf("normalize raw chat body max_completion_tokens: %w", err)
+		}
+		normalized = next
+	}
+
+	next, err := sjson.DeleteBytes(normalized, "max_output_tokens")
+	if err != nil {
+		return body, false, fmt.Errorf("normalize raw chat body delete max_output_tokens: %w", err)
+	}
+	normalized = next
+
+	return normalized, true, nil
+}
+
+func isOpenAIChatCompletionsResponsesShape(body []byte) bool {
+	return !gjson.GetBytes(body, "messages").Exists() && gjson.GetBytes(body, "input").Exists()
 }
 
 // ensureOpenAIChatStreamUsage 确保 raw Chat Completions 流式请求会让上游返回 usage。

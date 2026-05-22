@@ -419,6 +419,7 @@ type ChatCompletionsRequest struct {
 	Instructions        string             `json:"instructions,omitempty"` // OpenAI Responses API compat
 	MaxTokens           *int               `json:"max_tokens,omitempty"`
 	MaxCompletionTokens *int               `json:"max_completion_tokens,omitempty"`
+	MaxOutputTokens     *int               `json:"max_output_tokens,omitempty"` // Responses API compat alias accepted on chat/completions inputs
 	Temperature         *float64           `json:"temperature,omitempty"`
 	TopP                *float64           `json:"top_p,omitempty"`
 	Stream              bool               `json:"stream,omitempty"`
