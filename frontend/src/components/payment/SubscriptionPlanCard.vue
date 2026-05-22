@@ -1,11 +1,11 @@
 <template>
   <div
     :class="[
-      'group relative flex flex-col overflow-hidden rounded-lg border border-hairline bg-canvas p-8 shadow-card transition-all',
+      'group relative flex h-full flex-col overflow-hidden rounded-lg border border-hairline bg-canvas p-8 shadow-card transition-all',
       'hover:-translate-y-0.5 hover:shadow-card-hover',
     ]"
   >
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+    <div class="flex flex-col gap-4 sm:min-h-[8.25rem] sm:flex-row sm:items-start sm:justify-between sm:gap-6">
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2">
           <h3 class="min-w-0 break-words font-display text-lg font-medium leading-tight text-ink">
@@ -18,6 +18,7 @@
         <p v-if="plan.description" class="mt-3 line-clamp-2 text-sm leading-relaxed text-muted">
           {{ plan.description }}
         </p>
+        <div v-else class="mt-3 hidden min-h-[2.75rem] sm:block" aria-hidden="true"></div>
       </div>
 
       <div class="w-full shrink-0 text-left sm:w-auto sm:text-right">
@@ -39,7 +40,7 @@
     </div>
 
     <!-- Quota + scope summary -->
-    <div class="mt-6 rounded-lg border border-hairline bg-surface-card p-4 text-sm">
+    <div class="mt-6 rounded-lg border border-hairline bg-surface-card p-4 text-sm sm:min-h-[4.75rem]">
       <div class="grid gap-3 sm:grid-cols-2">
         <div class="flex items-center justify-between">
           <span class="text-muted-soft">{{ t('payment.planCard.rate') }}</span>
@@ -73,9 +74,9 @@
       </div>
     </div>
 
-    <div v-if="plan.features.length > 0" class="mt-6 space-y-2">
+    <div v-if="plan.features.length > 0" class="mt-6 flex-1 space-y-2">
       <div class="text-xs font-medium uppercase tracking-wide text-muted-soft">
-        {{ t('common.features') }}
+        {{ t('payment.planFeatures') }}
       </div>
       <ul class="space-y-2">
         <li v-for="feature in plan.features" :key="feature" class="flex items-start gap-2">
@@ -87,13 +88,15 @@
       </ul>
     </div>
 
-    <button
-      type="button"
-      class="btn btn-primary mt-6 w-full"
-      @click="emit('select', plan)"
-    >
-      {{ isRenewal ? t('payment.renewNow') : t('payment.subscribeNow') }}
-    </button>
+    <div class="mt-auto pt-6">
+      <button
+        type="button"
+        class="btn btn-primary w-full"
+        @click="emit('select', plan)"
+      >
+        {{ isRenewal ? t('payment.renewNow') : t('payment.subscribeNow') }}
+      </button>
+    </div>
   </div>
 </template>
 
