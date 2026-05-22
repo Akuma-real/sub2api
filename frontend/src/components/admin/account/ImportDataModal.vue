@@ -74,23 +74,12 @@
         <label class="input-label" for="data-import-default-group">
           {{ t("admin.accounts.dataImportDefaultGroup") }}
         </label>
-        <select
+        <Select
           id="data-import-default-group"
           v-model="selectedGroupId"
-          class="input-field"
-          :disabled="importing || defaultGroupOptions.length === 0"
-        >
-          <option value="">
-            {{ t("admin.accounts.dataImportNoDefaultGroup") }}
-          </option>
-          <option
-            v-for="group in defaultGroupOptions"
-            :key="group.id"
-            :value="String(group.id)"
-          >
-            {{ groupOptionLabel(group) }}
-          </option>
-        </select>
+          :options="defaultGroupSelectOptions"
+          :disabled="importing || activeDefaultGroups.length === 0"
+        />
         <p class="mt-1 text-xs text-muted">
           {{ t("admin.accounts.dataImportGroupHint") }}
         </p>
@@ -158,6 +147,7 @@
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import BaseDialog from "@/components/common/BaseDialog.vue";
+import Select, { type SelectOption } from "@/components/common/Select.vue";
 import Icon from "@/components/icons/Icon.vue";
 import { adminAPI } from "@/api/admin";
 import { useAppStore } from "@/stores/app";
@@ -185,17 +175,27 @@ const importing = ref(false);
 const file = ref<File | null>(null);
 const isDragActive = ref(false);
 const result = ref<AdminDataImportResult | null>(null);
-const selectedGroupId = ref("");
+const selectedGroupId = ref<number | null>(null);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const fileName = computed(() => file.value?.name || "");
 
 const errorItems = computed(() => result.value?.errors || []);
-const defaultGroupOptions = computed(() =>
+const activeDefaultGroups = computed(() =>
   [...props.groups]
     .filter((group) => group.status === "active")
     .sort((a, b) => a.name.localeCompare(b.name)),
 );
+const defaultGroupSelectOptions = computed<SelectOption[]>(() => [
+  {
+    value: null,
+    label: t("admin.accounts.dataImportNoDefaultGroup"),
+  },
+  ...activeDefaultGroups.value.map((group) => ({
+    value: group.id,
+    label: groupOptionLabel(group),
+  })),
+]);
 
 watch(
   () => props.show,
@@ -204,7 +204,7 @@ watch(
       file.value = null;
       isDragActive.value = false;
       result.value = null;
-      selectedGroupId.value = "";
+      selectedGroupId.value = null;
       if (fileInput.value) {
         fileInput.value.value = "";
       }
@@ -246,10 +246,11 @@ const groupOptionLabel = (group: AdminGroup) => {
   return `${group.name} / ${group.platform}`;
 };
 
-const selectedGroupIds = computed(() => {
-  const groupId = Number(selectedGroupId.value);
-  return Number.isFinite(groupId) && groupId > 0 ? [groupId] : undefined;
-});
+const selectedGroupIds = computed(() =>
+  typeof selectedGroupId.value === "number" && selectedGroupId.value > 0
+    ? [selectedGroupId.value]
+    : undefined,
+);
 
 const handleClose = () => {
   if (importing.value) return;

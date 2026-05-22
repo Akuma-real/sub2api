@@ -1,7 +1,9 @@
 <template>
-  <div class="relative" ref="containerRef">
+  <div class="relative" ref="containerRef" :class="attrs.class">
     <button
       ref="triggerRef"
+      :id="triggerId"
+      v-bind="triggerAttrs"
       type="button"
       @click="toggle"
       :disabled="disabled"
@@ -118,11 +120,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  nextTick,
+  useAttrs,
+} from "vue";
 import { useI18n } from "vue-i18n";
 import Icon from "@/components/icons/Icon.vue";
 
+defineOptions({ inheritAttrs: false });
+
 const { t } = useI18n();
+const attrs = useAttrs();
+const triggerId = computed(() =>
+  typeof attrs.id === "string" && attrs.id ? attrs.id : undefined,
+);
+const triggerAttrs = computed(() =>
+  Object.fromEntries(
+    Object.entries(attrs).filter(([key]) => key !== "class" && key !== "id"),
+  ),
+);
 
 // Instance ID for unique click-outside detection
 const instanceId = `select-${Math.random().toString(36).substring(2, 9)}`;

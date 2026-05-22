@@ -92,7 +92,27 @@ describe('ImportDataModal', () => {
       },
       global: {
         stubs: {
-          BaseDialog: { template: '<div><slot /><slot name="footer" /></div>' }
+          BaseDialog: { template: '<div><slot /><slot name="footer" /></div>' },
+          Select: {
+            props: ['modelValue', 'options', 'disabled'],
+            emits: ['update:modelValue'],
+            template: `
+              <select
+                data-test="default-group-select"
+                :disabled="disabled"
+                :value="modelValue === null || modelValue === undefined ? '' : String(modelValue)"
+                @change="$emit('update:modelValue', $event.target.value === '' ? null : Number($event.target.value))"
+              >
+                <option
+                  v-for="option in options"
+                  :key="String(option.value)"
+                  :value="option.value === null ? '' : String(option.value)"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            `
+          }
         }
       }
     })
@@ -109,7 +129,7 @@ describe('ImportDataModal', () => {
     })
 
     await input.trigger('change')
-    await wrapper.find('select').setValue('42')
+    await wrapper.get('[data-test="default-group-select"]').setValue('42')
     await wrapper.find('form').trigger('submit')
     await Promise.resolve()
 

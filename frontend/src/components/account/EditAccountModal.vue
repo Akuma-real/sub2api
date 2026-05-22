@@ -583,25 +583,12 @@
           </div>
           <div>
             <label class="input-label">Location</label>
-            <select
+            <Select
               v-model="editVertexLocation"
               required
-              class="input font-mono"
-            >
-              <optgroup
-                v-for="group in VERTEX_LOCATION_OPTIONS"
-                :key="group.label"
-                :label="group.label"
-              >
-                <option
-                  v-for="option in group.options"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </optgroup>
-            </select>
+              class="font-mono"
+              :options="vertexLocationOptions"
+            />
             <p class="input-hint">{{ t('admin.accounts.vertexLocationHint') }}</p>
           </div>
         </div>
@@ -1476,11 +1463,11 @@
               {{ t('admin.accounts.anthropic.webSearchEmulationDesc') }}
             </p>
           </div>
-          <select v-model="webSearchEmulationMode" class="input w-24 text-sm">
-            <option value="default">{{ t('admin.accounts.anthropic.webSearchDefault') }}</option>
-            <option value="enabled">{{ t('admin.accounts.anthropic.webSearchEnabled') }}</option>
-            <option value="disabled">{{ t('admin.accounts.anthropic.webSearchDisabled') }}</option>
-          </select>
+          <Select
+            v-model="webSearchEmulationMode"
+            class="w-32"
+            :options="webSearchEmulationOptions"
+          />
         </div>
       </div>
 
@@ -1972,11 +1959,10 @@
           </div>
           <!-- Profile selector -->
           <div v-if="tlsFingerprintEnabled" class="mt-3">
-            <select v-model="tlsFingerprintProfileId" class="input">
-              <option :value="null">{{ t('admin.accounts.quotaControl.tlsFingerprint.defaultProfile') }}</option>
-              <option v-if="tlsFingerprintProfiles.length > 0" :value="-1">{{ t('admin.accounts.quotaControl.tlsFingerprint.randomProfile') }}</option>
-              <option v-for="p in tlsFingerprintProfiles" :key="p.id" :value="p.id">{{ p.name }}</option>
-            </select>
+            <Select
+              v-model="tlsFingerprintProfileId"
+              :options="tlsFingerprintProfileOptions"
+            />
           </div>
         </div>
 
@@ -2034,13 +2020,11 @@
           </div>
           <div v-if="cacheTTLOverrideEnabled" class="mt-3">
             <label class="input-label text-xs">{{ t('admin.accounts.quotaControl.cacheTTLOverride.target') }}</label>
-            <select
+            <Select
               v-model="cacheTTLOverrideTarget"
-              class="mt-1 block w-full rounded-md border border-hairline bg-canvas px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            >
-              <option value="5m">5m</option>
-              <option value="1h">1h</option>
-            </select>
+              class="mt-1 w-full"
+              :options="cacheTTLOverrideTargetOptions"
+            />
             <p class="mt-1 text-xs text-muted">
               {{ t('admin.accounts.quotaControl.cacheTTLOverride.targetHint') }}
             </p>
@@ -2221,7 +2205,7 @@ import { useQuotaNotifyState } from '@/composables/useQuotaNotifyState'
 import type { Account, Proxy, AdminGroup, CheckMixedChannelResponse, OpenAICompactMode, OpenAIResponsesMode } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import Select from '@/components/common/Select.vue'
+import Select, { type SelectOption } from '@/components/common/Select.vue'
 import Icon from '@/components/icons/Icon.vue'
 import ProxySelector from '@/components/common/ProxySelector.vue'
 import GroupSelector from '@/components/common/GroupSelector.vue'
@@ -2265,6 +2249,25 @@ const { t } = useI18n()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 
+type GroupedSelectSource = readonly {
+  label: string
+  options: readonly { value: string; label: string }[]
+}[]
+
+const toGroupedSelectOptions = (groups: GroupedSelectSource): SelectOption[] =>
+  groups.flatMap((group) => [
+    {
+      value: `__group:${group.label}`,
+      label: group.label,
+      kind: 'group',
+      disabled: true,
+    },
+    ...group.options.map((option) => ({
+      value: option.value,
+      label: option.label,
+    })),
+  ])
+
 // Platform-specific hint for Base URL
 const baseUrlHint = computed(() => {
   if (!props.account) return t('admin.accounts.baseUrlHint')
@@ -2303,6 +2306,9 @@ const editBedrockApiKeyValue = ref('')
 const editVertexProjectId = ref('')
 const editVertexClientEmail = ref('')
 const editVertexLocation = ref('us-central1')
+const vertexLocationOptions = computed<SelectOption[]>(() =>
+  toGroupedSelectOptions(VERTEX_LOCATION_OPTIONS)
+)
 const isBedrockAPIKeyMode = computed(() =>
   props.account?.type === 'bedrock' &&
   (props.account?.credentials as Record<string, unknown>)?.auth_mode === 'apikey'
@@ -2361,9 +2367,29 @@ const umqModeOptions = computed(() => [
 const tlsFingerprintEnabled = ref(false)
 const tlsFingerprintProfileId = ref<number | null>(null)
 const tlsFingerprintProfiles = ref<{ id: number; name: string }[]>([])
+const tlsFingerprintProfileOptions = computed<SelectOption[]>(() => [
+  {
+    value: null,
+    label: t('admin.accounts.quotaControl.tlsFingerprint.defaultProfile'),
+  },
+  ...(tlsFingerprintProfiles.value.length > 0
+    ? [{
+        value: -1,
+        label: t('admin.accounts.quotaControl.tlsFingerprint.randomProfile'),
+      }]
+    : []),
+  ...tlsFingerprintProfiles.value.map((profile) => ({
+    value: profile.id,
+    label: profile.name,
+  })),
+])
 const sessionIdMaskingEnabled = ref(false)
 const cacheTTLOverrideEnabled = ref(false)
 const cacheTTLOverrideTarget = ref<string>('5m')
+const cacheTTLOverrideTargetOptions: SelectOption[] = [
+  { value: '5m', label: '5m' },
+  { value: '1h', label: '1h' },
+]
 const customBaseUrlEnabled = ref(false)
 const customBaseUrl = ref('')
 
@@ -2378,6 +2404,11 @@ type CodexImageGenerationBridgeMode = 'inherit' | 'enabled' | 'disabled'
 const codexImageGenerationBridgeMode = ref<CodexImageGenerationBridgeMode>('inherit')
 const anthropicPassthroughEnabled = ref(false)
 const webSearchEmulationMode = ref('default')
+const webSearchEmulationOptions = computed<SelectOption[]>(() => [
+  { value: 'default', label: t('admin.accounts.anthropic.webSearchDefault') },
+  { value: 'enabled', label: t('admin.accounts.anthropic.webSearchEnabled') },
+  { value: 'disabled', label: t('admin.accounts.anthropic.webSearchDisabled') },
+])
 const webSearchGlobalEnabled = ref(false)
 const {
   globalEnabled: quotaNotifyGlobalEnabled,

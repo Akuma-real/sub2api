@@ -15,45 +15,22 @@
         <div v-if="visibleFilterCount > 0" class="filter-grid">
           <label v-if="showPlatformFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.platform") }}</span>
-            <select v-model="filters.platform">
-              <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option v-for="platform in platformOptions" :key="platform">
-                {{ platform }}
-              </option>
-            </select>
+            <Select v-model="filters.platform" :options="platformSelectOptions" />
           </label>
 
           <label v-if="showGroupFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.group") }}</span>
-            <select v-model="filters.group">
-              <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option v-for="group in groupOptions" :key="group">
-                {{ group }}
-              </option>
-            </select>
+            <Select v-model="filters.group" :options="groupSelectOptions" />
           </label>
 
           <label v-if="showBillingFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.billing") }}</span>
-            <select v-model="filters.billing">
-              <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option v-for="mode in billingModeOptions" :key="mode" :value="mode">
-                {{ billingModeLabel(mode) }}
-              </option>
-            </select>
+            <Select v-model="filters.billing" :options="billingSelectOptions" />
           </label>
 
           <label v-if="showPricingFilter" class="filter-field">
             <span>{{ t("modelMarketplace.filters.pricing") }}</span>
-            <select v-model="filters.pricing">
-              <option value="all">{{ t("modelMarketplace.filters.all") }}</option>
-              <option value="priced">
-                {{ t("modelMarketplace.filters.priced") }}
-              </option>
-              <option value="unpriced">
-                {{ t("modelMarketplace.filters.unpriced") }}
-              </option>
-            </select>
+            <Select v-model="filters.pricing" :options="pricingSelectOptions" />
           </label>
 
         </div>
@@ -61,21 +38,7 @@
         <div class="toolbar-actions">
           <label class="sort-field">
             <span>{{ t("modelMarketplace.sort.label") }}</span>
-            <select v-model="sortKey">
-              <option value="name">{{ t("modelMarketplace.sort.name") }}</option>
-              <option value="platform">
-                {{ t("modelMarketplace.sort.platform") }}
-              </option>
-              <option value="input">
-                {{ t("modelMarketplace.sort.input") }}
-              </option>
-              <option value="output">
-                {{ t("modelMarketplace.sort.output") }}
-              </option>
-              <option value="rate">
-                {{ t("modelMarketplace.sort.rate") }}
-              </option>
-            </select>
+            <Select v-model="sortKey" :options="sortSelectOptions" class="w-36" />
           </label>
           <div class="view-toggle">
             <button
@@ -394,6 +357,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
+import Select from "@/components/common/Select.vue";
 import Icon from "@/components/icons/Icon.vue";
 import PlatformIcon from "@/components/common/PlatformIcon.vue";
 import type { GroupPlatform } from "@/types";
@@ -471,6 +435,36 @@ const groupOptions = computed(() =>
 const billingModeOptions = computed(() =>
   Array.from(new Set(models.value.map((m) => m.billing_mode))).sort(),
 );
+const platformSelectOptions = computed(() => [
+  { value: "all", label: t("modelMarketplace.filters.all") },
+  ...platformOptions.value.map((platform) => ({
+    value: platform,
+    label: platform,
+  })),
+]);
+const groupSelectOptions = computed(() => [
+  { value: "all", label: t("modelMarketplace.filters.all") },
+  ...groupOptions.value.map((group) => ({ value: group, label: group })),
+]);
+const billingSelectOptions = computed(() => [
+  { value: "all", label: t("modelMarketplace.filters.all") },
+  ...billingModeOptions.value.map((mode) => ({
+    value: mode,
+    label: billingModeLabel(mode),
+  })),
+]);
+const pricingSelectOptions = computed(() => [
+  { value: "all", label: t("modelMarketplace.filters.all") },
+  { value: "priced", label: t("modelMarketplace.filters.priced") },
+  { value: "unpriced", label: t("modelMarketplace.filters.unpriced") },
+]);
+const sortSelectOptions = computed(() => [
+  { value: "name", label: t("modelMarketplace.sort.name") },
+  { value: "platform", label: t("modelMarketplace.sort.platform") },
+  { value: "input", label: t("modelMarketplace.sort.input") },
+  { value: "output", label: t("modelMarketplace.sort.output") },
+  { value: "rate", label: t("modelMarketplace.sort.rate") },
+]);
 
 const showPlatformFilter = computed(() => platformOptions.value.length > 1);
 const showGroupFilter = computed(() => groupOptions.value.length > 1);

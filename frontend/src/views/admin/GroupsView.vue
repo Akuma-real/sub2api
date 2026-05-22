@@ -451,35 +451,12 @@
             </span>
           </div>
           <!-- 分组选择下拉 -->
-          <select
-            class="input"
-            @change="
-              (e) => {
-                const val = Number((e.target as HTMLSelectElement).value);
-                if (
-                  val &&
-                  !createForm.copy_accounts_from_group_ids.includes(val)
-                ) {
-                  createForm.copy_accounts_from_group_ids.push(val);
-                }
-                (e.target as HTMLSelectElement).value = '';
-              }
-            "
-          >
-            <option value="">
-              {{ t("admin.groups.copyAccounts.selectPlaceholder") }}
-            </option>
-            <option
-              v-for="opt in copyAccountsGroupOptions"
-              :key="opt.value"
-              :value="opt.value"
-              :disabled="
-                createForm.copy_accounts_from_group_ids.includes(opt.value)
-              "
-            >
-              {{ opt.label }}
-            </option>
-          </select>
+          <Select
+            :model-value="createCopyAccountsGroupId"
+            :options="copyAccountsGroupSelectOptions"
+            class="w-full"
+            @update:model-value="handleCreateCopyAccountsGroupSelect"
+          />
           <p class="input-hint">{{ t("admin.groups.copyAccounts.hint") }}</p>
         </div>
         <div>
@@ -1633,35 +1610,12 @@
             </span>
           </div>
           <!-- 分组选择下拉 -->
-          <select
-            class="input"
-            @change="
-              (e) => {
-                const val = Number((e.target as HTMLSelectElement).value);
-                if (
-                  val &&
-                  !editForm.copy_accounts_from_group_ids.includes(val)
-                ) {
-                  editForm.copy_accounts_from_group_ids.push(val);
-                }
-                (e.target as HTMLSelectElement).value = '';
-              }
-            "
-          >
-            <option value="">
-              {{ t("admin.groups.copyAccounts.selectPlaceholder") }}
-            </option>
-            <option
-              v-for="opt in copyAccountsGroupOptionsForEdit"
-              :key="opt.value"
-              :value="opt.value"
-              :disabled="
-                editForm.copy_accounts_from_group_ids.includes(opt.value)
-              "
-            >
-              {{ opt.label }}
-            </option>
-          </select>
+          <Select
+            :model-value="editCopyAccountsGroupId"
+            :options="copyAccountsGroupSelectOptionsForEdit"
+            class="w-full"
+            @update:model-value="handleEditCopyAccountsGroupSelect"
+          />
           <p class="input-hint">
             {{ t("admin.groups.copyAccounts.hintEdit") }}
           </p>
@@ -3043,6 +2997,28 @@ const copyAccountsGroupOptionsForEdit = computed(() => {
   }));
 });
 
+const copyAccountsGroupSelectOptions = computed(() => [
+  {
+    value: null,
+    label: t("admin.groups.copyAccounts.selectPlaceholder"),
+  },
+  ...copyAccountsGroupOptions.value.map((opt) => ({
+    ...opt,
+    disabled: createForm.copy_accounts_from_group_ids.includes(opt.value),
+  })),
+]);
+
+const copyAccountsGroupSelectOptionsForEdit = computed(() => [
+  {
+    value: null,
+    label: t("admin.groups.copyAccounts.selectPlaceholder"),
+  },
+  ...copyAccountsGroupOptionsForEdit.value.map((opt) => ({
+    ...opt,
+    disabled: editForm.copy_accounts_from_group_ids.includes(opt.value),
+  })),
+]);
+
 const groups = ref<AdminGroup[]>([]);
 const loading = ref(false);
 const usageMap = ref<Map<number, { today_cost: number; total_cost: number }>>(
@@ -3087,6 +3063,8 @@ const showDeleteDialog = ref(false);
 const showSortModal = ref(false);
 const submitting = ref(false);
 const sortSubmitting = ref(false);
+const createCopyAccountsGroupId = ref<number | null>(null);
+const editCopyAccountsGroupId = ref<number | null>(null);
 const editingGroup = ref<AdminGroup | null>(null);
 const deletingGroup = ref<AdminGroup | null>(null);
 const showRateMultipliersModal = ref(false);
@@ -3333,6 +3311,34 @@ const removeEditRoutingRule = (rule: ModelRoutingRule) => {
   accountSearchRunner.clearKey(key);
   clearAccountSearchStateByKey(key);
   editModelRoutingRules.value.splice(index, 1);
+};
+
+const handleCreateCopyAccountsGroupSelect = (
+  value: number | string | boolean | null,
+) => {
+  const groupId = Number(value);
+  if (
+    Number.isFinite(groupId) &&
+    groupId > 0 &&
+    !createForm.copy_accounts_from_group_ids.includes(groupId)
+  ) {
+    createForm.copy_accounts_from_group_ids.push(groupId);
+  }
+  createCopyAccountsGroupId.value = null;
+};
+
+const handleEditCopyAccountsGroupSelect = (
+  value: number | string | boolean | null,
+) => {
+  const groupId = Number(value);
+  if (
+    Number.isFinite(groupId) &&
+    groupId > 0 &&
+    !editForm.copy_accounts_from_group_ids.includes(groupId)
+  ) {
+    editForm.copy_accounts_from_group_ids.push(groupId);
+  }
+  editCopyAccountsGroupId.value = null;
 };
 
 // 将 UI 格式的路由规则转换为 API 格式
@@ -3654,6 +3660,7 @@ const closeCreateModal = () => {
   createForm.supported_model_scopes = ["claude", "gemini_text", "gemini_image"];
   createForm.mcp_xml_inject = true;
   createForm.copy_accounts_from_group_ids = [];
+  createCopyAccountsGroupId.value = null;
   createModelRoutingRules.value = [];
 };
 
@@ -3810,6 +3817,7 @@ const closeEditModal = () => {
   editingGroup.value = null;
   editModelRoutingRules.value = [];
   editForm.copy_accounts_from_group_ids = [];
+  editCopyAccountsGroupId.value = null;
   resetMessagesDispatchFormState(editForm);
 };
 

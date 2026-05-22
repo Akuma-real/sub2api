@@ -18,22 +18,21 @@
         </label>
         <label class="block">
           <span class="input-label">{{ t("admin.groups.form.platform") }}</span>
-          <select v-model="platform" class="input" @change="loadAccounts">
-            <option value="">{{ t("admin.groups.allPlatforms") }}</option>
-            <option value="anthropic">Anthropic</option>
-            <option value="openai">OpenAI</option>
-            <option value="gemini">Gemini</option>
-            <option value="antigravity">Antigravity</option>
-          </select>
+          <Select
+            v-model="platform"
+            class="w-full"
+            :options="platformOptions"
+            @change="loadAccounts"
+          />
         </label>
         <label class="block">
           <span class="input-label">{{ t("admin.groups.allStatus") }}</span>
-          <select v-model="status" class="input" @change="loadAccounts">
-            <option value="">{{ t("admin.groups.allStatus") }}</option>
-            <option value="active">{{ t("admin.accounts.status.active") }}</option>
-            <option value="inactive">{{ t("admin.accounts.status.inactive") }}</option>
-            <option value="error">{{ t("admin.accounts.status.error") }}</option>
-          </select>
+          <Select
+            v-model="status"
+            class="w-full"
+            :options="statusOptions"
+            @change="loadAccounts"
+          />
         </label>
       </div>
 
@@ -105,10 +104,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { adminAPI } from "@/api/admin";
 import BaseDialog from "@/components/common/BaseDialog.vue";
+import Select from "@/components/common/Select.vue";
 import Icon from "@/components/icons/Icon.vue";
 import { useAppStore } from "@/stores/app";
 import type { Account, AdminGroup } from "@/types";
@@ -135,6 +135,19 @@ const platform = ref("");
 const status = ref("");
 const loading = ref(false);
 const saving = ref(false);
+const platformOptions = computed(() => [
+  { value: "", label: t("admin.groups.allPlatforms") },
+  { value: "anthropic", label: "Anthropic" },
+  { value: "openai", label: "OpenAI" },
+  { value: "gemini", label: "Gemini" },
+  { value: "antigravity", label: "Antigravity" },
+]);
+const statusOptions = computed(() => [
+  { value: "", label: t("admin.groups.allStatus") },
+  { value: "active", label: t("admin.accounts.status.active") },
+  { value: "inactive", label: t("admin.accounts.status.inactive") },
+  { value: "error", label: t("admin.accounts.status.error") },
+]);
 
 function accountGroupIds(account: Account): number[] {
   return account.group_ids ?? account.groups?.map((group) => group.id) ?? [];

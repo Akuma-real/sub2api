@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import Select from "@/components/common/Select.vue";
 import QuotaNotifyToggle from "./QuotaNotifyToggle.vue";
 import type { QuotaThresholdType, QuotaResetMode } from "@/constants/account";
 
@@ -38,14 +40,36 @@ const emit = defineEmits<{
 }>();
 
 const hasResetMode = props.dim !== "total";
+const resetModeOptions = computed(() => [
+  { value: "rolling", label: t("admin.accounts.quotaResetModeRolling") },
+  { value: "fixed", label: t("admin.accounts.quotaResetModeFixed") },
+]);
+const resetDayOptions = computed(() =>
+  props.dayOptions.map((d) => ({
+    value: d.value,
+    label: t("admin.accounts.dayOfWeek." + d.key),
+  })),
+);
+const resetHourOptions = computed(() =>
+  props.hourOptions.map((hour) => ({
+    value: hour,
+    label: `${String(hour).padStart(2, "0")}:00`,
+  })),
+);
+const resetTimezoneOptions = computed(() =>
+  (props.timezoneOptions || []).map((tz) => ({
+    value: tz,
+    label: `${tz} (${getTimezoneOffsetLabel(tz)})`,
+  })),
+);
 
 const onLimitInput = (e: Event) => {
   const raw = (e.target as HTMLInputElement).valueAsNumber;
   emit("update:limit", Number.isNaN(raw) ? null : raw);
 };
 
-const onModeChange = (e: Event) => {
-  const val = (e.target as HTMLSelectElement).value as QuotaResetMode;
+const onModeChange = (val: QuotaResetMode | null) => {
+  if (!val) return;
   emit("update:resetMode", val);
   if (val === "fixed") {
     if (props.resetHour == null) emit("update:resetHour", 0);
@@ -126,71 +150,41 @@ function getTimezoneOffsetLabel(tz: string): string {
       <label class="text-xs text-muted whitespace-nowrap">{{
         t("admin.accounts.quotaResetMode")
       }}</label>
-      <select
-        :value="resetMode || 'rolling'"
-        @change="onModeChange"
-        class="input py-1 text-xs w-auto"
-      >
-        <option value="rolling">
-          {{ t("admin.accounts.quotaResetModeRolling") }}
-        </option>
-        <option value="fixed">
-          {{ t("admin.accounts.quotaResetModeFixed") }}
-        </option>
-      </select>
+      <Select
+        :model-value="resetMode || 'rolling'"
+        :options="resetModeOptions"
+        class="w-auto"
+        @update:model-value="onModeChange($event as QuotaResetMode | null)"
+      />
       <template v-if="resetMode === 'fixed'">
         <!-- Weekly: day of week selector -->
         <template v-if="dim === 'weekly'">
           <label class="text-xs text-muted whitespace-nowrap">{{
             t("admin.accounts.quotaWeeklyResetDay")
           }}</label>
-          <select
-            :value="resetDay ?? 1"
-            @change="
-              emit(
-                'update:resetDay',
-                Number(($event.target as HTMLSelectElement).value),
-              )
-            "
-            class="input py-1 text-xs w-28"
-          >
-            <option v-for="d in dayOptions" :key="d.value" :value="d.value">
-              {{ t("admin.accounts.dayOfWeek." + d.key) }}
-            </option>
-          </select>
+          <Select
+            :model-value="resetDay ?? 1"
+            :options="resetDayOptions"
+            class="w-28"
+            @update:model-value="emit('update:resetDay', Number($event))"
+          />
         </template>
         <label class="text-xs text-muted whitespace-nowrap">{{
           t("admin.accounts.quotaResetHour")
         }}</label>
-        <select
-          :value="resetHour ?? 0"
-          @change="
-            emit(
-              'update:resetHour',
-              Number(($event.target as HTMLSelectElement).value),
-            )
-          "
-          class="input py-1 text-xs w-24"
-        >
-          <option v-for="h in hourOptions" :key="h" :value="h">
-            {{ String(h).padStart(2, "0") }}:00
-          </option>
-        </select>
+        <Select
+          :model-value="resetHour ?? 0"
+          :options="resetHourOptions"
+          class="w-24"
+          @update:model-value="emit('update:resetHour', Number($event))"
+        />
         <template v-if="timezoneOptions && timezoneOptions.length > 0">
-          <select
-            :value="resetTimezone || 'UTC'"
-            @change="
-              emit(
-                'update:resetTimezone',
-                ($event.target as HTMLSelectElement).value,
-              )
-            "
-            class="input py-1 text-xs w-auto"
-          >
-            <option v-for="tz in timezoneOptions" :key="tz" :value="tz">
-              {{ tz }} ({{ getTimezoneOffsetLabel(tz) }})
-            </option>
-          </select>
+          <Select
+            :model-value="resetTimezone || 'UTC'"
+            :options="resetTimezoneOptions"
+            class="w-auto"
+            @update:model-value="emit('update:resetTimezone', String($event))"
+          />
         </template>
       </template>
       <span class="text-[11px] text-muted">

@@ -439,22 +439,24 @@
                     <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.streamTimeout.action") }}
                     </label>
-                    <select
+                    <Select
                       v-model="streamTimeoutForm.action"
-                      class="input w-64"
-                    >
-                      <option value="temp_unsched">
-                        {{
-                          t("admin.settings.streamTimeout.actionTempUnsched")
-                        }}
-                      </option>
-                      <option value="error">
-                        {{ t("admin.settings.streamTimeout.actionError") }}
-                      </option>
-                      <option value="none">
-                        {{ t("admin.settings.streamTimeout.actionNone") }}
-                      </option>
-                    </select>
+                      class="w-64"
+                      :options="[
+                        {
+                          value: 'temp_unsched',
+                          label: t('admin.settings.streamTimeout.actionTempUnsched'),
+                        },
+                        {
+                          value: 'error',
+                          label: t('admin.settings.streamTimeout.actionError'),
+                        },
+                        {
+                          value: 'none',
+                          label: t('admin.settings.streamTimeout.actionNone'),
+                        },
+                      ]"
+                    />
                     <p class="mt-1.5 text-xs text-muted">
                       {{ t("admin.settings.streamTimeout.actionHint") }}
                     </p>
@@ -2788,18 +2790,15 @@
                     <label class="mb-2 block text-sm font-medium text-body">
                       {{ t("admin.settings.oidc.tokenAuthMethod") }}
                     </label>
-                    <select
+                    <Select
                       v-model="form.oidc_connect_token_auth_method"
-                      class="input font-mono text-sm"
-                    >
-                      <option value="client_secret_post">
-                        client_secret_post
-                      </option>
-                      <option value="client_secret_basic">
-                        client_secret_basic
-                      </option>
-                      <option value="none">none</option>
-                    </select>
+                      class="font-mono text-sm"
+                      :options="[
+                        { value: 'client_secret_post', label: 'client_secret_post' },
+                        { value: 'client_secret_basic', label: 'client_secret_basic' },
+                        { value: 'none', label: 'none' },
+                      ]"
+                    />
                   </div>
 
                   <div>
@@ -4534,14 +4533,14 @@
                     <label class="mb-1 block text-xs font-medium text-body">
                       {{ t("admin.settings.customMenu.visibility") }}
                     </label>
-                    <select v-model="item.visibility" class="input text-sm">
-                      <option value="user">
-                        {{ t("admin.settings.customMenu.visibilityUser") }}
-                      </option>
-                      <option value="admin">
-                        {{ t("admin.settings.customMenu.visibilityAdmin") }}
-                      </option>
-                    </select>
+                    <Select
+                      v-model="item.visibility"
+                      class="text-sm"
+                      :options="[
+                        { value: 'user', label: t('admin.settings.customMenu.visibilityUser') },
+                        { value: 'admin', label: t('admin.settings.customMenu.visibilityAdmin') },
+                      ]"
+                    />
                   </div>
 
                   <!-- URL (full width) -->
