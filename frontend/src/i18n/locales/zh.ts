@@ -1099,6 +1099,7 @@ export default {
       platform: '平台',
       input: '输入价格',
       output: '输出价格',
+      rate: '倍率',
       channels: '渠道数量'
     },
     view: {
@@ -1109,6 +1110,7 @@ export default {
       model: '模型',
       platform: '平台',
       price: '价格',
+      rate: '倍率',
       groups: '分组',
       actions: '操作'
     },
@@ -1140,6 +1142,7 @@ export default {
     groups: {
       exclusive: '专属',
       public: '公开',
+      effectiveRateLabel: '有效倍率',
       effectiveRate: '倍率 {rate}'
     }
   },
@@ -3072,9 +3075,14 @@ export default {
       dataExported: '数据导出成功',
       dataExportFailed: '数据导出失败',
       dataImportTitle: '导入数据',
-      dataImportHint: '上传导出的 JSON 文件以批量导入账号与代理。',
-      dataImportWarning: '导入将创建新账号与代理，分组需手工绑定；请确认已有数据不会冲突。',
+      dataImportHint: '上传或拖入导出的 JSON 文件以批量导入账号与代理。',
+      dataImportWarning: '导入将创建新账号与代理；如选择默认分组，导入账号会直接绑定到该分组。请确认已有数据不会冲突。',
       dataImportFile: '数据文件',
+      dataImportDropHint: '拖拽 JSON 文件到这里',
+      dataImportDropSubHint: '或点击右侧按钮选择文件',
+      dataImportDefaultGroup: '导入默认分组',
+      dataImportNoDefaultGroup: '不绑定分组',
+      dataImportGroupHint: '选择后，本次导入创建的每个账号都会绑定到这个分组。',
       dataImportButton: '开始导入',
       dataImporting: '导入中...',
       dataImportSelectFile: '请选择数据文件',

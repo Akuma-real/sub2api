@@ -63,6 +63,7 @@ type DataAccount struct {
 
 type DataImportRequest struct {
 	Data                 DataPayload `json:"data"`
+	GroupIDs             []int64     `json:"group_ids"`
 	SkipDefaultGroupBind *bool       `json:"skip_default_group_bind"`
 }
 
@@ -197,6 +198,7 @@ func (h *AccountHandler) importData(ctx context.Context, req DataImportRequest) 
 	if req.SkipDefaultGroupBind != nil {
 		skipDefaultGroupBind = *req.SkipDefaultGroupBind
 	}
+	groupIDs := uniqueDataImportGroupIDs(req.GroupIDs)
 
 	dataPayload := req.Data
 	result := DataImportResult{}
@@ -315,7 +317,7 @@ func (h *AccountHandler) importData(ctx context.Context, req DataImportRequest) 
 			Concurrency:          item.Concurrency,
 			Priority:             item.Priority,
 			RateMultiplier:       item.RateMultiplier,
-			GroupIDs:             nil,
+			GroupIDs:             append([]int64(nil), groupIDs...),
 			ExpiresAt:            item.ExpiresAt,
 			AutoPauseOnExpired:   item.AutoPauseOnExpired,
 			SkipDefaultGroupBind: skipDefaultGroupBind,
@@ -356,6 +358,23 @@ func (h *AccountHandler) importData(ctx context.Context, req DataImportRequest) 
 	}
 
 	return result, nil
+}
+
+func uniqueDataImportGroupIDs(groupIDs []int64) []int64 {
+	if len(groupIDs) <= 1 {
+		return groupIDs
+	}
+
+	seen := make(map[int64]struct{}, len(groupIDs))
+	unique := make([]int64, 0, len(groupIDs))
+	for _, groupID := range groupIDs {
+		if _, ok := seen[groupID]; ok {
+			continue
+		}
+		seen[groupID] = struct{}{}
+		unique = append(unique, groupID)
+	}
+	return unique
 }
 
 func (h *AccountHandler) listAllProxies(ctx context.Context) ([]service.Proxy, error) {

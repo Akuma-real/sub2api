@@ -72,6 +72,9 @@
               <option value="output">
                 {{ t("modelMarketplace.sort.output") }}
               </option>
+              <option value="rate">
+                {{ t("modelMarketplace.sort.rate") }}
+              </option>
             </select>
           </label>
           <div class="view-toggle">
@@ -150,6 +153,10 @@
               <span>{{ t("modelMarketplace.columns.price") }}</span>
               <strong>{{ priceSummary(model) }}</strong>
             </div>
+            <div class="price-line">
+              <span>{{ t("modelMarketplace.columns.rate") }}</span>
+              <strong>{{ modelRateSummary(model) }}</strong>
+            </div>
             <div class="model-badges">
               <span>{{ billingModeLabel(model.billing_mode) }}</span>
               <span>{{ pricingSourceLabel(model.pricing_source) }}</span>
@@ -180,6 +187,7 @@
               <th>{{ t("modelMarketplace.columns.model") }}</th>
               <th>{{ t("modelMarketplace.columns.platform") }}</th>
               <th>{{ t("modelMarketplace.columns.price") }}</th>
+              <th>{{ t("modelMarketplace.columns.rate") }}</th>
               <th>{{ t("modelMarketplace.columns.groups") }}</th>
               <th>{{ t("modelMarketplace.columns.actions") }}</th>
             </tr>
@@ -211,6 +219,12 @@
                 <div class="price-cell">
                   <strong>{{ priceSummary(model) }}</strong>
                   <span>{{ pricingSourceLabel(model.pricing_source) }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="rate-cell">
+                  <strong>{{ modelRateSummary(model) }}</strong>
+                  <span>{{ t("modelMarketplace.groups.effectiveRateLabel") }}</span>
                 </div>
               </td>
               <td>
@@ -282,6 +296,10 @@
           <div class="detail-metric">
             <span>{{ t("modelMarketplace.columns.price") }}</span>
             <strong>{{ priceSummary(selectedModel) }}</strong>
+          </div>
+          <div class="detail-metric">
+            <span>{{ t("modelMarketplace.columns.rate") }}</span>
+            <strong>{{ modelRateSummary(selectedModel) }}</strong>
           </div>
           <div class="detail-metric">
             <span>{{ t("modelMarketplace.columns.groups") }}</span>
@@ -394,7 +412,7 @@ import {
   type BillingMode,
 } from "@/constants/channel";
 
-type SortKey = "name" | "platform" | "input" | "output";
+type SortKey = "name" | "platform" | "input" | "output" | "rate";
 type ViewMode = "table" | "cards";
 type ModelMarketplaceChannel = ModelMarketplaceModel["channels"][number];
 type ModelMarketplaceGroup = ModelMarketplaceChannel["groups"][number];
@@ -525,6 +543,8 @@ function compareModels(
       return priceForSort(a, "input_price") - priceForSort(b, "input_price");
     case "output":
       return priceForSort(a, "output_price") - priceForSort(b, "output_price");
+    case "rate":
+      return rateForSort(a) - rateForSort(b) || a.id.localeCompare(b.id);
     default:
       return a.id.localeCompare(b.id);
   }
@@ -584,6 +604,31 @@ function modelGroupDetails(model: ModelMarketplaceModel): ModelGroupDetail[] {
       pricingSource: detail.pricingSource,
     }))
     .sort((a, b) => a.group.name.localeCompare(b.group.name));
+}
+
+function modelRateValues(model: ModelMarketplaceModel) {
+  const rates = model.channels.flatMap((channel) =>
+    channel.groups
+      .map((group) => group.effective_rate_multiplier)
+      .filter((rate): rate is number => Number.isFinite(rate)),
+  );
+
+  return Array.from(new Set(rates.map((rate) => Number(rate.toFixed(6))))).sort(
+    (a, b) => a - b,
+  );
+}
+
+function modelRateSummary(model: ModelMarketplaceModel) {
+  const rates = modelRateValues(model);
+  if (rates.length === 0) return "-";
+  if (rates.length === 1) return formatMultiplier(rates[0]);
+  return `${formatMultiplier(rates[0])} - ${formatMultiplier(
+    rates[rates.length - 1],
+  )}`;
+}
+
+function rateForSort(model: ModelMarketplaceModel) {
+  return modelRateValues(model)[0] ?? Number.POSITIVE_INFINITY;
 }
 
 function resetFilters() {
@@ -810,7 +855,7 @@ onMounted(loadMarketplace);
 }
 
 .model-table {
-  @apply w-full min-w-[860px] border-collapse text-sm;
+  @apply w-full min-w-[960px] border-collapse text-sm;
 }
 
 .model-table th {
@@ -826,7 +871,8 @@ onMounted(loadMarketplace);
 }
 
 .model-cell,
-.price-cell {
+.price-cell,
+.rate-cell {
   @apply flex flex-col gap-1;
 }
 
@@ -835,8 +881,13 @@ onMounted(loadMarketplace);
 }
 
 .model-cell span,
-.price-cell span {
+.price-cell span,
+.rate-cell span {
   @apply text-xs text-muted;
+}
+
+.rate-cell strong {
+  @apply font-medium text-ink;
 }
 
 .row-actions {

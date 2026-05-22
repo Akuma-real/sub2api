@@ -1095,6 +1095,7 @@ export default {
       platform: 'Platform',
       input: 'Input price',
       output: 'Output price',
+      rate: 'Rate',
       channels: 'Channel count'
     },
     view: {
@@ -1105,6 +1106,7 @@ export default {
       model: 'Model',
       platform: 'Platform',
       price: 'Price',
+      rate: 'Rate',
       groups: 'Groups',
       actions: 'Actions'
     },
@@ -1136,6 +1138,7 @@ export default {
     groups: {
       exclusive: 'Exclusive',
       public: 'Public',
+      effectiveRateLabel: 'Effective rate',
       effectiveRate: 'Rate {rate}'
     }
   },
@@ -2996,9 +2999,14 @@ export default {
       dataExported: 'Data exported successfully',
       dataExportFailed: 'Failed to export data',
       dataImportTitle: 'Import Data',
-      dataImportHint: 'Upload the exported JSON file to import accounts and proxies.',
-      dataImportWarning: 'Import will create new accounts/proxies; groups must be bound manually. Ensure existing data does not conflict.',
+      dataImportHint: 'Upload or drop the exported JSON file to import accounts and proxies.',
+      dataImportWarning: 'Import will create new accounts/proxies; if a default group is selected, imported accounts are bound to it immediately. Ensure existing data does not conflict.',
       dataImportFile: 'Data file',
+      dataImportDropHint: 'Drop a JSON file here',
+      dataImportDropSubHint: 'Or use the button on the right',
+      dataImportDefaultGroup: 'Import default group',
+      dataImportNoDefaultGroup: 'Do not bind a group',
+      dataImportGroupHint: 'When selected, every account created by this import is bound to this group.',
       dataImportButton: 'Start Import',
       dataImporting: 'Importing...',
       dataImportSelectFile: 'Please select a data file',
