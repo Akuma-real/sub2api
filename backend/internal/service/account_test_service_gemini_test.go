@@ -47,7 +47,7 @@ func TestProcessGeminiStream_EmitsImageEvent(t *testing.T) {
 
 	stream := strings.NewReader("data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ok\"},{\"inlineData\":{\"mimeType\":\"image/png\",\"data\":\"QUJD\"}}]}}]}\n\ndata: [DONE]\n\n")
 
-	err := svc.processGeminiStream(ctx, stream)
+	err := svc.processGeminiStreamWithMetrics(ctx, stream, newAccountTestMetrics())
 	require.NoError(t, err)
 
 	body := recorder.Body.String()
@@ -56,4 +56,25 @@ func TestProcessGeminiStream_EmitsImageEvent(t *testing.T) {
 	require.Contains(t, body, "\"type\":\"image\"")
 	require.Contains(t, body, "\"image_url\":\"data:image/png;base64,QUJD\"")
 	require.Contains(t, body, "\"mime_type\":\"image/png\"")
+}
+
+func TestProcessGeminiStream_EmitsCompletionMetrics(t *testing.T) {
+	t.Parallel()
+	gin.SetMode(gin.TestMode)
+
+	ctx, recorder := newTestContext()
+	svc := &AccountTestService{}
+
+	stream := strings.NewReader("data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ok\"}]},\"finishReason\":\"STOP\"}],\"usageMetadata\":{\"promptTokenCount\":8,\"candidatesTokenCount\":3,\"cachedContentTokenCount\":2}}\n\n")
+
+	err := svc.processGeminiStreamWithMetrics(ctx, stream, newAccountTestMetrics())
+	require.NoError(t, err)
+
+	body := recorder.Body.String()
+	require.Contains(t, body, "\"type\":\"test_complete\"")
+	require.Contains(t, body, "\"input_tokens\":6")
+	require.Contains(t, body, "\"output_tokens\":3")
+	require.Contains(t, body, "\"total_tokens\":11")
+	require.Contains(t, body, "\"cache_read_tokens\":2")
+	require.Contains(t, body, "\"output_chars\":2")
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/util/urlvalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/tidwall/gjson"
 )
 
 // sseDataPrefix matches SSE data lines with optional whitespace after colon.
@@ -38,16 +39,173 @@ const (
 
 // TestEvent represents a SSE event for account testing
 type TestEvent struct {
-	Type     string `json:"type"`
-	Text     string `json:"text,omitempty"`
-	Model    string `json:"model,omitempty"`
-	Status   string `json:"status,omitempty"`
-	Code     string `json:"code,omitempty"`
-	ImageURL string `json:"image_url,omitempty"`
-	MimeType string `json:"mime_type,omitempty"`
-	Data     any    `json:"data,omitempty"`
-	Success  bool   `json:"success,omitempty"`
-	Error    string `json:"error,omitempty"`
+	Type                string `json:"type"`
+	Text                string `json:"text,omitempty"`
+	Model               string `json:"model,omitempty"`
+	Status              string `json:"status,omitempty"`
+	Code                string `json:"code,omitempty"`
+	ImageURL            string `json:"image_url,omitempty"`
+	MimeType            string `json:"mime_type,omitempty"`
+	Data                any    `json:"data,omitempty"`
+	Success             bool   `json:"success,omitempty"`
+	Error               string `json:"error,omitempty"`
+	DurationMs          int64  `json:"duration_ms,omitempty"`
+	FirstTokenMs        int64  `json:"first_token_ms,omitempty"`
+	InputTokens         int    `json:"input_tokens,omitempty"`
+	OutputTokens        int    `json:"output_tokens,omitempty"`
+	TotalTokens         int    `json:"total_tokens,omitempty"`
+	CacheCreationTokens int    `json:"cache_creation_tokens,omitempty"`
+	CacheReadTokens     int    `json:"cache_read_tokens,omitempty"`
+	ImageOutputTokens   int    `json:"image_output_tokens,omitempty"`
+	OutputChars         int    `json:"output_chars,omitempty"`
+	ImageCount          int    `json:"image_count,omitempty"`
+}
+
+type accountTestMetrics struct {
+	startTime           time.Time
+	firstTokenTime      time.Time
+	outputChars         int
+	imageCount          int
+	inputTokens         int
+	outputTokens        int
+	cacheCreationTokens int
+	cacheReadTokens     int
+	imageOutputTokens   int
+}
+
+func newAccountTestMetrics() *accountTestMetrics {
+	return &accountTestMetrics{startTime: time.Now()}
+}
+
+func (m *accountTestMetrics) ObserveContent(text string) {
+	if m == nil || text == "" {
+		return
+	}
+	if m.firstTokenTime.IsZero() {
+		m.firstTokenTime = time.Now()
+	}
+	m.outputChars += len([]rune(text))
+}
+
+func (m *accountTestMetrics) ObserveImage() {
+	if m == nil {
+		return
+	}
+	if m.firstTokenTime.IsZero() {
+		m.firstTokenTime = time.Now()
+	}
+	m.imageCount++
+}
+
+func (m *accountTestMetrics) MergeClaudeUsage(usage *ClaudeUsage) {
+	if m == nil || usage == nil {
+		return
+	}
+	m.inputTokens = usage.InputTokens
+	m.outputTokens = usage.OutputTokens
+	m.cacheCreationTokens = usage.CacheCreationInputTokens
+	m.cacheReadTokens = usage.CacheReadInputTokens
+	m.imageOutputTokens = usage.ImageOutputTokens
+}
+
+func (m *accountTestMetrics) MergeOpenAIUsage(usage OpenAIUsage) {
+	if m == nil {
+		return
+	}
+	m.inputTokens = usage.InputTokens
+	m.outputTokens = usage.OutputTokens
+	m.cacheCreationTokens = usage.CacheCreationInputTokens
+	m.cacheReadTokens = usage.CacheReadInputTokens
+	m.imageOutputTokens = usage.ImageOutputTokens
+}
+
+func (m *accountTestMetrics) CompletionEvent(success bool, errMsg string) TestEvent {
+	event := TestEvent{Type: "test_complete", Success: success, Error: errMsg}
+	if m == nil || m.startTime.IsZero() {
+		return event
+	}
+
+	event.DurationMs = time.Since(m.startTime).Milliseconds()
+	if !m.firstTokenTime.IsZero() {
+		event.FirstTokenMs = m.firstTokenTime.Sub(m.startTime).Milliseconds()
+	}
+	event.InputTokens = m.inputTokens
+	event.OutputTokens = m.outputTokens
+	event.TotalTokens = m.inputTokens + m.outputTokens + m.cacheCreationTokens + m.cacheReadTokens + m.imageOutputTokens
+	event.CacheCreationTokens = m.cacheCreationTokens
+	event.CacheReadTokens = m.cacheReadTokens
+	event.ImageOutputTokens = m.imageOutputTokens
+	event.OutputChars = m.outputChars
+	event.ImageCount = m.imageCount
+	return event
+}
+
+func mergeClaudeTestUsage(metrics *accountTestMetrics, data map[string]any) {
+	if metrics == nil {
+		return
+	}
+
+	var usage map[string]any
+	if msg, ok := data["message"].(map[string]any); ok {
+		usage, _ = msg["usage"].(map[string]any)
+	}
+	if usage == nil {
+		usage, _ = data["usage"].(map[string]any)
+	}
+	if usage == nil {
+		return
+	}
+
+	if value, ok := asInt(usage["input_tokens"]); ok {
+		metrics.inputTokens = value
+	}
+	if value, ok := asInt(usage["output_tokens"]); ok {
+		metrics.outputTokens = value
+	}
+	if value, ok := asInt(usage["cache_creation_input_tokens"]); ok {
+		metrics.cacheCreationTokens = value
+	}
+	if value, ok := asInt(usage["cache_read_input_tokens"]); ok {
+		metrics.cacheReadTokens = value
+	}
+}
+
+func mergeGeminiTestUsage(metrics *accountTestMetrics, data map[string]any) {
+	if metrics == nil {
+		return
+	}
+
+	usage, _ := data["usageMetadata"].(map[string]any)
+	if usage == nil {
+		return
+	}
+
+	prompt, _ := asInt(usage["promptTokenCount"])
+	candidates, _ := asInt(usage["candidatesTokenCount"])
+	cached, _ := asInt(usage["cachedContentTokenCount"])
+	thoughts, _ := asInt(usage["thoughtsTokenCount"])
+
+	imageTokens := 0
+	if details, ok := usage["candidatesTokensDetails"].([]any); ok {
+		for _, entry := range details {
+			detail, ok := entry.(map[string]any)
+			if !ok || detail["modality"] != "IMAGE" {
+				continue
+			}
+			if tokens, ok := asInt(detail["tokenCount"]); ok {
+				imageTokens += tokens
+			}
+		}
+	}
+
+	inputTokens := prompt - cached
+	if inputTokens < 0 {
+		inputTokens = 0
+	}
+	metrics.inputTokens = inputTokens
+	metrics.outputTokens = candidates + thoughts
+	metrics.cacheReadTokens = cached
+	metrics.imageOutputTokens = imageTokens
 }
 
 const (
@@ -259,6 +417,8 @@ func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
 
+	metrics := newAccountTestMetrics()
+
 	// Create Claude Code style payload (same for all account types)
 	payload, err := createTestPayload(testModelID)
 	if err != nil {
@@ -317,7 +477,7 @@ func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account
 	}
 
 	// Process SSE stream
-	return s.processClaudeStream(c, resp.Body)
+	return s.processClaudeStreamWithMetrics(c, resp.Body, metrics)
 }
 
 func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Context, ctx context.Context, account *Account, testModelID string) error {
@@ -332,6 +492,8 @@ func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Con
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+
+	metrics := newAccountTestMetrics()
 
 	payload, err := createTestPayload(testModelID)
 	if err != nil {
@@ -385,7 +547,7 @@ func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Con
 		return s.sendErrorAndEnd(c, errMsg)
 	}
 
-	return s.processClaudeStream(c, resp.Body)
+	return s.processClaudeStreamWithMetrics(c, resp.Body, metrics)
 }
 
 // testBedrockAccountConnection tests a Bedrock (SigV4 or API Key) account using non-streaming invoke
@@ -403,6 +565,7 @@ func (s *AccountTestService) testBedrockAccountConnection(c *gin.Context, ctx co
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+	metrics := newAccountTestMetrics()
 
 	// Create a minimal Bedrock-compatible payload (no stream, no cache_control)
 	bedrockPayload := map[string]any{
@@ -486,8 +649,9 @@ func (s *AccountTestService) testBedrockAccountConnection(c *gin.Context, ctx co
 		text = "(empty response)"
 	}
 
+	metrics.ObserveContent(text)
 	s.sendEvent(c, TestEvent{Type: "content", Text: text})
-	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	s.sendEvent(c, metrics.CompletionEvent(true, ""))
 	return nil
 }
 
@@ -576,6 +740,8 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
 
+	metrics := newAccountTestMetrics()
+
 	// Create OpenAI Responses API payload
 	payload := createOpenAITestPayload(testModelID, isOAuth)
 	payloadBytes, _ := json.Marshal(payload)
@@ -634,7 +800,7 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 	}
 
 	// Process SSE stream
-	return s.processOpenAIStream(c, resp.Body)
+	return s.processOpenAIStreamWithMetrics(c, resp.Body, metrics)
 }
 
 // testOpenAICompactConnection probes /responses/compact and persists the
@@ -679,6 +845,7 @@ func (s *AccountTestService) testOpenAICompactConnection(c *gin.Context, account
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+	metrics := newAccountTestMetrics()
 
 	payloadBytes, _ := json.Marshal(createOpenAICompactProbePayload(testModelID))
 	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
@@ -747,8 +914,9 @@ func (s *AccountTestService) testOpenAICompactConnection(c *gin.Context, account
 		return s.sendErrorAndEnd(c, fmt.Sprintf("API returned %d: %s", resp.StatusCode, string(body)))
 	}
 
+	metrics.ObserveContent("Compact probe succeeded")
 	s.sendEvent(c, TestEvent{Type: "content", Text: "Compact probe succeeded"})
-	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	s.sendEvent(c, metrics.CompletionEvent(true, ""))
 	return nil
 }
 
@@ -813,6 +981,7 @@ func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+	metrics := newAccountTestMetrics()
 
 	// Create test payload (Gemini format)
 	payload := createGeminiTestPayload(testModelID, prompt)
@@ -857,7 +1026,7 @@ func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account
 	}
 
 	// Process SSE stream
-	return s.processGeminiStream(c, resp.Body)
+	return s.processGeminiStreamWithMetrics(c, resp.Body, metrics)
 }
 
 // routeAntigravityTest 路由 Antigravity 账号的测试请求。
@@ -893,6 +1062,7 @@ func (s *AccountTestService) testAntigravityAccountConnection(c *gin.Context, ac
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+	metrics := newAccountTestMetrics()
 
 	// Send test_start event
 	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
@@ -905,10 +1075,11 @@ func (s *AccountTestService) testAntigravityAccountConnection(c *gin.Context, ac
 
 	// 发送响应内容
 	if result.Text != "" {
+		metrics.ObserveContent(result.Text)
 		s.sendEvent(c, TestEvent{Type: "content", Text: result.Text})
 	}
 
-	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	s.sendEvent(c, metrics.CompletionEvent(true, ""))
 	return nil
 }
 
@@ -1087,15 +1258,14 @@ func createGeminiTestPayload(modelID string, prompt string) []byte {
 	return bytes
 }
 
-// processGeminiStream processes SSE stream from Gemini API
-func (s *AccountTestService) processGeminiStream(c *gin.Context, body io.Reader) error {
+func (s *AccountTestService) processGeminiStreamWithMetrics(c *gin.Context, body io.Reader, metrics *accountTestMetrics) error {
 	reader := bufio.NewReader(body)
 
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+				s.sendEvent(c, metrics.CompletionEvent(true, ""))
 				return nil
 			}
 			return s.sendErrorAndEnd(c, fmt.Sprintf("Stream read error: %s", err.Error()))
@@ -1108,7 +1278,7 @@ func (s *AccountTestService) processGeminiStream(c *gin.Context, body io.Reader)
 
 		jsonStr := strings.TrimPrefix(line, "data: ")
 		if jsonStr == "[DONE]" {
-			s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+			s.sendEvent(c, metrics.CompletionEvent(true, ""))
 			return nil
 		}
 
@@ -1123,6 +1293,7 @@ func (s *AccountTestService) processGeminiStream(c *gin.Context, body io.Reader)
 		if resp, ok := data["response"].(map[string]any); ok && resp != nil {
 			data = resp
 		}
+		mergeGeminiTestUsage(metrics, data)
 		if candidates, ok := data["candidates"].([]any); ok && len(candidates) > 0 {
 			if candidate, ok := candidates[0].(map[string]any); ok {
 				// Extract content first (before checking completion)
@@ -1131,12 +1302,14 @@ func (s *AccountTestService) processGeminiStream(c *gin.Context, body io.Reader)
 						for _, part := range parts {
 							if partMap, ok := part.(map[string]any); ok {
 								if text, ok := partMap["text"].(string); ok && text != "" {
+									metrics.ObserveContent(text)
 									s.sendEvent(c, TestEvent{Type: "content", Text: text})
 								}
 								if inlineData, ok := partMap["inlineData"].(map[string]any); ok {
 									mimeType, _ := inlineData["mimeType"].(string)
 									data, _ := inlineData["data"].(string)
 									if strings.HasPrefix(strings.ToLower(mimeType), "image/") && data != "" {
+										metrics.ObserveImage()
 										s.sendEvent(c, TestEvent{
 											Type:     "image",
 											ImageURL: fmt.Sprintf("data:%s;base64,%s", mimeType, data),
@@ -1151,7 +1324,7 @@ func (s *AccountTestService) processGeminiStream(c *gin.Context, body io.Reader)
 
 				// Check for completion after extracting content
 				if finishReason, ok := candidate["finishReason"].(string); ok && finishReason != "" {
-					s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+					s.sendEvent(c, metrics.CompletionEvent(true, ""))
 					return nil
 				}
 			}
@@ -1197,15 +1370,14 @@ func createOpenAITestPayload(modelID string, isOAuth bool) map[string]any {
 	return payload
 }
 
-// processClaudeStream processes the SSE stream from Claude API
-func (s *AccountTestService) processClaudeStream(c *gin.Context, body io.Reader) error {
+func (s *AccountTestService) processClaudeStreamWithMetrics(c *gin.Context, body io.Reader, metrics *accountTestMetrics) error {
 	reader := bufio.NewReader(body)
 
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+				s.sendEvent(c, metrics.CompletionEvent(true, ""))
 				return nil
 			}
 			return s.sendErrorAndEnd(c, fmt.Sprintf("Stream read error: %s", err.Error()))
@@ -1218,7 +1390,7 @@ func (s *AccountTestService) processClaudeStream(c *gin.Context, body io.Reader)
 
 		jsonStr := sseDataPrefix.ReplaceAllString(line, "")
 		if jsonStr == "[DONE]" {
-			s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+			s.sendEvent(c, metrics.CompletionEvent(true, ""))
 			return nil
 		}
 
@@ -1233,11 +1405,14 @@ func (s *AccountTestService) processClaudeStream(c *gin.Context, body io.Reader)
 		case "content_block_delta":
 			if delta, ok := data["delta"].(map[string]any); ok {
 				if text, ok := delta["text"].(string); ok {
+					metrics.ObserveContent(text)
 					s.sendEvent(c, TestEvent{Type: "content", Text: text})
 				}
 			}
+		case "message_delta":
+			mergeClaudeTestUsage(metrics, data)
 		case "message_stop":
-			s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+			s.sendEvent(c, metrics.CompletionEvent(true, ""))
 			return nil
 		case "error":
 			errorMsg := "Unknown error"
@@ -1251,8 +1426,7 @@ func (s *AccountTestService) processClaudeStream(c *gin.Context, body io.Reader)
 	}
 }
 
-// processOpenAIStream processes the SSE stream from OpenAI Responses API
-func (s *AccountTestService) processOpenAIStream(c *gin.Context, body io.Reader) error {
+func (s *AccountTestService) processOpenAIStreamWithMetrics(c *gin.Context, body io.Reader, metrics *accountTestMetrics) error {
 	reader := bufio.NewReader(body)
 	seenCompleted := false
 
@@ -1261,7 +1435,7 @@ func (s *AccountTestService) processOpenAIStream(c *gin.Context, body io.Reader)
 		if err != nil {
 			if err == io.EOF {
 				if seenCompleted {
-					s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+					s.sendEvent(c, metrics.CompletionEvent(true, ""))
 					return nil
 				}
 				return s.sendErrorAndEnd(c, "Stream ended before response.completed")
@@ -1277,7 +1451,7 @@ func (s *AccountTestService) processOpenAIStream(c *gin.Context, body io.Reader)
 		jsonStr := sseDataPrefix.ReplaceAllString(line, "")
 		if jsonStr == "[DONE]" {
 			if seenCompleted {
-				s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+				s.sendEvent(c, metrics.CompletionEvent(true, ""))
 				return nil
 			}
 			return s.sendErrorAndEnd(c, "Stream ended before response.completed")
@@ -1294,10 +1468,14 @@ func (s *AccountTestService) processOpenAIStream(c *gin.Context, body io.Reader)
 		case "response.output_text.delta":
 			// OpenAI Responses API uses "delta" field for text content
 			if delta, ok := data["delta"].(string); ok && delta != "" {
+				metrics.ObserveContent(delta)
 				s.sendEvent(c, TestEvent{Type: "content", Text: delta})
 			}
 		case "response.completed", "response.done":
-			s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+			if usage, ok := extractOpenAIUsageFromJSONBytes([]byte(jsonStr)); ok {
+				metrics.MergeOpenAIUsage(usage)
+			}
+			s.sendEvent(c, metrics.CompletionEvent(true, ""))
 			return nil
 		case "response.failed":
 			errorMsg := "OpenAI response failed"
@@ -1344,6 +1522,7 @@ func (s *AccountTestService) testOpenAIImageAPIKey(c *gin.Context, ctx context.C
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+	metrics := newAccountTestMetrics()
 
 	s.sendEvent(c, TestEvent{Type: "test_start", Model: modelID})
 
@@ -1399,9 +1578,11 @@ func (s *AccountTestService) testOpenAIImageAPIKey(c *gin.Context, ctx context.C
 
 	for _, item := range result.Data {
 		if item.RevisedPrompt != "" {
+			metrics.ObserveContent(item.RevisedPrompt)
 			s.sendEvent(c, TestEvent{Type: "content", Text: item.RevisedPrompt})
 		}
 		if item.B64JSON != "" {
+			metrics.ObserveImage()
 			s.sendEvent(c, TestEvent{
 				Type:     "image",
 				ImageURL: "data:image/png;base64," + item.B64JSON,
@@ -1410,7 +1591,7 @@ func (s *AccountTestService) testOpenAIImageAPIKey(c *gin.Context, ctx context.C
 		}
 	}
 
-	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	s.sendEvent(c, metrics.CompletionEvent(true, ""))
 	return nil
 }
 
@@ -1427,8 +1608,10 @@ func (s *AccountTestService) testOpenAIImageOAuth(c *gin.Context, ctx context.Co
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
+	metrics := newAccountTestMetrics()
 
 	s.sendEvent(c, TestEvent{Type: "test_start", Model: modelID})
+	metrics.ObserveContent("Calling Codex /responses image tool...\n")
 	s.sendEvent(c, TestEvent{Type: "content", Text: "Calling Codex /responses image tool...\n"})
 
 	parsed := &OpenAIImagesRequest{
@@ -1489,19 +1672,26 @@ func (s *AccountTestService) testOpenAIImageOAuth(c *gin.Context, ctx context.Co
 		return s.sendErrorAndEnd(c, fmt.Sprintf("Failed to read image response: %s", err.Error()))
 	}
 
-	results, _, _, _, _, err := collectOpenAIImagesFromResponsesBody(body)
+	results, _, usageRaw, _, _, err := collectOpenAIImagesFromResponsesBody(body)
 	if err != nil {
 		return s.sendErrorAndEnd(c, fmt.Sprintf("Failed to parse image response: %s", err.Error()))
 	}
 	if len(results) == 0 {
 		return s.sendErrorAndEnd(c, "No images returned from responses API")
 	}
+	if len(usageRaw) > 0 {
+		if usage, ok := openAIUsageFromGJSON(gjson.ParseBytes(usageRaw)); ok {
+			metrics.MergeOpenAIUsage(usage)
+		}
+	}
 
 	for _, item := range results {
 		if item.RevisedPrompt != "" {
+			metrics.ObserveContent(item.RevisedPrompt)
 			s.sendEvent(c, TestEvent{Type: "content", Text: item.RevisedPrompt})
 		}
 		mimeType := openAIImageOutputMIMEType(item.OutputFormat)
+		metrics.ObserveImage()
 		s.sendEvent(c, TestEvent{
 			Type:     "image",
 			ImageURL: "data:" + mimeType + ";base64," + item.Result,
@@ -1509,7 +1699,7 @@ func (s *AccountTestService) testOpenAIImageOAuth(c *gin.Context, ctx context.Co
 		})
 	}
 
-	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	s.sendEvent(c, metrics.CompletionEvent(true, ""))
 	return nil
 }
 

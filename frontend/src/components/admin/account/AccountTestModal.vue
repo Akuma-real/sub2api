@@ -8,36 +8,47 @@
     <div class="space-y-4">
       <!-- Account Info Card -->
       <div
-        v-if="account"
-        class="flex items-center justify-between rounded-xl border border-hairline bg-surface-soft p-3"
+        v-if="displayAccount"
+        :class="[
+          'flex items-center justify-between rounded-lg border p-3 transition-colors',
+          status === 'success'
+            ? 'border-success/30 bg-success/10'
+            : displayAccount.status === 'error'
+              ? 'border-error/25 bg-surface-soft'
+              : 'border-hairline bg-surface-soft'
+        ]"
       >
         <div class="flex items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500"
+            :class="[
+              'flex h-10 w-10 items-center justify-center rounded-lg',
+              accountIconClass
+            ]"
           >
-            <Icon name="play" size="md" class="text-on-primary" :stroke-width="2" />
+            <Icon
+              :name="accountIconName"
+              size="md"
+              class="text-on-primary"
+              :class="status === 'connecting' && 'animate-spin'"
+              :stroke-width="2"
+            />
           </div>
           <div>
-            <div class="font-semibold text-ink">{{ account.name }}</div>
+            <div class="font-semibold text-ink">{{ displayAccount.name }}</div>
             <div class="flex items-center gap-1.5 text-xs text-muted">
               <span
                 class="rounded bg-hairline-soft px-1.5 py-0.5 text-[10px] font-medium uppercase"
               >
-                {{ account.type }}
+                {{ displayAccount.type }}
               </span>
               <span>{{ t('admin.accounts.account') }}</span>
             </div>
           </div>
         </div>
         <span
-          :class="[
-            'rounded-full px-2.5 py-1 text-xs font-semibold',
-            account.status === 'active'
-              ? 'bg-success/15 text-success'
-              : 'bg-surface-card text-body'
-          ]"
+          :class="accountStatusBadgeClass"
         >
-          {{ account.status }}
+          {{ accountStatusLabel }}
         </span>
       </div>
 
@@ -52,6 +63,17 @@
           value-key="id"
           label-key="display_name"
           :placeholder="loadingModels ? t('common.loading') + '...' : t('admin.accounts.selectTestModel')"
+        />
+      </div>
+
+      <div v-if="isOpenAIAccount" class="space-y-1.5">
+        <label class="text-sm font-medium text-body">
+          {{ t('admin.accounts.openai.testMode') }}
+        </label>
+        <Select
+          v-model="testMode"
+          :options="openAITestModeOptions"
+          :disabled="status === 'connecting'"
         />
       </div>
 
@@ -70,7 +92,7 @@
       <div class="group relative">
         <div
           ref="terminalRef"
-          class="max-h-[240px] min-h-[120px] overflow-y-auto rounded-xl border border-hairline-soft bg-surface-dark p-4 font-mono text-sm"
+          class="max-h-[240px] min-h-[120px] overflow-y-auto rounded-lg border border-hairline-soft bg-surface-dark p-4 font-mono text-sm"
         >
           <!-- Status Line -->
           <div v-if="status === 'idle'" class="flex items-center gap-2 text-muted">
@@ -120,6 +142,37 @@
         </button>
       </div>
 
+      <div
+        v-if="metrics"
+        class="grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
+        <div
+          v-for="item in primaryMetricItems"
+          :key="item.key"
+          class="rounded-lg border border-hairline bg-surface-soft p-3"
+        >
+          <div class="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted">
+            <Icon :name="item.icon" size="xs" :stroke-width="2" />
+            <span>{{ item.label }}</span>
+          </div>
+          <div class="text-base font-semibold text-ink">{{ item.value }}</div>
+        </div>
+      </div>
+
+      <div
+        v-if="metrics && tokenMetricItems.length > 0"
+        class="grid grid-cols-2 gap-2 sm:grid-cols-3"
+      >
+        <div
+          v-for="item in tokenMetricItems"
+          :key="item.key"
+          class="rounded-lg border border-hairline bg-canvas px-3 py-2"
+        >
+          <div class="text-xs font-medium text-muted">{{ item.label }}</div>
+          <div class="mt-0.5 text-sm font-semibold text-body-strong">{{ item.value }}</div>
+        </div>
+      </div>
+
       <div v-if="generatedImages.length > 0" class="space-y-2">
         <div class="text-xs font-medium text-body">
           {{ t('admin.accounts.imagePreview') }}
@@ -128,12 +181,12 @@
           <div
             v-for="(image, index) in generatedImages"
             :key="`${image.url}-${index}`"
-            class="group/img relative cursor-pointer overflow-hidden rounded-xl border border-hairline bg-canvas shadow-sm transition hover:border-primary-300 hover:shadow-md"
+            class="group/img relative cursor-pointer overflow-hidden rounded-lg border border-hairline bg-canvas transition hover:border-primary-300"
             @click="previewImageUrl = image.url"
           >
             <img :src="image.url" :alt="`test-image-${index + 1}`" class="max-h-[360px] w-full object-contain" />
             <div class="absolute inset-0 flex items-center justify-center bg-ink/0 transition-colors group-hover/img:bg-ink/20">
-              <Icon name="eye" size="lg" class="text-on-primary opacity-0 drop-shadow-lg transition-opacity group-hover/img:opacity-100" :stroke-width="2" />
+              <Icon name="eye" size="lg" class="text-on-primary opacity-0 transition-opacity group-hover/img:opacity-100" :stroke-width="2" />
             </div>
             <div class="border-t border-hairline-soft px-3 py-1.5 text-xs text-muted">
               {{ image.mimeType || 'image/*' }}
@@ -194,11 +247,11 @@
         </button>
         <button
           @click="startTest"
-          :disabled="status === 'connecting' || !selectedModelId"
+          :disabled="status === 'connecting' || loadingModels || !selectedModelId"
           :class="[
             'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all',
-            status === 'connecting' || !selectedModelId
-              ? 'cursor-not-allowed bg-primary-400 text-on-primary'
+            status === 'connecting' || loadingModels || !selectedModelId
+              ? 'cursor-not-allowed bg-hairline text-muted'
               : status === 'success'
                 ? 'bg-success/100 text-on-primary hover:bg-success/80'
                 : status === 'error'
@@ -235,6 +288,7 @@ import { computed, ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Select from '@/components/common/Select.vue'
+import type { SelectOption } from '@/components/common/Select.vue'
 import TextArea from '@/components/common/TextArea.vue'
 import { Icon } from '@/components/icons'
 import { useClipboard } from '@/composables/useClipboard'
@@ -254,6 +308,36 @@ interface PreviewImage {
   mimeType?: string
 }
 
+interface TestMetrics {
+  duration_ms?: number
+  first_token_ms?: number
+  input_tokens?: number
+  output_tokens?: number
+  total_tokens?: number
+  cache_creation_tokens?: number
+  cache_read_tokens?: number
+  image_output_tokens?: number
+  output_chars?: number
+  image_count?: number
+}
+
+type TestEvent = TestMetrics & {
+  type: string
+  text?: string
+  model?: string
+  success?: boolean
+  error?: string
+  image_url?: string
+  mime_type?: string
+}
+
+type MetricItem = {
+  key: string
+  label: string
+  value: string
+  icon: 'clock' | 'bolt' | 'chart' | 'chat'
+}
+
 const props = defineProps<{
   show: boolean
   account: Account | null
@@ -261,6 +345,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'tested', account: Account): void
 }>()
 
 const terminalRef = ref<HTMLElement | null>(null)
@@ -274,8 +359,16 @@ const testPrompt = ref('')
 const loadingModels = ref(false)
 let abortController: AbortController | null = null
 const generatedImages = ref<PreviewImage[]>([])
+const refreshedAccount = ref<Account | null>(null)
+const metrics = ref<TestMetrics | null>(null)
+const testMode = ref<'default' | 'compact'>('default')
 const previewImageUrl = ref('')
 const prioritizedGeminiModels = ['gemini-3.1-flash-image', 'gemini-2.5-flash-image', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-2.0-flash']
+const isOpenAIAccount = computed(() => props.account?.platform === 'openai')
+const openAITestModeOptions = computed<SelectOption[]>(() => [
+  { value: 'default', label: t('admin.accounts.openai.testModeDefault') },
+  { value: 'compact', label: t('admin.accounts.openai.testModeCompact') }
+])
 const supportsGeminiImageTest = computed(() => {
   const modelID = selectedModelId.value.toLowerCase()
   if (!modelID.startsWith('gemini-') || !modelID.includes('-image')) return false
@@ -290,6 +383,93 @@ const supportsOpenAIImageTest = computed(() => {
 })
 
 const supportsImageTest = computed(() => supportsGeminiImageTest.value || supportsOpenAIImageTest.value)
+const displayAccount = computed(() => refreshedAccount.value || props.account)
+const testedAsHealthy = computed(() => status.value === 'success')
+const accountIconName = computed(() => {
+  if (status.value === 'connecting') return 'refresh'
+  if (status.value === 'success') return 'check'
+  if (displayAccount.value?.status === 'error' || status.value === 'error') return 'exclamationTriangle'
+  return 'play'
+})
+const accountIconClass = computed(() => {
+  if (status.value === 'success') return 'bg-success'
+  if (displayAccount.value?.status === 'error' || status.value === 'error') return 'bg-error'
+  return 'bg-primary-500'
+})
+const accountStatusLabel = computed(() => {
+  if (testedAsHealthy.value) return t('admin.accounts.testPassedThisRun')
+  const accountStatus = displayAccount.value?.status || 'inactive'
+  return t(`admin.accounts.status.${accountStatus}`)
+})
+const accountStatusBadgeClass = computed(() => {
+  const base = 'rounded-full px-2.5 py-1 text-xs font-semibold'
+  if (testedAsHealthy.value) return `${base} bg-success/15 text-success`
+  if (displayAccount.value?.status === 'active') return `${base} bg-success/15 text-success`
+  if (displayAccount.value?.status === 'error') return `${base} bg-error/15 text-error`
+  return `${base} bg-surface-card text-body`
+})
+const hasUsageTokens = computed(() => {
+  const data = metrics.value
+  if (!data) return false
+  return Number(data.input_tokens || 0) > 0 ||
+    Number(data.output_tokens || 0) > 0 ||
+    Number(data.total_tokens || 0) > 0 ||
+    Number(data.cache_creation_tokens || 0) > 0 ||
+    Number(data.cache_read_tokens || 0) > 0 ||
+    Number(data.image_output_tokens || 0) > 0
+})
+const primaryMetricItems = computed<MetricItem[]>(() => {
+  const data = metrics.value
+  if (!data) return []
+  const durationMs = Number(data.duration_ms || 0)
+  const outputTokens = Number(data.output_tokens || 0)
+  const outputChars = Number(data.output_chars || 0)
+  const images = Number(data.image_count || 0)
+  const throughputValue = outputTokens > 0
+    ? formatPerSecond(outputTokens, durationMs, t('admin.accounts.testMetrics.tokensPerSecondUnit'))
+    : formatPerSecond(outputChars, durationMs, t('admin.accounts.testMetrics.charsPerSecondUnit'))
+
+  return [
+    {
+      key: 'duration',
+      label: t('admin.accounts.testMetrics.duration'),
+      value: formatDurationMs(durationMs),
+      icon: 'clock'
+    },
+    {
+      key: 'first-token',
+      label: t('admin.accounts.testMetrics.firstToken'),
+      value: data.first_token_ms != null ? formatDurationMs(Number(data.first_token_ms)) : '-',
+      icon: 'bolt'
+    },
+    {
+      key: 'throughput',
+      label: outputTokens > 0
+        ? t('admin.accounts.testMetrics.tokenThroughput')
+        : t('admin.accounts.testMetrics.charThroughput'),
+      value: throughputValue,
+      icon: 'chart'
+    },
+    {
+      key: 'output',
+      label: images > 0 ? t('admin.accounts.testMetrics.images') : t('admin.accounts.testMetrics.output'),
+      value: images > 0 ? String(images) : formatNumber(outputTokens || outputChars),
+      icon: 'chat'
+    }
+  ]
+})
+const tokenMetricItems = computed(() => {
+  const data = metrics.value
+  if (!data || !hasUsageTokens.value) return []
+  return [
+    { key: 'input', label: t('admin.accounts.testMetrics.inputTokens'), value: formatNumber(data.input_tokens || 0) },
+    { key: 'output', label: t('admin.accounts.testMetrics.outputTokens'), value: formatNumber(data.output_tokens || 0) },
+    { key: 'total', label: t('admin.accounts.testMetrics.totalTokens'), value: formatNumber(data.total_tokens || 0) },
+    { key: 'cache-create', label: t('admin.accounts.testMetrics.cacheCreationTokens'), value: formatNumber(data.cache_creation_tokens || 0) },
+    { key: 'cache-read', label: t('admin.accounts.testMetrics.cacheReadTokens'), value: formatNumber(data.cache_read_tokens || 0) },
+    { key: 'image-tokens', label: t('admin.accounts.testMetrics.imageTokens'), value: formatNumber(data.image_output_tokens || 0) }
+  ].filter(item => item.value !== '0' || item.key === 'total')
+})
 
 const sortTestModels = (models: ClaudeModel[]) => {
   const priorityMap = new Map(prioritizedGeminiModels.map((id, index) => [id, index]))
@@ -302,12 +482,32 @@ const sortTestModels = (models: ClaudeModel[]) => {
   })
 }
 
+const formatNumber = (value: number) => {
+  return new Intl.NumberFormat().format(Math.max(0, Math.round(value)))
+}
+
+const formatDurationMs = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) return '-'
+  if (value < 1000) return `${Math.round(value)}ms`
+  return `${(value / 1000).toFixed(value < 10000 ? 2 : 1)}s`
+}
+
+const formatPerSecond = (count: number, durationMs: number, unit: string) => {
+  if (!Number.isFinite(count) || count <= 0 || !Number.isFinite(durationMs) || durationMs <= 0) {
+    return '-'
+  }
+  const perSecond = count / (durationMs / 1000)
+  return `${perSecond.toFixed(perSecond >= 10 ? 1 : 2)} ${unit}`
+}
+
 // Load available models when modal opens
 watch(
   () => props.show,
   async (newVal) => {
     if (newVal && props.account) {
       testPrompt.value = ''
+      testMode.value = 'default'
+      refreshedAccount.value = null
       resetState()
       await loadAvailableModels()
     } else {
@@ -358,6 +558,7 @@ const resetState = () => {
   streamingContent.value = ''
   errorMessage.value = ''
   generatedImages.value = []
+  metrics.value = null
   previewImageUrl.value = ''
 }
 
@@ -410,9 +611,10 @@ const startTest = async () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-              model_id: selectedModelId.value,
-              prompt: supportsImageTest.value ? testPrompt.value.trim() : ''
-            }),
+        model_id: selectedModelId.value,
+        prompt: supportsImageTest.value ? testPrompt.value.trim() : '',
+        mode: isOpenAIAccount.value ? testMode.value : 'default'
+      }),
       signal: abortController.signal
     })
 
@@ -462,15 +664,31 @@ const startTest = async () => {
   }
 }
 
-const handleEvent = (event: {
-  type: string
-  text?: string
-  model?: string
-  success?: boolean
-  error?: string
-  image_url?: string
-  mime_type?: string
-}) => {
+const refreshTestedAccount = async () => {
+  if (!props.account) return
+  try {
+    const latest = await adminAPI.accounts.getById(props.account.id)
+    refreshedAccount.value = latest
+    emit('tested', latest)
+  } catch (error) {
+    console.error('Failed to refresh tested account:', error)
+  }
+}
+
+const extractMetrics = (event: TestEvent): TestMetrics => ({
+  duration_ms: event.duration_ms,
+  first_token_ms: event.first_token_ms,
+  input_tokens: event.input_tokens,
+  output_tokens: event.output_tokens,
+  total_tokens: event.total_tokens,
+  cache_creation_tokens: event.cache_creation_tokens,
+  cache_read_tokens: event.cache_read_tokens,
+  image_output_tokens: event.image_output_tokens,
+  output_chars: event.output_chars,
+  image_count: event.image_count
+})
+
+const handleEvent = (event: TestEvent) => {
   switch (event.type) {
     case 'test_start':
       addLine(t('admin.accounts.connectedToApi'), 'text-success')
@@ -510,8 +728,10 @@ const handleEvent = (event: {
         addLine(streamingContent.value, 'text-success')
         streamingContent.value = ''
       }
+      metrics.value = extractMetrics(event)
       if (event.success) {
         status.value = 'success'
+        refreshTestedAccount()
       } else {
         status.value = 'error'
         errorMessage.value = event.error || 'Test failed'

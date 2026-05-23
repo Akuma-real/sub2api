@@ -2,15 +2,17 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AccountTestModal from '../AccountTestModal.vue'
 
-const { getAvailableModels, copyToClipboard } = vi.hoisted(() => ({
+const { getAvailableModels, getById, copyToClipboard } = vi.hoisted(() => ({
   getAvailableModels: vi.fn(),
+  getById: vi.fn(),
   copyToClipboard: vi.fn()
 }))
 
 vi.mock('@/api/admin', () => ({
   adminAPI: {
     accounts: {
-      getAvailableModels
+      getAvailableModels,
+      getById
     }
   }
 }))
@@ -68,7 +70,8 @@ function mountModal() {
         name: 'Gemini Image Test',
         platform: 'gemini',
         type: 'apikey',
-        status: 'active'
+        status: 'error',
+        error_message: 'previous failure'
       }
     } as any,
     global: {
@@ -93,6 +96,14 @@ describe('AccountTestModal', () => {
       { id: 'gemini-2.5-flash-image', display_name: 'Gemini 2.5 Flash Image' },
       { id: 'gemini-3.1-flash-image', display_name: 'Gemini 3.1 Flash Image' }
     ])
+    getById.mockResolvedValue({
+      id: 42,
+      name: 'Gemini Image Test',
+      platform: 'gemini',
+      type: 'apikey',
+      status: 'active',
+      error_message: null
+    })
     copyToClipboard.mockReset()
     Object.defineProperty(globalThis, 'localStorage', {
       value: {
@@ -107,7 +118,7 @@ describe('AccountTestModal', () => {
       createStreamResponse([
         'data: {"type":"test_start","model":"gemini-2.5-flash-image"}\n',
         'data: {"type":"image","image_url":"data:image/png;base64,QUJD","mime_type":"image/png"}\n',
-        'data: {"type":"test_complete","success":true}\n'
+        'data: {"type":"test_complete","success":true,"duration_ms":2000,"first_token_ms":400,"input_tokens":12,"output_tokens":8,"total_tokens":20,"output_chars":18,"image_count":1}\n'
       ])
     ) as any
   })
@@ -137,11 +148,17 @@ describe('AccountTestModal', () => {
     const [, request] = (global.fetch as any).mock.calls[0]
     expect(JSON.parse(request.body)).toEqual({
       model_id: 'gemini-3.1-flash-image',
-      prompt: 'draw a tiny orange cat astronaut'
+      prompt: 'draw a tiny orange cat astronaut',
+      mode: 'default'
     })
 
     const preview = wrapper.find('img[alt="test-image-1"]')
     expect(preview.exists()).toBe(true)
     expect(preview.attributes('src')).toBe('data:image/png;base64,QUJD')
+    expect(wrapper.text()).toContain('admin.accounts.testPassedThisRun')
+    expect(wrapper.text()).toContain('4.00 admin.accounts.testMetrics.tokensPerSecondUnit')
+    expect(wrapper.text()).toContain('20')
+    expect(getById).toHaveBeenCalledWith(42)
+    expect(wrapper.emitted('tested')?.[0]?.[0]).toMatchObject({ id: 42, status: 'active' })
   })
 })
