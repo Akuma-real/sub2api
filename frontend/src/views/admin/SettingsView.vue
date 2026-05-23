@@ -1339,7 +1339,6 @@
                       :key="suffix"
                       class="inline-flex items-center gap-1 rounded bg-surface-card px-2 py-1 text-xs font-mono text-body"
                     >
-                      <span class="text-muted-soft">@</span>
                       <span>{{ suffix }}</span>
                       <button
                         type="button"
@@ -1360,7 +1359,6 @@
                     <div
                       class="flex min-w-[220px] flex-1 items-center gap-1 rounded border border-transparent px-2 py-1 focus-within:border-primary-300"
                     >
-                      <span class="font-mono text-sm text-muted-soft">@</span>
                       <input
                         v-model="registrationEmailSuffixWhitelistDraft"
                         type="text"
@@ -8066,8 +8064,8 @@ async function saveSettings() {
       registration_enabled: form.registration_enabled,
       email_verify_enabled: form.email_verify_enabled,
       registration_email_suffix_whitelist:
-        registrationEmailSuffixWhitelistTags.value.map(
-          (suffix) => `@${suffix}`,
+        registrationEmailSuffixWhitelistTags.value.map((suffix) =>
+          suffix.startsWith("*.") ? suffix : `@${suffix}`,
         ),
       promo_code_enabled: form.promo_code_enabled,
       invitation_code_enabled: form.invitation_code_enabled,

@@ -253,6 +253,26 @@
               </button>
             </div>
 
+            <div class="flex flex-col gap-2 rounded-lg border border-hairline-soft bg-surface-soft px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex min-w-0 items-center gap-2 text-sm text-body">
+                <Icon name="filter" size="sm" class="flex-shrink-0 text-muted-soft" />
+                <span class="font-medium">{{ t('admin.riskControl.modelFilter') }}</span>
+                <span class="truncate text-muted">{{ modelFilterSummary }}</span>
+              </div>
+              <div v-if="modelFilterPreviewModels.length > 0" class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="model in modelFilterPreviewModels"
+                  :key="model"
+                  class="inline-flex max-w-[180px] items-center truncate rounded-md bg-canvas px-2 py-1 font-mono text-xs text-body shadow-sm"
+                >
+                  {{ model }}
+                </span>
+                <span v-if="hiddenModelFilterModelCount > 0" class="inline-flex rounded-md bg-canvas px-2 py-1 text-xs text-muted shadow-sm">
+                  +{{ hiddenModelFilterModelCount }}
+                </span>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
               <Select
                 v-model="filters.result"
@@ -1240,6 +1260,52 @@
                 </p>
               </div>
             </div>
+
+            <div class="space-y-4 rounded-lg border border-hairline-soft bg-canvas p-4">
+              <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 class="text-base font-semibold text-ink">{{ t('admin.riskControl.modelFilter') }}</h3>
+                  <p class="mt-1 text-sm text-muted">{{ t('admin.riskControl.modelFilterHint') }}</p>
+                </div>
+                <span class="inline-flex w-fit rounded-md bg-surface-card px-2.5 py-1 text-xs font-medium text-body">
+                  {{ modelFilterSummary }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
+                <button
+                  v-for="option in modelFilterOptions"
+                  :key="option.value"
+                  type="button"
+                  class="rounded-lg border p-3 text-left transition-colors"
+                  :class="configForm.model_filter_type === option.value
+                    ? 'border-primary-300 bg-primary-500/10 text-ink shadow-sm'
+                    : 'border-hairline-soft bg-canvas text-body hover:bg-surface-soft'"
+                  @click="setModelFilterType(option.value)"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-semibold">{{ option.label }}</span>
+                    <span
+                      class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border"
+                      :class="configForm.model_filter_type === option.value
+                        ? 'border-primary-500 bg-primary-500 text-on-primary'
+                        : 'border-hairline text-transparent'"
+                    >
+                      <Icon name="check" size="xs" :stroke-width="2" />
+                    </span>
+                  </div>
+                  <p class="mt-1 text-xs leading-5 text-muted">{{ option.description }}</p>
+                </button>
+              </div>
+
+              <div v-if="configForm.model_filter_type !== 'all'" class="space-y-2">
+                <label class="input-label">{{ t('admin.riskControl.modelFilterModels') }}</label>
+                <ModelWhitelistSelector v-model="configForm.model_filter_models" />
+                <p class="text-xs text-muted">
+                  {{ t('admin.riskControl.modelFilterModelCount', { count: modelFilterModelCount }) }}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div
@@ -1692,11 +1758,14 @@ import Icon from "@/components/icons/Icon.vue";
 import Select from "@/components/common/Select.vue";
 import Toggle from "@/components/common/Toggle.vue";
 import Pagination from "@/components/common/Pagination.vue";
+import ModelWhitelistSelector from "@/components/account/ModelWhitelistSelector.vue";
 import { adminAPI } from "@/api/admin";
 import type {
   ContentModerationAPIKeyStatus,
   ContentModerationConfig,
   ContentModerationLog,
+  ContentModerationModelFilter,
+  ContentModerationModelFilterType,
   ContentModerationRuntimeStatus,
   ContentModerationTestAuditResult,
   KeywordBlockingMode,
@@ -1798,6 +1867,8 @@ const configForm = reactive({
   pre_hash_check_enabled: false,
   blocked_keywords_text: "",
   keyword_blocking_mode: "keyword_and_api" as KeywordBlockingMode,
+  model_filter_type: "all" as ContentModerationModelFilterType,
+  model_filter_models: [] as string[],
 });
 
 const pagination = reactive({
@@ -1846,6 +1917,24 @@ const keywordBlockingModeOptions = computed<Array<{ value: KeywordBlockingMode; 
     value: 'api_only',
     label: t('admin.riskControl.keywordModeApiOnly'),
     description: t('admin.riskControl.keywordModeApiOnlyDesc'),
+  },
+])
+
+const modelFilterOptions = computed<Array<{ value: ContentModerationModelFilterType; label: string; description: string }>>(() => [
+  {
+    value: 'all',
+    label: t('admin.riskControl.modelFilterAll'),
+    description: t('admin.riskControl.modelFilterAllDesc'),
+  },
+  {
+    value: 'include',
+    label: t('admin.riskControl.modelFilterInclude'),
+    description: t('admin.riskControl.modelFilterIncludeDesc'),
+  },
+  {
+    value: 'exclude',
+    label: t('admin.riskControl.modelFilterExclude'),
+    description: t('admin.riskControl.modelFilterExcludeDesc'),
   },
 ])
 
@@ -1930,6 +2019,22 @@ const groupFilterOptions = computed<SelectOption[]>(() => [
 ]);
 
 const selectedGroupCount = computed(() => String(configForm.group_ids.length));
+
+const modelFilterModelCount = computed(() => configForm.model_filter_models.length)
+
+const modelFilterSummary = computed(() => {
+  if (configForm.model_filter_type === 'include') {
+    return t('admin.riskControl.modelFilterIncludeSummary', { count: modelFilterModelCount.value })
+  }
+  if (configForm.model_filter_type === 'exclude') {
+    return t('admin.riskControl.modelFilterExcludeSummary', { count: modelFilterModelCount.value })
+  }
+  return t('admin.riskControl.modelFilterAllSummary')
+})
+
+const modelFilterPreviewModels = computed(() => configForm.model_filter_models.slice(0, 6))
+
+const hiddenModelFilterModelCount = computed(() => Math.max(0, configForm.model_filter_models.length - modelFilterPreviewModels.value.length))
 
 const filteredGroups = computed(() => {
   const keyword = groupSearch.value.trim().toLowerCase();
@@ -2088,9 +2193,7 @@ const overviewItems = computed<OverviewItem[]>(() => [
     value: configForm.all_groups
       ? t("admin.riskControl.allGroups")
       : selectedGroupCount.value,
-    meta: configForm.all_groups
-      ? t("admin.riskControl.allGroupsHint")
-      : t("admin.riskControl.selectedGroupsHint"),
+    meta: modelFilterSummary.value,
     icon: "users",
     iconClass: "bg-primary-100 text-primary-600 ",
   },
@@ -2230,6 +2333,9 @@ function applyConfig(config: ContentModerationConfig) {
   configForm.keyword_blocking_mode = normalizeKeywordBlockingMode(
     config.keyword_blocking_mode,
   );
+  const modelFilter = normalizeModelFilter(config.model_filter)
+  configForm.model_filter_type = modelFilter.type
+  configForm.model_filter_models = modelFilter.models
 }
 
 async function loadAll() {
@@ -2280,6 +2386,11 @@ async function loadStatus(silent = true) {
 async function saveConfig() {
   saving.value = true;
   try {
+    const modelFilterPayload = buildModelFilterPayload()
+    if (modelFilterPayload.type !== 'all' && modelFilterPayload.models.length === 0) {
+      appStore.showError(t('admin.riskControl.modelFilterModelsRequired'))
+      return
+    }
     const payload: UpdateContentModerationConfig = {
       enabled: configForm.enabled,
       mode: configForm.mode,
@@ -2309,6 +2420,7 @@ async function saveConfig() {
       pre_hash_check_enabled: configForm.pre_hash_check_enabled,
       blocked_keywords: blockedKeywordList.value,
       keyword_blocking_mode: configForm.keyword_blocking_mode,
+      model_filter: modelFilterPayload,
     };
     const keys = parseApiKeys(configForm.api_keys_text);
     if (
@@ -2497,6 +2609,13 @@ function setAPIKeysMode(mode: APIKeysWriteMode) {
   configForm.api_keys_mode = mode;
   if (mode === "replace") {
     pendingDeleteApiKeyHashes.value = [];
+  }
+}
+
+function setModelFilterType(type: ContentModerationModelFilterType) {
+  configForm.model_filter_type = type
+  if (type === 'all') {
+    configForm.model_filter_models = []
   }
 }
 
@@ -2813,6 +2932,49 @@ function normalizeKeywordBlockingMode(value: unknown): KeywordBlockingMode {
     return value
   }
   return 'keyword_and_api'
+}
+
+function normalizeModelFilter(value: unknown): ContentModerationModelFilter {
+  if (!value || typeof value !== 'object') {
+    return { type: 'all', models: [] }
+  }
+  const raw = value as Partial<ContentModerationModelFilter>
+  const type = normalizeModelFilterType(raw.type)
+  const models = type === 'all' ? [] : normalizeModelNames(raw.models)
+  return { type, models }
+}
+
+function normalizeModelFilterType(value: unknown): ContentModerationModelFilterType {
+  if (value === 'include' || value === 'exclude' || value === 'all') {
+    return value
+  }
+  return 'all'
+}
+
+function normalizeModelNames(models: unknown): string[] {
+  if (!Array.isArray(models)) return []
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const item of models) {
+    const model = String(item ?? '').trim()
+    if (!model) continue
+    const key = model.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(model)
+  }
+  return out
+}
+
+function buildModelFilterPayload(): ContentModerationModelFilter {
+  const type = normalizeModelFilterType(configForm.model_filter_type)
+  if (type === 'all') {
+    return { type: 'all', models: [] }
+  }
+  return {
+    type,
+    models: normalizeModelNames(configForm.model_filter_models),
+  }
 }
 
 function parseBlockedKeywords(value: string): string[] {
