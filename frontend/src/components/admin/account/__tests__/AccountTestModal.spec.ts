@@ -61,7 +61,16 @@ function createStreamResponse(lines: string[]) {
   } as Response
 }
 
-function mountModal() {
+type MountAccount = {
+  id: number
+  name: string
+  platform: string
+  type: string
+  status: string
+  error_message?: string | null
+}
+
+function mountModal(account?: Partial<MountAccount>) {
   return mount(AccountTestModal, {
     props: {
       show: false,
@@ -71,13 +80,30 @@ function mountModal() {
         platform: 'gemini',
         type: 'apikey',
         status: 'error',
-        error_message: 'previous failure'
+        error_message: 'previous failure',
+        ...account
       }
     } as any,
     global: {
       stubs: {
         BaseDialog: { template: '<div><slot /><slot name="footer" /></div>' },
-        Select: { template: '<div class="select-stub"></div>' },
+        Select: {
+          props: ['modelValue', 'options', 'valueKey', 'labelKey'],
+          emits: ['update:modelValue'],
+          template: `
+            <div class="select-stub">
+              <button
+                v-for="option in options"
+                :key="String(option[valueKey || 'value'])"
+                class="select-option-stub"
+                type="button"
+                @click="$emit('update:modelValue', option[valueKey || 'value'])"
+              >
+                {{ option[labelKey || 'label'] }}
+              </button>
+            </div>
+          `
+        },
         TextArea: {
           props: ['modelValue'],
           emits: ['update:modelValue'],
@@ -118,7 +144,7 @@ describe('AccountTestModal', () => {
       createStreamResponse([
         'data: {"type":"test_start","model":"gemini-2.5-flash-image"}\n',
         'data: {"type":"image","image_url":"data:image/png;base64,QUJD","mime_type":"image/png"}\n',
-        'data: {"type":"test_complete","success":true,"duration_ms":2000,"first_token_ms":400,"input_tokens":12,"output_tokens":8,"total_tokens":20,"output_chars":18,"image_count":1}\n'
+        'data: {"type":"test_complete","success":true,"duration_ms":2000,"first_token_ms":400,"generation_ms":1600,"input_tokens":12,"output_tokens":8,"total_tokens":20,"output_chars":18,"image_count":1}\n'
       ])
     ) as any
   })
@@ -156,9 +182,60 @@ describe('AccountTestModal', () => {
     expect(preview.exists()).toBe(true)
     expect(preview.attributes('src')).toBe('data:image/png;base64,QUJD')
     expect(wrapper.text()).toContain('admin.accounts.testPassedThisRun')
-    expect(wrapper.text()).toContain('4.00 admin.accounts.testMetrics.tokensPerSecondUnit')
+    expect(wrapper.text()).toContain('5.00 admin.accounts.testMetrics.tokensPerSecondUnit')
     expect(wrapper.text()).toContain('20')
     expect(getById).toHaveBeenCalledWith(42)
     expect(wrapper.emitted('tested')?.[0]?.[0]).toMatchObject({ id: 42, status: 'active' })
+  })
+
+  it('速度测试模式会发送 speed mode 并优先展示后端吞吐率', async () => {
+    getAvailableModels.mockResolvedValue([
+      { id: 'gpt-5.4', display_name: 'GPT 5.4' }
+    ])
+    getById.mockResolvedValue({
+      id: 42,
+      name: 'OpenAI Speed Test',
+      platform: 'openai',
+      type: 'apikey',
+      status: 'active',
+      error_message: null
+    })
+    global.fetch = vi.fn().mockResolvedValue(
+      createStreamResponse([
+        'data: {"type":"test_start","model":"gpt-5.4","mode":"speed"}\n',
+        'data: {"type":"content","text":"benchmark output"}\n',
+        'data: {"type":"test_complete","success":true,"duration_ms":3000,"first_token_ms":500,"generation_ms":2500,"input_tokens":180,"output_tokens":750,"total_tokens":930,"output_chars":3200,"output_tokens_per_second":300,"output_chars_per_second":1280}\n'
+      ])
+    ) as any
+
+    const wrapper = mountModal({
+      name: 'OpenAI Speed Test',
+      platform: 'openai',
+      status: 'active'
+    })
+    await wrapper.setProps({ show: true })
+    await flushPromises()
+
+    const speedOption = wrapper.findAll('button.select-option-stub')
+      .find((button) => button.text().includes('admin.accounts.openai.testModeSpeed'))
+    expect(speedOption).toBeTruthy()
+    await speedOption!.trigger('click')
+
+    const startButton = wrapper.findAll('button')
+      .find((button) => button.text().includes('admin.accounts.startTest'))
+    expect(startButton).toBeTruthy()
+    await startButton!.trigger('click')
+    await flushPromises()
+    await flushPromises()
+
+    const [, request] = (global.fetch as any).mock.calls[0]
+    expect(JSON.parse(request.body)).toEqual({
+      model_id: 'gpt-5.4',
+      prompt: '',
+      mode: 'speed'
+    })
+    expect(wrapper.text()).toContain('admin.accounts.sendingSpeedTestMessage')
+    expect(wrapper.text()).toContain('300.0 admin.accounts.testMetrics.tokensPerSecondUnit')
+    expect(wrapper.text()).toContain('admin.accounts.speedTestMode')
   })
 })

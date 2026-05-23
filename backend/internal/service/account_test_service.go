@@ -39,26 +39,30 @@ const (
 
 // TestEvent represents a SSE event for account testing
 type TestEvent struct {
-	Type                string `json:"type"`
-	Text                string `json:"text,omitempty"`
-	Model               string `json:"model,omitempty"`
-	Status              string `json:"status,omitempty"`
-	Code                string `json:"code,omitempty"`
-	ImageURL            string `json:"image_url,omitempty"`
-	MimeType            string `json:"mime_type,omitempty"`
-	Data                any    `json:"data,omitempty"`
-	Success             bool   `json:"success,omitempty"`
-	Error               string `json:"error,omitempty"`
-	DurationMs          int64  `json:"duration_ms,omitempty"`
-	FirstTokenMs        int64  `json:"first_token_ms,omitempty"`
-	InputTokens         int    `json:"input_tokens,omitempty"`
-	OutputTokens        int    `json:"output_tokens,omitempty"`
-	TotalTokens         int    `json:"total_tokens,omitempty"`
-	CacheCreationTokens int    `json:"cache_creation_tokens,omitempty"`
-	CacheReadTokens     int    `json:"cache_read_tokens,omitempty"`
-	ImageOutputTokens   int    `json:"image_output_tokens,omitempty"`
-	OutputChars         int    `json:"output_chars,omitempty"`
-	ImageCount          int    `json:"image_count,omitempty"`
+	Type                string  `json:"type"`
+	Text                string  `json:"text,omitempty"`
+	Model               string  `json:"model,omitempty"`
+	Mode                string  `json:"mode,omitempty"`
+	Status              string  `json:"status,omitempty"`
+	Code                string  `json:"code,omitempty"`
+	ImageURL            string  `json:"image_url,omitempty"`
+	MimeType            string  `json:"mime_type,omitempty"`
+	Data                any     `json:"data,omitempty"`
+	Success             bool    `json:"success,omitempty"`
+	Error               string  `json:"error,omitempty"`
+	DurationMs          int64   `json:"duration_ms,omitempty"`
+	FirstTokenMs        int64   `json:"first_token_ms,omitempty"`
+	GenerationMs        int64   `json:"generation_ms,omitempty"`
+	OutputTokensPerSec  float64 `json:"output_tokens_per_second,omitempty"`
+	OutputCharsPerSec   float64 `json:"output_chars_per_second,omitempty"`
+	InputTokens         int     `json:"input_tokens,omitempty"`
+	OutputTokens        int     `json:"output_tokens,omitempty"`
+	TotalTokens         int     `json:"total_tokens,omitempty"`
+	CacheCreationTokens int     `json:"cache_creation_tokens,omitempty"`
+	CacheReadTokens     int     `json:"cache_read_tokens,omitempty"`
+	ImageOutputTokens   int     `json:"image_output_tokens,omitempty"`
+	OutputChars         int     `json:"output_chars,omitempty"`
+	ImageCount          int     `json:"image_count,omitempty"`
 }
 
 type accountTestMetrics struct {
@@ -129,6 +133,10 @@ func (m *accountTestMetrics) CompletionEvent(success bool, errMsg string) TestEv
 	if !m.firstTokenTime.IsZero() {
 		event.FirstTokenMs = m.firstTokenTime.Sub(m.startTime).Milliseconds()
 	}
+	event.GenerationMs = event.DurationMs
+	if event.FirstTokenMs > 0 && event.DurationMs > event.FirstTokenMs {
+		event.GenerationMs = event.DurationMs - event.FirstTokenMs
+	}
 	event.InputTokens = m.inputTokens
 	event.OutputTokens = m.outputTokens
 	event.TotalTokens = m.inputTokens + m.outputTokens + m.cacheCreationTokens + m.cacheReadTokens + m.imageOutputTokens
@@ -137,6 +145,15 @@ func (m *accountTestMetrics) CompletionEvent(success bool, errMsg string) TestEv
 	event.ImageOutputTokens = m.imageOutputTokens
 	event.OutputChars = m.outputChars
 	event.ImageCount = m.imageCount
+	if event.GenerationMs > 0 {
+		seconds := float64(event.GenerationMs) / 1000
+		if event.OutputTokens > 0 {
+			event.OutputTokensPerSec = float64(event.OutputTokens) / seconds
+		}
+		if event.OutputChars > 0 {
+			event.OutputCharsPerSec = float64(event.OutputChars) / seconds
+		}
+	}
 	return event
 }
 
@@ -212,6 +229,8 @@ const (
 	defaultGeminiTextTestPrompt  = "hi"
 	defaultGeminiImageTestPrompt = "Generate a cute orange cat astronaut sticker on a clean pastel background."
 	defaultOpenAIImageTestPrompt = "Generate a cute orange cat astronaut sticker on a clean pastel background."
+	speedTestOutputTokens        = 1024
+	speedTestPrompt              = "Generate a sustained throughput benchmark response. Write a detailed, coherent technical note about API gateway latency, streaming token delivery, queueing, and measurement methodology. Keep writing until you reach the response limit. Do not summarize early."
 )
 
 // isOpenAIImageModel checks if the model is an OpenAI image generation model (e.g. gpt-image-2).
@@ -283,11 +302,18 @@ func generateSessionString() (string, error) {
 	return FormatMetadataUserID(hex64, "", sessionUUID, uaVersion), nil
 }
 
-// createTestPayload creates a Claude Code style test request payload
-func createTestPayload(modelID string) (map[string]any, error) {
+// createTestPayload creates a Claude Code style test request payload.
+func createTestPayload(modelID string, mode string) (map[string]any, error) {
 	sessionID, err := generateSessionString()
 	if err != nil {
 		return nil, err
+	}
+
+	textPrompt := "hi"
+	maxTokens := 1024
+	if normalizeAccountTestMode(mode) == AccountTestModeSpeed {
+		textPrompt = speedTestPrompt
+		maxTokens = speedTestOutputTokens
 	}
 
 	return map[string]any{
@@ -298,7 +324,7 @@ func createTestPayload(modelID string) (map[string]any, error) {
 				"content": []map[string]any{
 					{
 						"type": "text",
-						"text": "hi",
+						"text": textPrompt,
 						"cache_control": map[string]string{
 							"type": "ephemeral",
 						},
@@ -318,7 +344,7 @@ func createTestPayload(modelID string) (map[string]any, error) {
 		"metadata": map[string]string{
 			"user_id": sessionID,
 		},
-		"max_tokens":  1024,
+		"max_tokens":  maxTokens,
 		"temperature": 1,
 		"stream":      true,
 	}, nil
@@ -327,9 +353,11 @@ func createTestPayload(modelID string) (map[string]any, error) {
 // TestAccountConnection tests an account's connection by sending a test request
 // All account types use full Claude Code client characteristics, only auth header differs
 // modelID is optional - if empty, defaults to claude.DefaultTestModel
-// mode is optional - "compact" routes OpenAI accounts to the /responses/compact probe path
+// mode is optional. "compact" routes OpenAI accounts to /responses/compact;
+// "speed" sends a longer streaming generation to estimate output throughput.
 func (s *AccountTestService) TestAccountConnection(c *gin.Context, accountID int64, modelID string, prompt string, mode string) error {
 	ctx := c.Request.Context()
+	normalizedMode := normalizeAccountTestMode(mode)
 
 	// Get account
 	account, err := s.accountRepo.GetByID(ctx, accountID)
@@ -339,23 +367,24 @@ func (s *AccountTestService) TestAccountConnection(c *gin.Context, accountID int
 
 	// Route to platform-specific test method
 	if account.IsOpenAI() {
-		return s.testOpenAIAccountConnection(c, account, modelID, prompt, normalizeAccountTestMode(mode))
+		return s.testOpenAIAccountConnection(c, account, modelID, prompt, normalizedMode)
 	}
 
 	if account.IsGemini() {
-		return s.testGeminiAccountConnection(c, account, modelID, prompt)
+		return s.testGeminiAccountConnection(c, account, modelID, prompt, normalizedMode)
 	}
 
 	if account.Platform == PlatformAntigravity {
-		return s.routeAntigravityTest(c, account, modelID, prompt)
+		return s.routeAntigravityTest(c, account, modelID, prompt, normalizedMode)
 	}
 
-	return s.testClaudeAccountConnection(c, account, modelID)
+	return s.testClaudeAccountConnection(c, account, modelID, normalizedMode)
 }
 
 // testClaudeAccountConnection tests an Anthropic Claude account's connection
-func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account *Account, modelID string) error {
+func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account *Account, modelID string, mode string) error {
 	ctx := c.Request.Context()
+	mode = normalizeAccountTestMode(mode)
 
 	// Determine the model to use
 	testModelID := modelID
@@ -370,10 +399,13 @@ func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account
 
 	// Bedrock accounts use a separate test path
 	if account.IsBedrock() {
+		if mode == AccountTestModeSpeed {
+			return s.sendErrorAndEnd(c, "Speed test mode is not supported for Bedrock accounts")
+		}
 		return s.testBedrockAccountConnection(c, ctx, account, testModelID)
 	}
 	if account.Type == AccountTypeServiceAccount {
-		return s.testClaudeVertexServiceAccountConnection(c, ctx, account, testModelID)
+		return s.testClaudeVertexServiceAccountConnection(c, ctx, account, testModelID, mode)
 	}
 
 	// Determine authentication method and API URL
@@ -420,14 +452,14 @@ func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account
 	metrics := newAccountTestMetrics()
 
 	// Create Claude Code style payload (same for all account types)
-	payload, err := createTestPayload(testModelID)
+	payload, err := createTestPayload(testModelID, mode)
 	if err != nil {
 		return s.sendErrorAndEnd(c, "Failed to create test payload")
 	}
 	payloadBytes, _ := json.Marshal(payload)
 
 	// Send test_start event
-	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID, Mode: mode})
 
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(payloadBytes))
 	if err != nil {
@@ -480,7 +512,8 @@ func (s *AccountTestService) testClaudeAccountConnection(c *gin.Context, account
 	return s.processClaudeStreamWithMetrics(c, resp.Body, metrics)
 }
 
-func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Context, ctx context.Context, account *Account, testModelID string) error {
+func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Context, ctx context.Context, account *Account, testModelID string, mode string) error {
+	mode = normalizeAccountTestMode(mode)
 	if mappedModel, matched := account.ResolveMappedModel(testModelID); matched {
 		testModelID = mappedModel
 	} else {
@@ -495,7 +528,7 @@ func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Con
 
 	metrics := newAccountTestMetrics()
 
-	payload, err := createTestPayload(testModelID)
+	payload, err := createTestPayload(testModelID, mode)
 	if err != nil {
 		return s.sendErrorAndEnd(c, "Failed to create test payload")
 	}
@@ -518,7 +551,7 @@ func (s *AccountTestService) testClaudeVertexServiceAccountConnection(c *gin.Con
 		return s.sendErrorAndEnd(c, fmt.Sprintf("Failed to build Vertex URL: %s", err.Error()))
 	}
 
-	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID, Mode: mode})
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fullURL, bytes.NewReader(vertexBody))
 	if err != nil {
@@ -676,6 +709,9 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 
 	// Route to image generation test if an image model is selected
 	if isOpenAIImageModel(testModelID) {
+		if mode == AccountTestModeSpeed {
+			return s.sendErrorAndEnd(c, "Speed test mode is not supported for image generation models")
+		}
 		imagePrompt := strings.TrimSpace(prompt)
 		if imagePrompt == "" {
 			imagePrompt = defaultOpenAIImageTestPrompt
@@ -719,7 +755,7 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 			return s.sendErrorAndEnd(c, fmt.Sprintf("Invalid base URL: %s", err.Error()))
 		}
 		if !openai_compat.ShouldUseResponsesAPI(account.Extra) {
-			return s.testOpenAIChatCompletionsConnection(c, account, testModelID, prompt, normalizedBaseURL, authToken)
+			return s.testOpenAIChatCompletionsConnection(c, account, testModelID, prompt, mode, normalizedBaseURL, authToken)
 		}
 		apiURL = buildOpenAIResponsesURL(normalizedBaseURL)
 	} else {
@@ -736,11 +772,11 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 	metrics := newAccountTestMetrics()
 
 	// Create OpenAI Responses API payload
-	payload := createOpenAITestPayload(testModelID, isOAuth)
+	payload := createOpenAITestPayload(testModelID, isOAuth, mode)
 	payloadBytes, _ := json.Marshal(payload)
 
 	// Send test_start event
-	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID, Mode: mode})
 
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(payloadBytes))
 	if err != nil {
@@ -803,10 +839,12 @@ func (s *AccountTestService) testOpenAIChatCompletionsConnection(
 	account *Account,
 	testModelID string,
 	prompt string,
+	mode string,
 	normalizedBaseURL string,
 	authToken string,
 ) error {
 	ctx := c.Request.Context()
+	mode = normalizeAccountTestMode(mode)
 	apiURL := buildOpenAIChatCompletionsURL(normalizedBaseURL)
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -815,10 +853,10 @@ func (s *AccountTestService) testOpenAIChatCompletionsConnection(
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
 
-	payload := createOpenAIChatCompletionsTestPayload(testModelID, prompt)
+	payload := createOpenAIChatCompletionsTestPayload(testModelID, prompt, mode)
 	payloadBytes, _ := json.Marshal(payload)
 
-	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID, Mode: mode})
 	s.sendEvent(c, TestEvent{Type: "status", Text: "正在通过 /v1/chat/completions 测试连接"})
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(payloadBytes))
@@ -900,7 +938,7 @@ func (s *AccountTestService) testOpenAICompactConnection(c *gin.Context, account
 	metrics := newAccountTestMetrics()
 
 	payloadBytes, _ := json.Marshal(createOpenAICompactProbePayload(testModelID))
-	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID, Mode: AccountTestModeCompact})
 
 	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(payloadBytes))
 	if err != nil {
@@ -1007,9 +1045,10 @@ func (s *AccountTestService) reconcileOpenAI429State(ctx context.Context, accoun
 	}
 }
 
-// testGeminiAccountConnection tests a Gemini account's connection
-func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account *Account, modelID string, prompt string) error {
+// testGeminiAccountConnection tests a Gemini account's connection.
+func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account *Account, modelID string, prompt string, mode string) error {
 	ctx := c.Request.Context()
+	mode = normalizeAccountTestMode(mode)
 
 	// Determine the model to use
 	testModelID := modelID
@@ -1026,6 +1065,9 @@ func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account
 			}
 		}
 	}
+	if mode == AccountTestModeSpeed && isImageGenerationModel(testModelID) {
+		return s.sendErrorAndEnd(c, "Speed test mode is not supported for image generation models")
+	}
 
 	// Set SSE headers
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -1036,7 +1078,7 @@ func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account
 	metrics := newAccountTestMetrics()
 
 	// Create test payload (Gemini format)
-	payload := createGeminiTestPayload(testModelID, prompt)
+	payload := createGeminiTestPayload(testModelID, prompt, mode)
 
 	// Build request based on account type
 	var req *http.Request
@@ -1058,7 +1100,7 @@ func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account
 	}
 
 	// Send test_start event
-	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID, Mode: mode})
 
 	// Get proxy and execute request
 	proxyURL := ""
@@ -1083,12 +1125,16 @@ func (s *AccountTestService) testGeminiAccountConnection(c *gin.Context, account
 
 // routeAntigravityTest 路由 Antigravity 账号的测试请求。
 // APIKey 类型走原生协议（与 gateway_handler 路由一致），OAuth/Upstream 走 CRS 中转。
-func (s *AccountTestService) routeAntigravityTest(c *gin.Context, account *Account, modelID string, prompt string) error {
+func (s *AccountTestService) routeAntigravityTest(c *gin.Context, account *Account, modelID string, prompt string, mode string) error {
+	mode = normalizeAccountTestMode(mode)
 	if account.Type == AccountTypeAPIKey {
 		if strings.HasPrefix(modelID, "gemini-") {
-			return s.testGeminiAccountConnection(c, account, modelID, prompt)
+			return s.testGeminiAccountConnection(c, account, modelID, prompt, mode)
 		}
-		return s.testClaudeAccountConnection(c, account, modelID)
+		return s.testClaudeAccountConnection(c, account, modelID, mode)
+	}
+	if mode == AccountTestModeSpeed {
+		return s.sendErrorAndEnd(c, "Speed test mode is only supported for Antigravity API Key accounts")
 	}
 	return s.testAntigravityAccountConnection(c, account, modelID)
 }
@@ -1259,7 +1305,8 @@ func (s *AccountTestService) buildCodeAssistRequest(ctx context.Context, accessT
 
 // createGeminiTestPayload creates a minimal test payload for Gemini API.
 // Image models use the image-generation path so the frontend can preview the returned image.
-func createGeminiTestPayload(modelID string, prompt string) []byte {
+func createGeminiTestPayload(modelID string, prompt string, mode string) []byte {
+	mode = normalizeAccountTestMode(mode)
 	if isImageGenerationModel(modelID) {
 		imagePrompt := strings.TrimSpace(prompt)
 		if imagePrompt == "" {
@@ -1290,6 +1337,9 @@ func createGeminiTestPayload(modelID string, prompt string) []byte {
 	if textPrompt == "" {
 		textPrompt = defaultGeminiTextTestPrompt
 	}
+	if mode == AccountTestModeSpeed {
+		textPrompt = speedTestPrompt
+	}
 
 	payload := map[string]any{
 		"contents": []map[string]any{
@@ -1305,6 +1355,12 @@ func createGeminiTestPayload(modelID string, prompt string) []byte {
 				{"text": "You are a helpful AI assistant."},
 			},
 		},
+	}
+	if mode == AccountTestModeSpeed {
+		payload["generationConfig"] = map[string]any{
+			"maxOutputTokens": speedTestOutputTokens,
+			"temperature":     1,
+		}
 	}
 	bytes, _ := json.Marshal(payload)
 	return bytes
@@ -1393,8 +1449,13 @@ func (s *AccountTestService) processGeminiStreamWithMetrics(c *gin.Context, body
 	}
 }
 
-// createOpenAITestPayload creates a test payload for OpenAI Responses API
-func createOpenAITestPayload(modelID string, isOAuth bool) map[string]any {
+// createOpenAITestPayload creates a test payload for OpenAI Responses API.
+func createOpenAITestPayload(modelID string, isOAuth bool, mode string) map[string]any {
+	textPrompt := "hi"
+	if normalizeAccountTestMode(mode) == AccountTestModeSpeed {
+		textPrompt = speedTestPrompt
+	}
+
 	payload := map[string]any{
 		"model": modelID,
 		"input": []map[string]any{
@@ -1403,12 +1464,15 @@ func createOpenAITestPayload(modelID string, isOAuth bool) map[string]any {
 				"content": []map[string]any{
 					{
 						"type": "input_text",
-						"text": "hi",
+						"text": textPrompt,
 					},
 				},
 			},
 		},
 		"stream": true,
+	}
+	if normalizeAccountTestMode(mode) == AccountTestModeSpeed {
+		payload["max_output_tokens"] = speedTestOutputTokens
 	}
 
 	// OAuth accounts using ChatGPT internal API require store: false
@@ -1422,13 +1486,17 @@ func createOpenAITestPayload(modelID string, isOAuth bool) map[string]any {
 	return payload
 }
 
-func createOpenAIChatCompletionsTestPayload(modelID string, prompt string) map[string]any {
+func createOpenAIChatCompletionsTestPayload(modelID string, prompt string, mode string) map[string]any {
 	testPrompt := strings.TrimSpace(prompt)
 	if testPrompt == "" {
 		testPrompt = "hi"
 	}
+	speedMode := normalizeAccountTestMode(mode) == AccountTestModeSpeed
+	if speedMode {
+		testPrompt = speedTestPrompt
+	}
 
-	return map[string]any{
+	payload := map[string]any{
 		"model": modelID,
 		"messages": []map[string]any{
 			{
@@ -1438,6 +1506,10 @@ func createOpenAIChatCompletionsTestPayload(modelID string, prompt string) map[s
 		},
 		"stream": true,
 	}
+	if speedMode {
+		payload["max_tokens"] = speedTestOutputTokens
+	}
+	return payload
 }
 
 func (s *AccountTestService) processClaudeStreamWithMetrics(c *gin.Context, body io.Reader, metrics *accountTestMetrics) error {

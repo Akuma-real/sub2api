@@ -45,6 +45,19 @@ Sub2API 是一个 AI API 网关平台，用于分发和管理 AI 产品订阅的
 - **管理后台** - Web 界面进行监控和管理
 - **外部系统集成** - 支持通过 iframe 嵌入外部系统（如工单等），扩展管理后台功能
 
+## Akuma Fork 与原版差异
+
+本 fork 持续跟进并合并上游 [Wei-Shaw/sub2api](https://github.com/Wei-Shaw/sub2api)，同时为我的自用部署和发布通道保留以下增强。
+
+- **Akuma 发布与更新通道** - 内置更新检查默认指向 `Akuma-real/sub2api`，支持带 `akuma` 后缀的 prerelease 版本比较，并在 GitHub latest 接口不返回 prerelease 时回退到 release 列表。
+- **前端设计系统** - 前端按 `frontend/DESIGN.md` 重做视觉方向，使用暖色画布、珊瑚色强调、统一的表格/表单/弹窗样式，并补齐移动端布局、选择器、订阅卡片等细节。
+- **模型市场** - 新增用户侧模型市场，按当前用户可访问的分组展示模型、平台、渠道、价格、计费模式、可用状态和调用示例。
+- **可用渠道数据增强** - 用户可见渠道会结合运行时模型目录、分组权限、有效倍率、价格来源和订阅分组信息，减少只看渠道时不清楚模型与价格来源的问题。
+- **账号运维增强** - 新增上游模型发现能力，支持常见平台通过后端和代理探测模型列表；清理旧版账号测试弹窗，并让账号测试支持图片预览、速度测试/压测模式、总耗时、生成耗时、首 token 延迟、吞吐速度、token 用量、缓存用量、输出字符数和图片数量等指标。
+- **OpenAI、Codex 与 Claude Code 兼容** - 增强 Responses/Chat Completions 转换、Codex OAuth 请求规范化、默认 `instructions` 补齐、prompt cache key 透传、无效参数剔除，以及 Claude Code 流式 usage 字段补齐。
+- **计费与市场展示优化** - 简化重复的计费展示，保留订阅分组“专属”选项的手动选择，优化价格卡片和模型/分组可见性展示。
+- **发布镜像优化** - 调整 GoReleaser Docker 镜像构建路径，避免 release 镜像里出现重复二进制层。
+
 ## ❤️ 赞助商
 
 > [想出现在这里？](mailto:support@pincc.ai)

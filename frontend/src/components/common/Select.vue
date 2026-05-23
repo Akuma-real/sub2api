@@ -35,7 +35,7 @@
 
     <!-- Teleport dropdown to body to escape stacking context -->
     <Teleport to="body">
-      <Transition name="select-dropdown">
+      <Transition name="select-dropdown" :css="animateDropdown">
         <div
           v-if="isOpen"
           ref="dropdownRef"
@@ -134,6 +134,8 @@ import Icon from "@/components/icons/Icon.vue";
 
 defineOptions({ inheritAttrs: false });
 
+const selectOpenEventName = "sub2api-select-open";
+
 const { t } = useI18n();
 const attrs = useAttrs();
 const triggerId = computed(() =>
@@ -194,6 +196,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 const isOpen = ref(false);
+const animateDropdown = ref(true);
 const searchQuery = ref("");
 const focusedIndex = ref(-1);
 const containerRef = ref<HTMLElement | null>(null);
@@ -391,9 +394,21 @@ const calculateDropdownPosition = () => {
   });
 };
 
+const openDropdown = () => {
+  if (isOpen.value) return;
+  animateDropdown.value = true;
+  window.dispatchEvent(new CustomEvent(selectOpenEventName, { detail: instanceId }));
+  isOpen.value = true;
+};
+
 const toggle = () => {
   if (props.disabled) return;
-  isOpen.value = !isOpen.value;
+  animateDropdown.value = true;
+  if (isOpen.value) {
+    isOpen.value = false;
+  } else {
+    openDropdown();
+  }
 };
 
 watch(isOpen, (open) => {
@@ -438,7 +453,7 @@ const selectOption = (option: any) => {
 // Keyboards
 const onTriggerKeyDown = () => {
   if (!isOpen.value) {
-    isOpen.value = true;
+    openDropdown();
   }
 };
 
@@ -466,6 +481,7 @@ const onDropdownKeyDown = (e: KeyboardEvent) => {
       break;
     case "Escape":
       e.preventDefault();
+      animateDropdown.value = true;
       isOpen.value = false;
       triggerRef.value?.focus();
       break;
@@ -501,16 +517,30 @@ const handleClickOutside = (event: MouseEvent) => {
   const isInTrigger = containerRef.value?.contains(target);
 
   if (!isInDropdown && !isInTrigger && isOpen.value) {
+    animateDropdown.value = true;
     isOpen.value = false;
+  }
+};
+
+const handlePeerSelectOpen = (event: Event) => {
+  const customEvent = event as CustomEvent<string>;
+  if (customEvent.detail !== instanceId && isOpen.value) {
+    animateDropdown.value = false;
+    isOpen.value = false;
+    nextTick(() => {
+      animateDropdown.value = true;
+    });
   }
 };
 
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
+  window.addEventListener(selectOpenEventName, handlePeerSelectOpen);
 });
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
+  window.removeEventListener(selectOpenEventName, handlePeerSelectOpen);
   window.removeEventListener("scroll", updateTriggerRect, { capture: true });
   window.removeEventListener("resize", calculateDropdownPosition);
 });

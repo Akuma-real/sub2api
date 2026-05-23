@@ -46,6 +46,19 @@ Sub2API is an AI API gateway platform designed to distribute and manage API quot
 - **Admin Dashboard** - Web interface for monitoring and management
 - **External System Integration** - Embed external systems (e.g. ticketing) via iframe to extend the admin dashboard
 
+## Akuma Fork Differences
+
+This fork tracks the upstream [Wei-Shaw/sub2api](https://github.com/Wei-Shaw/sub2api) project and keeps upstream changes merged, while carrying additional behavior for my own deployment and release channel.
+
+- **Akuma release and update channel** - Built-in update checks target `Akuma-real/sub2api` by default, with prerelease-aware version comparison and fallback handling for GitHub releases.
+- **Frontend design system** - The web UI is restyled around `frontend/DESIGN.md`, with a warm canvas, coral accents, revised tables/forms/dialogs, mobile layout fixes, and design-aligned admin/user pages.
+- **Model marketplace** - Adds a user-facing model marketplace that shows visible models, platforms, channels, groups, pricing, billing modes, availability, and request examples based on the user's accessible groups.
+- **Richer available-channel data** - User-visible channels can be enriched with runtime model catalogs, group visibility, effective rate multipliers, pricing source information, and subscription-group context.
+- **Account operations improvements** - Adds upstream model discovery for supported account types, improves bulk/account UI flows, removes the stale legacy account-test modal, and expands account testing with image previews, speed/pressure-test mode, duration, generation time, first-token latency, throughput, token usage, cache usage, output characters, and image counts.
+- **OpenAI, Codex, and Claude Code compatibility** - Improves Responses/Chat Completions bridging, Codex OAuth request normalization, default `instructions` handling, prompt cache key propagation, unsupported parameter stripping, and Claude Code stream usage normalization.
+- **Billing and marketplace UX refinements** - Simplifies duplicated billing displays, preserves manual subscription exclusivity choices, improves pricing-card layout, and makes model/group visibility easier to inspect.
+- **Release image cleanup** - Adjusts the GoReleaser Docker image path to avoid duplicate binary layers in release images.
+
 ## ❤️ Sponsors
 
 > [Want to appear here?](mailto:support@pincc.ai)

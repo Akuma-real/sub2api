@@ -63,4 +63,34 @@ describe('Select', () => {
 
     wrapper.unmount()
   })
+
+  it('closes another open dropdown before opening the current one', async () => {
+    const first = mount(Select, {
+      props: {
+        modelValue: '',
+        options
+      },
+      attachTo: document.body
+    })
+    const second = mount(Select, {
+      props: {
+        modelValue: 'openai',
+        options
+      },
+      attachTo: document.body
+    })
+
+    await first.find('.select-trigger').trigger('click')
+    expect(document.body.querySelectorAll('.select-dropdown-portal')).toHaveLength(1)
+
+    await second.find('.select-trigger').trigger('click')
+    await second.vm.$nextTick()
+
+    expect(document.body.querySelectorAll('.select-dropdown-portal')).toHaveLength(1)
+    expect(first.find('.select-trigger').attributes('aria-expanded')).toBe('false')
+    expect(second.find('.select-trigger').attributes('aria-expanded')).toBe('true')
+
+    first.unmount()
+    second.unmount()
+  })
 })

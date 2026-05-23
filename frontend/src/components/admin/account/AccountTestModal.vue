@@ -66,13 +66,13 @@
         />
       </div>
 
-      <div v-if="isOpenAIAccount" class="space-y-1.5">
+      <div v-if="testModeOptions.length > 1" class="space-y-1.5">
         <label class="text-sm font-medium text-body">
-          {{ t('admin.accounts.openai.testMode') }}
+          {{ t('admin.accounts.testMode') }}
         </label>
         <Select
           v-model="testMode"
-          :options="openAITestModeOptions"
+          :options="testModeOptions"
           :disabled="status === 'connecting'"
         />
       </div>
@@ -231,6 +231,8 @@
           {{
             supportsImageTest
               ? t('admin.accounts.imageTestMode')
+              : testMode === 'speed'
+                ? t('admin.accounts.speedTestMode')
               : t('admin.accounts.testPrompt')
           }}
         </span>
@@ -311,6 +313,9 @@ interface PreviewImage {
 interface TestMetrics {
   duration_ms?: number
   first_token_ms?: number
+  generation_ms?: number
+  output_tokens_per_second?: number
+  output_chars_per_second?: number
   input_tokens?: number
   output_tokens?: number
   total_tokens?: number
@@ -325,6 +330,7 @@ type TestEvent = TestMetrics & {
   type: string
   text?: string
   model?: string
+  mode?: AccountTestMode
   success?: boolean
   error?: string
   image_url?: string
@@ -337,6 +343,8 @@ type MetricItem = {
   value: string
   icon: 'clock' | 'bolt' | 'chart' | 'chat'
 }
+
+type AccountTestMode = 'default' | 'speed'
 
 const props = defineProps<{
   show: boolean
@@ -361,14 +369,9 @@ let abortController: AbortController | null = null
 const generatedImages = ref<PreviewImage[]>([])
 const refreshedAccount = ref<Account | null>(null)
 const metrics = ref<TestMetrics | null>(null)
-const testMode = ref<'default' | 'compact'>('default')
+const testMode = ref<AccountTestMode>('default')
 const previewImageUrl = ref('')
 const prioritizedGeminiModels = ['gemini-3.1-flash-image', 'gemini-2.5-flash-image', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-2.0-flash']
-const isOpenAIAccount = computed(() => props.account?.platform === 'openai')
-const openAITestModeOptions = computed<SelectOption[]>(() => [
-  { value: 'default', label: t('admin.accounts.openai.testModeDefault') },
-  { value: 'compact', label: t('admin.accounts.openai.testModeCompact') }
-])
 const supportsGeminiImageTest = computed(() => {
   const modelID = selectedModelId.value.toLowerCase()
   if (!modelID.startsWith('gemini-') || !modelID.includes('-image')) return false
@@ -383,6 +386,23 @@ const supportsOpenAIImageTest = computed(() => {
 })
 
 const supportsImageTest = computed(() => supportsGeminiImageTest.value || supportsOpenAIImageTest.value)
+const supportsSpeedTest = computed(() => {
+  const account = props.account
+  if (!account) return false
+  if (account.platform === 'openai' || account.platform === 'gemini' || account.platform === 'anthropic') {
+    return account.type !== 'bedrock' && account.type !== 'upstream'
+  }
+  return account.platform === 'antigravity' && account.type === 'apikey'
+})
+const testModeOptions = computed<SelectOption[]>(() => {
+  const options: SelectOption[] = [
+    { value: 'default', label: t('admin.accounts.openai.testModeDefault') }
+  ]
+  if (supportsSpeedTest.value && !supportsImageTest.value) {
+    options.push({ value: 'speed', label: t('admin.accounts.openai.testModeSpeed') })
+  }
+  return options
+})
 const displayAccount = computed(() => refreshedAccount.value || props.account)
 const testedAsHealthy = computed(() => status.value === 'success')
 const accountIconName = computed(() => {
@@ -422,12 +442,23 @@ const primaryMetricItems = computed<MetricItem[]>(() => {
   const data = metrics.value
   if (!data) return []
   const durationMs = Number(data.duration_ms || 0)
+  const generationMs = Number(data.generation_ms || 0) || durationMs
   const outputTokens = Number(data.output_tokens || 0)
   const outputChars = Number(data.output_chars || 0)
   const images = Number(data.image_count || 0)
   const throughputValue = outputTokens > 0
-    ? formatPerSecond(outputTokens, durationMs, t('admin.accounts.testMetrics.tokensPerSecondUnit'))
-    : formatPerSecond(outputChars, durationMs, t('admin.accounts.testMetrics.charsPerSecondUnit'))
+    ? formatPerSecond(
+        Number(data.output_tokens_per_second || 0),
+        outputTokens,
+        generationMs,
+        t('admin.accounts.testMetrics.tokensPerSecondUnit')
+      )
+    : formatPerSecond(
+        Number(data.output_chars_per_second || 0),
+        outputChars,
+        generationMs,
+        t('admin.accounts.testMetrics.charsPerSecondUnit')
+      )
 
   return [
     {
@@ -461,14 +492,22 @@ const primaryMetricItems = computed<MetricItem[]>(() => {
 const tokenMetricItems = computed(() => {
   const data = metrics.value
   if (!data || !hasUsageTokens.value) return []
-  return [
+  const items = [
     { key: 'input', label: t('admin.accounts.testMetrics.inputTokens'), value: formatNumber(data.input_tokens || 0) },
     { key: 'output', label: t('admin.accounts.testMetrics.outputTokens'), value: formatNumber(data.output_tokens || 0) },
     { key: 'total', label: t('admin.accounts.testMetrics.totalTokens'), value: formatNumber(data.total_tokens || 0) },
     { key: 'cache-create', label: t('admin.accounts.testMetrics.cacheCreationTokens'), value: formatNumber(data.cache_creation_tokens || 0) },
     { key: 'cache-read', label: t('admin.accounts.testMetrics.cacheReadTokens'), value: formatNumber(data.cache_read_tokens || 0) },
     { key: 'image-tokens', label: t('admin.accounts.testMetrics.imageTokens'), value: formatNumber(data.image_output_tokens || 0) }
-  ].filter(item => item.value !== '0' || item.key === 'total')
+  ]
+  if (Number(data.generation_ms || 0) > 0) {
+    items.push({
+      key: 'generation',
+      label: t('admin.accounts.testMetrics.generation'),
+      value: formatDurationMs(Number(data.generation_ms))
+    })
+  }
+  return items.filter(item => item.value !== '0' || item.key === 'total')
 })
 
 const sortTestModels = (models: ClaudeModel[]) => {
@@ -492,7 +531,10 @@ const formatDurationMs = (value: number) => {
   return `${(value / 1000).toFixed(value < 10000 ? 2 : 1)}s`
 }
 
-const formatPerSecond = (count: number, durationMs: number, unit: string) => {
+const formatPerSecond = (rate: number, count: number, durationMs: number, unit: string) => {
+  if (Number.isFinite(rate) && rate > 0) {
+    return `${rate.toFixed(rate >= 10 ? 1 : 2)} ${unit}`
+  }
   if (!Number.isFinite(count) || count <= 0 || !Number.isFinite(durationMs) || durationMs <= 0) {
     return '-'
   }
@@ -519,6 +561,24 @@ watch(
 watch(selectedModelId, () => {
   if (supportsImageTest.value && !testPrompt.value.trim()) {
     testPrompt.value = t('admin.accounts.imagePromptDefault')
+  }
+  if (!testModeOptions.value.some(option => option.value === testMode.value)) {
+    testMode.value = 'default'
+  }
+})
+
+watch(
+  () => props.account,
+  () => {
+    if (!testModeOptions.value.some(option => option.value === testMode.value)) {
+      testMode.value = 'default'
+    }
+  }
+)
+
+watch(testModeOptions, (options) => {
+  if (!options.some(option => option.value === testMode.value)) {
+    testMode.value = 'default'
   }
 })
 
@@ -613,7 +673,7 @@ const startTest = async () => {
       body: JSON.stringify({
         model_id: selectedModelId.value,
         prompt: supportsImageTest.value ? testPrompt.value.trim() : '',
-        mode: isOpenAIAccount.value ? testMode.value : 'default'
+        mode: testMode.value
       }),
       signal: abortController.signal
     })
@@ -678,6 +738,9 @@ const refreshTestedAccount = async () => {
 const extractMetrics = (event: TestEvent): TestMetrics => ({
   duration_ms: event.duration_ms,
   first_token_ms: event.first_token_ms,
+  generation_ms: event.generation_ms,
+  output_tokens_per_second: event.output_tokens_per_second,
+  output_chars_per_second: event.output_chars_per_second,
   input_tokens: event.input_tokens,
   output_tokens: event.output_tokens,
   total_tokens: event.total_tokens,
@@ -698,6 +761,8 @@ const handleEvent = (event: TestEvent) => {
       addLine(
         supportsImageTest.value
             ? t('admin.accounts.sendingImageRequest')
+            : (event.mode || testMode.value) === 'speed'
+              ? t('admin.accounts.sendingSpeedTestMessage')
             : t('admin.accounts.sendingTestMessage'),
         'text-muted-soft'
       )
