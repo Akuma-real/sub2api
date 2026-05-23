@@ -300,7 +300,7 @@
                 v-model="filters.from"
                 type="datetime-local"
                 class="input"
-                :title="t('admin.riskControl.filters.from ')"
+                :title="t('admin.riskControl.filters.from')"
                 @change="reloadLogsFromFirstPage"
               />
               <input
