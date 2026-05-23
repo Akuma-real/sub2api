@@ -42,11 +42,11 @@ RUN addgroup -g 1000 sub2api && \
 
 WORKDIR /app
 
-# Copy pre-built binary from GoReleaser
-COPY sub2api /app/sub2api
+# Copy pre-built binary from GoReleaser with ownership to avoid an extra full-layer chown copy
+COPY --chown=sub2api:sub2api sub2api /app/sub2api
 
 # Create data directory
-RUN mkdir -p /app/data && chown -R sub2api:sub2api /app
+RUN mkdir -p /app/data && chown sub2api:sub2api /app/data
 
 # Copy entrypoint script (fixes volume permissions then drops to sub2api)
 COPY deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
