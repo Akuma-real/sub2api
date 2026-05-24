@@ -24,7 +24,10 @@ const i18n = createI18n({
   },
 });
 
-const mountPlanCard = (groupPlatform: string) =>
+const mountPlanCard = (
+  groupPlatform: string,
+  overrides: Partial<InstanceType<typeof SubscriptionPlanCard>["$props"]["plan"]> = {},
+) =>
   mount(SubscriptionPlanCard, {
     props: {
       plan: {
@@ -40,6 +43,7 @@ const mountPlanCard = (groupPlatform: string) =>
         validity_unit: "day",
         supported_model_scopes: ["claude", "gemini_text", "gemini_image"],
         is_active: true,
+        ...overrides,
       },
     },
     global: { plugins: [i18n] },
@@ -60,5 +64,19 @@ describe("SubscriptionPlanCard", () => {
     expect(text).toContain("Claude");
     expect(text).toContain("Gemini");
     expect(text).toContain("Imagen");
+  });
+
+  it("stacks plan identity and price so wide prices do not crush plan names", () => {
+    const wrapper = mountPlanCard("openai", {
+      name: "Codex Plus Lite",
+      original_price: 21000,
+    });
+
+    const headerClasses = wrapper.get('[data-testid="subscription-plan-header"]').classes();
+    const priceClasses = wrapper.get('[data-testid="subscription-plan-price"]').classes();
+
+    expect(headerClasses).toContain("flex-col");
+    expect(headerClasses).not.toContain("sm:flex-row");
+    expect(priceClasses).toContain("w-full");
   });
 });

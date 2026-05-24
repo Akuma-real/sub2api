@@ -5,7 +5,7 @@
       'hover:-translate-y-0.5 hover:shadow-card-hover',
     ]"
   >
-    <div class="flex flex-col gap-4 sm:min-h-[8.25rem] sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+    <div data-testid="subscription-plan-header" class="flex flex-col gap-5 sm:min-h-[8.25rem]">
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2">
           <h3 class="min-w-0 break-words font-display text-lg font-medium leading-tight text-ink">
@@ -21,8 +21,8 @@
         <div v-else class="mt-3 hidden min-h-[2.75rem] sm:block" aria-hidden="true"></div>
       </div>
 
-      <div class="w-full shrink-0 text-left sm:w-auto sm:text-right">
-        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 sm:justify-end">
+      <div data-testid="subscription-plan-price" class="w-full text-left">
+        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span v-if="originalPriceDisplay" class="whitespace-nowrap text-sm text-muted-soft line-through">
             {{ originalPriceDisplay }}
           </span>
@@ -33,7 +33,7 @@
             / {{ validitySuffix }}
           </span>
         </div>
-        <p v-if="discountText" class="mt-1 text-xs font-medium text-primary-700 sm:text-right">
+        <p v-if="discountText" class="mt-1 text-xs font-medium text-primary-700">
           {{ discountText }}
         </p>
       </div>
