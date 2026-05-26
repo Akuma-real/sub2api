@@ -1494,6 +1494,87 @@
             </div>
           </div>
 
+          <div
+            v-else-if="activeSettingsTab === 'riskThresholds'"
+            class="space-y-5"
+          >
+            <div
+              class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+            >
+              <div>
+                <h3 class="text-base font-semibold text-ink">
+                  {{ t("admin.riskControl.riskThresholds") }}
+                </h3>
+                <p class="mt-1 text-sm text-muted">
+                  {{ t("admin.riskControl.riskThresholdsHint") }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-secondary inline-flex items-center justify-center gap-2"
+                @click="resetRiskThresholds"
+              >
+                <Icon name="refresh" size="sm" />
+                {{ t("admin.riskControl.riskThresholdReset") }}
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div
+                v-for="row in riskThresholdRows"
+                :key="row.category"
+                class="rounded-lg border border-hairline-soft bg-surface-soft p-4"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <label
+                      class="block truncate text-sm font-semibold text-ink"
+                      :for="`risk-threshold-${row.category}`"
+                    >
+                      {{ row.category }}
+                    </label>
+                    <p class="mt-1 text-xs text-muted">
+                      {{
+                        t("admin.riskControl.riskThresholdDefault", {
+                          value: formatThresholdPercent(row.defaultValue),
+                        })
+                      }}
+                    </p>
+                  </div>
+                  <span
+                    class="inline-flex shrink-0 rounded-md bg-canvas px-2 py-1 font-mono text-xs font-medium text-body shadow-sm"
+                  >
+                    {{ formatThresholdPercent(row.value) }}
+                  </span>
+                </div>
+                <div class="mt-3">
+                  <label
+                    class="sr-only"
+                    :for="`risk-threshold-${row.category}`"
+                  >
+                    {{ t("admin.riskControl.riskThresholdPercent") }}
+                  </label>
+                  <div class="relative">
+                    <input
+                      :id="`risk-threshold-${row.category}`"
+                      v-model.number="configForm.thresholds[row.category]"
+                      :data-test="`risk-threshold-${row.category}`"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      class="input pr-8 font-mono"
+                    />
+                    <span
+                      class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-soft"
+                      >%</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div v-else-if="activeSettingsTab === 'keywords'" class="space-y-5">
             <div
               class="flex items-start gap-3 rounded-lg border p-4"
@@ -1782,6 +1863,7 @@ type SettingsTab =
   | "scope"
   | "runtime"
   | "response"
+  | "riskThresholds"
   | "keywords"
   | "retention";
 type WorkerSlotState = "active" | "idle" | "disabled";
@@ -1803,11 +1885,32 @@ type ModerationScoreRow = {
   threshold: number;
   hit: boolean;
 };
+type RiskThresholdRow = {
+  category: string;
+  value: number;
+  defaultValue: number;
+};
 
 const maxModerationTestImages = 1;
 const maxModerationTestImageSize = 8 * 1024 * 1024;
 const maxVisibleApiKeyRows: number = 3;
 const blockedKeywordMax = 10000;
+const riskThresholdDefaults: Record<string, number> = {
+  harassment: 98,
+  "harassment/threatening": 90,
+  hate: 65,
+  "hate/threatening": 65,
+  illicit: 95,
+  "illicit/violent": 95,
+  "self-harm": 65,
+  "self-harm/intent": 85,
+  "self-harm/instructions": 65,
+  sexual: 65,
+  "sexual/minors": 65,
+  violence: 95,
+  "violence/graphic": 95,
+};
+const riskThresholdCategories = Object.keys(riskThresholdDefaults);
 
 const { t } = useI18n();
 const appStore = useAppStore();
@@ -1865,6 +1968,7 @@ const configForm = reactive({
   hit_retention_days: 180,
   non_hit_retention_days: 3,
   pre_hash_check_enabled: false,
+  thresholds: { ...riskThresholdDefaults } as Record<string, number>,
   blocked_keywords_text: "",
   keyword_blocking_mode: "keyword_and_api" as KeywordBlockingMode,
   model_filter_type: "all" as ContentModerationModelFilterType,
@@ -1892,6 +1996,7 @@ const settingsTabs = computed<Array<{ id: SettingsTab; label: string }>>(() => [
   { id: "scope", label: t("admin.riskControl.tabs.scope") },
   { id: "runtime", label: t("admin.riskControl.tabs.runtime") },
   { id: "response", label: t("admin.riskControl.tabs.response") },
+  { id: "riskThresholds", label: t("admin.riskControl.tabs.riskThresholds") },
   { id: "keywords", label: t("admin.riskControl.tabs.keywords") },
   { id: "retention", label: t("admin.riskControl.tabs.retention") },
 ]);
@@ -2223,6 +2328,14 @@ const moderationScoreRows = computed<ModerationScoreRow[]>(() => {
     .sort((a, b) => b.score - a.score);
 });
 
+const riskThresholdRows = computed<RiskThresholdRow[]>(() => (
+  riskThresholdCategories.map((category) => ({
+    category,
+    value: configForm.thresholds[category] ?? riskThresholdDefaults[category],
+    defaultValue: riskThresholdDefaults[category],
+  }))
+))
+
 const inputDetailText = computed(() => {
   if (!inputDetailRow.value) return "-";
   return (
@@ -2327,6 +2440,7 @@ function applyConfig(config: ContentModerationConfig) {
     3,
   );
   configForm.pre_hash_check_enabled = config.pre_hash_check_enabled ?? false;
+  configForm.thresholds = riskThresholdsFromConfig(config.thresholds);
   configForm.blocked_keywords_text = Array.isArray(config.blocked_keywords)
     ? config.blocked_keywords.join("\n")
     : "";
@@ -2418,6 +2532,7 @@ async function saveConfig() {
         3,
       ),
       pre_hash_check_enabled: configForm.pre_hash_check_enabled,
+      thresholds: buildRiskThresholdPayload(),
       blocked_keywords: blockedKeywordList.value,
       keyword_blocking_mode: configForm.keyword_blocking_mode,
       model_filter: modelFilterPayload,
@@ -2975,6 +3090,41 @@ function buildModelFilterPayload(): ContentModerationModelFilter {
     type,
     models: normalizeModelNames(configForm.model_filter_models),
   }
+}
+
+function riskThresholdsFromConfig(thresholds: Record<string, number> | null | undefined): Record<string, number> {
+  const out: Record<string, number> = { ...riskThresholdDefaults }
+  for (const category of riskThresholdCategories) {
+    const value = thresholds?.[category]
+    if (Number.isFinite(value)) {
+      out[category] = clampPercent(Number(value) * 100)
+    }
+  }
+  return out
+}
+
+function buildRiskThresholdPayload(): Record<string, number> {
+  const payload: Record<string, number> = {}
+  for (const category of riskThresholdCategories) {
+    payload[category] = Number((clampPercent(configForm.thresholds[category]) / 100).toFixed(4))
+  }
+  return payload
+}
+
+function resetRiskThresholds() {
+  configForm.thresholds = { ...riskThresholdDefaults }
+}
+
+function clampPercent(value: unknown): number {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) {
+    return 0
+  }
+  return Math.min(100, Math.max(0, numeric))
+}
+
+function formatThresholdPercent(value: number): string {
+  return `${clampPercent(value).toFixed(1)}%`
 }
 
 function parseBlockedKeywords(value: string): string[] {
