@@ -30,43 +30,65 @@ func (s *PaymentService) GetWebhookProvider(ctx context.Context, providerKey, ou
 // Official WeChat Pay may require multiple candidates because the callback body
 // cannot be bound to a merchant before decryption.
 func (s *PaymentService) GetWebhookProviders(ctx context.Context, providerKey, outTradeNo string) ([]payment.Provider, error) {
+	return s.GetWebhookProvidersByPaymentID(ctx, providerKey, outTradeNo, "")
+}
+
+// GetWebhookProvidersByPaymentID returns provider candidates using both the
+// merchant order ID and provider payment ID when a webhook includes them.
+func (s *PaymentService) GetWebhookProvidersByPaymentID(ctx context.Context, providerKey, outTradeNo, paymentID string) ([]payment.Provider, error) {
+	providerKey = strings.TrimSpace(providerKey)
+	outTradeNo = strings.TrimSpace(outTradeNo)
+	paymentID = strings.TrimSpace(paymentID)
+
 	if outTradeNo != "" {
 		order, err := s.entClient.PaymentOrder.Query().Where(paymentorder.OutTradeNo(outTradeNo)).Only(ctx)
 		if err == nil {
-			if psHasPinnedProviderInstance(order) {
-				prov, err := s.getPinnedOrderProvider(ctx, order)
-				if err != nil {
-					return nil, err
-				}
-				return []payment.Provider{prov}, nil
-			}
-			inst, err := s.getOrderProviderInstance(ctx, order)
-			if err != nil {
-				return nil, fmt.Errorf("load order provider instance: %w", err)
-			}
-			if inst != nil {
-				prov, err := s.createProviderFromInstance(ctx, inst)
-				if err != nil {
-					return nil, err
-				}
-				return []payment.Provider{prov}, nil
-			}
-			if strings.TrimSpace(providerKey) == payment.TypeWxpay {
-				return s.getEnabledWebhookProvidersByKey(ctx, providerKey)
-			}
-			if !s.webhookRegistryFallbackAllowed(ctx, providerKey) {
-				return nil, fmt.Errorf("webhook provider fallback is ambiguous for %s", providerKey)
-			}
-			s.EnsureProviders(ctx)
-			prov, err := s.registry.GetProviderByKey(providerKey)
-			if err != nil {
-				return nil, err
-			}
-			return []payment.Provider{prov}, nil
+			return s.getWebhookProvidersForOrder(ctx, providerKey, order)
 		}
 	}
 
-	if strings.TrimSpace(providerKey) == payment.TypeWxpay {
+	if providerKey == payment.TypeMuyin && paymentID != "" {
+		order, err := s.entClient.PaymentOrder.Query().
+			Where(
+				paymentorder.PaymentTradeNo(paymentID),
+				paymentorder.ProviderKeyEQ(payment.TypeMuyin),
+			).
+			Only(ctx)
+		if err == nil {
+			return s.getWebhookProvidersForOrder(ctx, providerKey, order)
+		}
+		if !dbent.IsNotFound(err) {
+			return nil, fmt.Errorf("lookup muyin webhook order by payment_id: %w", err)
+		}
+	}
+
+	return s.getWebhookFallbackProviders(ctx, providerKey)
+}
+
+func (s *PaymentService) getWebhookProvidersForOrder(ctx context.Context, providerKey string, order *dbent.PaymentOrder) ([]payment.Provider, error) {
+	if psHasPinnedProviderInstance(order) {
+		prov, err := s.getPinnedOrderProvider(ctx, order)
+		if err != nil {
+			return nil, err
+		}
+		return []payment.Provider{prov}, nil
+	}
+	inst, err := s.getOrderProviderInstance(ctx, order)
+	if err != nil {
+		return nil, fmt.Errorf("load order provider instance: %w", err)
+	}
+	if inst != nil {
+		prov, err := s.createProviderFromInstance(ctx, inst)
+		if err != nil {
+			return nil, err
+		}
+		return []payment.Provider{prov}, nil
+	}
+	return s.getWebhookFallbackProviders(ctx, providerKey)
+}
+
+func (s *PaymentService) getWebhookFallbackProviders(ctx context.Context, providerKey string) ([]payment.Provider, error) {
+	if providerKey == payment.TypeWxpay {
 		return s.getEnabledWebhookProvidersByKey(ctx, providerKey)
 	}
 

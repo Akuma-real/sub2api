@@ -4,18 +4,221 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"math"
 	"testing"
+	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/payment"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+const paymentFulfillmentAffiliateSchema = `
+CREATE TABLE user_affiliates (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    aff_code TEXT NOT NULL UNIQUE,
+    inviter_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL,
+    aff_count INTEGER NOT NULL DEFAULT 0,
+    aff_quota DECIMAL(20,8) NOT NULL DEFAULT 0,
+    aff_history_quota DECIMAL(20,8) NOT NULL DEFAULT 0,
+    aff_rebate_rate_percent DECIMAL(5,2),
+    aff_code_custom BOOLEAN NOT NULL DEFAULT false,
+    aff_frozen_quota DECIMAL(20,8) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_affiliate_ledger (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    amount DECIMAL(20,8) NOT NULL,
+    source_user_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL,
+    source_order_id INTEGER NULL REFERENCES payment_orders(id) ON DELETE SET NULL,
+    frozen_until TIMESTAMP NULL,
+    balance_after DECIMAL(20,8) NULL,
+    aff_quota_after DECIMAL(20,8) NULL,
+    aff_frozen_quota_after DECIMAL(20,8) NULL,
+    aff_history_quota_after DECIMAL(20,8) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_payment_audit_logs_order_action_uniq
+    ON payment_audit_logs(order_id, action);
+`
 
 type paymentFulfillmentTestProvider struct {
 	key            string
 	supportedTypes []payment.PaymentType
+}
+
+type paymentFulfillmentAffiliateRepo struct {
+	client *dbent.Client
+}
+
+func newPaymentFulfillmentAffiliateRepo(client *dbent.Client) *paymentFulfillmentAffiliateRepo {
+	return &paymentFulfillmentAffiliateRepo{client: client}
+}
+
+func (r *paymentFulfillmentAffiliateRepo) clientFromContext(ctx context.Context) *dbent.Client {
+	if tx := dbent.TxFromContext(ctx); tx != nil {
+		return tx.Client()
+	}
+	return r.client
+}
+
+func (r *paymentFulfillmentAffiliateRepo) EnsureUserAffiliate(ctx context.Context, userID int64) (*AffiliateSummary, error) {
+	rows, err := r.clientFromContext(ctx).QueryContext(ctx, `
+		SELECT user_id, aff_code, inviter_id, aff_count, aff_quota, aff_frozen_quota, aff_history_quota,
+		       aff_rebate_rate_percent, created_at, updated_at
+		FROM user_affiliates
+		WHERE user_id = ?
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	if !rows.Next() {
+		return nil, ErrAffiliateProfileNotFound
+	}
+	var summary AffiliateSummary
+	var inviterID sql.NullInt64
+	var customRate sql.NullFloat64
+	requireNoScanErr := rows.Scan(
+		&summary.UserID,
+		&summary.AffCode,
+		&inviterID,
+		&summary.AffCount,
+		&summary.AffQuota,
+		&summary.AffFrozenQuota,
+		&summary.AffHistoryQuota,
+		&customRate,
+		&summary.CreatedAt,
+		&summary.UpdatedAt,
+	)
+	if requireNoScanErr != nil {
+		return nil, requireNoScanErr
+	}
+	if inviterID.Valid {
+		summary.InviterID = &inviterID.Int64
+	}
+	if customRate.Valid {
+		summary.AffRebateRatePercent = &customRate.Float64
+	}
+	return &summary, rows.Err()
+}
+
+func (r *paymentFulfillmentAffiliateRepo) AccrueQuota(ctx context.Context, inviterID, inviteeUserID int64, amount float64, freezeHours int, sourceOrderID *int64) (bool, error) {
+	client := r.clientFromContext(ctx)
+	var res sql.Result
+	var err error
+	if freezeHours > 0 {
+		res, err = client.ExecContext(ctx, `
+			UPDATE user_affiliates
+			SET aff_frozen_quota = aff_frozen_quota + ?, aff_history_quota = aff_history_quota + ?, updated_at = CURRENT_TIMESTAMP
+			WHERE user_id = ?
+		`, amount, amount, inviterID)
+	} else {
+		res, err = client.ExecContext(ctx, `
+			UPDATE user_affiliates
+			SET aff_quota = aff_quota + ?, aff_history_quota = aff_history_quota + ?, updated_at = CURRENT_TIMESTAMP
+			WHERE user_id = ?
+		`, amount, amount, inviterID)
+	}
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return false, nil
+	}
+
+	sourceOrderArg := any(nil)
+	if sourceOrderID != nil {
+		sourceOrderArg = *sourceOrderID
+	}
+	if freezeHours > 0 {
+		_, err = client.ExecContext(ctx, `
+			INSERT INTO user_affiliate_ledger (user_id, action, amount, source_user_id, source_order_id, frozen_until, created_at, updated_at)
+			VALUES (?, 'accrue', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		`, inviterID, amount, inviteeUserID, sourceOrderArg, time.Now().Add(time.Duration(freezeHours)*time.Hour))
+	} else {
+		_, err = client.ExecContext(ctx, `
+			INSERT INTO user_affiliate_ledger (user_id, action, amount, source_user_id, source_order_id, created_at, updated_at)
+			VALUES (?, 'accrue', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		`, inviterID, amount, inviteeUserID, sourceOrderArg)
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *paymentFulfillmentAffiliateRepo) GetAccruedRebateFromInvitee(ctx context.Context, inviterID, inviteeUserID int64) (float64, error) {
+	rows, err := r.clientFromContext(ctx).QueryContext(ctx, `
+		SELECT COALESCE(SUM(amount), 0)
+		FROM user_affiliate_ledger
+		WHERE user_id = ? AND source_user_id = ? AND action = 'accrue'
+	`, inviterID, inviteeUserID)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = rows.Close() }()
+	if !rows.Next() {
+		return 0, rows.Err()
+	}
+	var total float64
+	if err := rows.Scan(&total); err != nil {
+		return 0, err
+	}
+	return total, rows.Err()
+}
+
+func (r *paymentFulfillmentAffiliateRepo) GetAffiliateByCode(context.Context, string) (*AffiliateSummary, error) {
+	panic("unexpected GetAffiliateByCode call")
+}
+func (r *paymentFulfillmentAffiliateRepo) BindInviter(context.Context, int64, int64) (bool, error) {
+	panic("unexpected BindInviter call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ThawFrozenQuota(context.Context, int64) (float64, error) {
+	panic("unexpected ThawFrozenQuota call")
+}
+func (r *paymentFulfillmentAffiliateRepo) TransferQuotaToBalance(context.Context, int64) (float64, float64, error) {
+	panic("unexpected TransferQuotaToBalance call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ListInvitees(context.Context, int64, int) ([]AffiliateInvitee, error) {
+	panic("unexpected ListInvitees call")
+}
+func (r *paymentFulfillmentAffiliateRepo) UpdateUserAffCode(context.Context, int64, string) error {
+	panic("unexpected UpdateUserAffCode call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ResetUserAffCode(context.Context, int64) (string, error) {
+	panic("unexpected ResetUserAffCode call")
+}
+func (r *paymentFulfillmentAffiliateRepo) SetUserRebateRate(context.Context, int64, *float64) error {
+	panic("unexpected SetUserRebateRate call")
+}
+func (r *paymentFulfillmentAffiliateRepo) BatchSetUserRebateRate(context.Context, []int64, *float64) error {
+	panic("unexpected BatchSetUserRebateRate call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ListUsersWithCustomSettings(context.Context, AffiliateAdminFilter) ([]AffiliateAdminEntry, int64, error) {
+	panic("unexpected ListUsersWithCustomSettings call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ListAffiliateInviteRecords(context.Context, AffiliateRecordFilter) ([]AffiliateInviteRecord, int64, error) {
+	panic("unexpected ListAffiliateInviteRecords call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ListAffiliateRebateRecords(context.Context, AffiliateRecordFilter) ([]AffiliateRebateRecord, int64, error) {
+	panic("unexpected ListAffiliateRebateRecords call")
+}
+func (r *paymentFulfillmentAffiliateRepo) ListAffiliateTransferRecords(context.Context, AffiliateRecordFilter) ([]AffiliateTransferRecord, int64, error) {
+	panic("unexpected ListAffiliateTransferRecords call")
+}
+func (r *paymentFulfillmentAffiliateRepo) GetAffiliateUserOverview(context.Context, int64) (*AffiliateUserOverview, error) {
+	panic("unexpected GetAffiliateUserOverview call")
 }
 
 func (p paymentFulfillmentTestProvider) Name() string        { return p.key }
@@ -187,6 +390,130 @@ func TestResolveRedeemAction_IsUsedCanUseConsistency(t *testing.T) {
 	assert.False(t, unusedCode.IsUsed())
 	assert.True(t, unusedCode.CanUse())
 	assert.Equal(t, redeemActionRedeem, resolveRedeemAction(unusedCode, nil))
+}
+
+func TestPaymentOrderCanAccrueAffiliateRebateIncludesSubscriptionOrders(t *testing.T) {
+	t.Parallel()
+
+	assert.True(t, paymentOrderCanAccrueAffiliateRebate(&dbent.PaymentOrder{
+		OrderType: payment.OrderTypeBalance,
+		Amount:    10,
+	}))
+	assert.True(t, paymentOrderCanAccrueAffiliateRebate(&dbent.PaymentOrder{
+		OrderType: payment.OrderTypeSubscription,
+		Amount:    99,
+	}))
+	assert.False(t, paymentOrderCanAccrueAffiliateRebate(&dbent.PaymentOrder{
+		OrderType: payment.OrderTypeSubscription,
+		Amount:    0,
+	}))
+	assert.False(t, paymentOrderCanAccrueAffiliateRebate(&dbent.PaymentOrder{
+		OrderType: "other",
+		Amount:    99,
+	}))
+}
+
+func TestExecuteSubscriptionFulfillmentAccruesAffiliateRebate(t *testing.T) {
+	ctx := context.Background()
+	client := newPaymentConfigServiceTestClient(t)
+
+	inviter, err := client.User.Create().
+		SetEmail("sub-aff-inviter@example.com").
+		SetPasswordHash("hash").
+		SetUsername("sub-aff-inviter").
+		Save(ctx)
+	require.NoError(t, err)
+	invitee, err := client.User.Create().
+		SetEmail("sub-aff-invitee@example.com").
+		SetPasswordHash("hash").
+		SetUsername("sub-aff-invitee").
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.ExecContext(ctx, paymentFulfillmentAffiliateSchema)
+	require.NoError(t, err)
+	_, err = client.ExecContext(ctx, `
+		INSERT INTO user_affiliates (user_id, aff_code, inviter_id, aff_count, aff_quota, aff_frozen_quota, aff_history_quota, created_at, updated_at)
+		VALUES (?, ?, NULL, 1, 0, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+		       (?, ?, ?, 0, 0, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	`, inviter.ID, "SUBINVITER01", invitee.ID, "SUBINVITEE01", inviter.ID)
+	require.NoError(t, err)
+
+	groupID := int64(101)
+	days := 30
+	order, err := client.PaymentOrder.Create().
+		SetUserID(invitee.ID).
+		SetUserEmail(invitee.Email).
+		SetUserName(invitee.Username).
+		SetAmount(99).
+		SetPayAmount(99).
+		SetFeeRate(0).
+		SetRechargeCode("SUB-AFF-ORDER").
+		SetOutTradeNo("sub2_sub_aff_order").
+		SetPaymentType(payment.TypeAlipay).
+		SetPaymentTradeNo("sub-aff-trade").
+		SetOrderType(payment.OrderTypeSubscription).
+		SetSubscriptionGroupID(groupID).
+		SetSubscriptionDays(days).
+		SetStatus(OrderStatusPaid).
+		SetExpiresAt(time.Now().Add(time.Hour)).
+		SetClientIP("127.0.0.1").
+		SetSrcHost("api.example.com").
+		Save(ctx)
+	require.NoError(t, err)
+
+	settingSvc := NewSettingService(&paymentConfigSettingRepoStub{values: map[string]string{
+		SettingKeyAffiliateEnabled:           "true",
+		SettingKeyAffiliateRebateRate:        "20",
+		SettingKeyAffiliateRebateFreezeHours: "0",
+	}}, nil)
+	affiliateSvc := NewAffiliateService(newPaymentFulfillmentAffiliateRepo(client), settingSvc, nil, nil)
+	groupRepo := &subscriptionGroupRepoStub{
+		group: &Group{ID: groupID, Status: StatusActive, SubscriptionType: SubscriptionTypeSubscription},
+	}
+	subRepo := newSubscriptionUserSubRepoStub()
+	subSvc := NewSubscriptionService(groupRepo, subRepo, nil, nil, nil)
+	svc := &PaymentService{
+		entClient:        client,
+		groupRepo:        groupRepo,
+		subscriptionSvc:  subSvc,
+		affiliateService: affiliateSvc,
+	}
+
+	require.NoError(t, svc.ExecuteSubscriptionFulfillment(ctx, order.ID))
+
+	reloaded, err := client.PaymentOrder.Get(ctx, order.ID)
+	require.NoError(t, err)
+	require.Equal(t, OrderStatusCompleted, reloaded.Status)
+	require.Equal(t, 1, subRepo.createCalls)
+
+	rows, err := client.QueryContext(ctx, `
+		SELECT aff_quota, aff_history_quota
+		FROM user_affiliates
+		WHERE user_id = ?
+	`, inviter.ID)
+	require.NoError(t, err)
+	defer func() { _ = rows.Close() }()
+	require.True(t, rows.Next())
+	var quota, history float64
+	require.NoError(t, rows.Scan(&quota, &history))
+	require.InDelta(t, 19.8, quota, 1e-9)
+	require.InDelta(t, 19.8, history, 1e-9)
+
+	logs, err := svc.GetOrderAuditLogs(ctx, order.ID)
+	require.NoError(t, err)
+	var sawRebate, sawSubscription bool
+	for _, log := range logs {
+		if log.Action == "AFFILIATE_REBATE_APPLIED" {
+			sawRebate = true
+			require.Contains(t, log.Detail, `"rebateAmount":19.8`)
+		}
+		if log.Action == "SUBSCRIPTION_SUCCESS" {
+			sawSubscription = true
+		}
+	}
+	require.True(t, sawRebate)
+	require.True(t, sawSubscription)
 }
 
 func TestExpectedNotificationProviderKeyPrefersOrderInstanceProvider(t *testing.T) {

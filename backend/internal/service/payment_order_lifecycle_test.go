@@ -23,6 +23,8 @@ type paymentOrderLifecycleQueryProvider struct {
 	key               string
 	lastQueryTradeNo  string
 	lastCancelTradeNo string
+	lastQueryType     string
+	lastCancelType    string
 	queryCalls        int
 	cancelCalls       int
 	responses         []*payment.QueryOrderResponse
@@ -56,9 +58,10 @@ func (p *paymentOrderLifecycleQueryProvider) CreatePayment(context.Context, paym
 	panic("unexpected call")
 }
 
-func (p *paymentOrderLifecycleQueryProvider) QueryOrder(_ context.Context, tradeNo string) (*payment.QueryOrderResponse, error) {
+func (p *paymentOrderLifecycleQueryProvider) QueryOrder(ctx context.Context, tradeNo string) (*payment.QueryOrderResponse, error) {
 	p.lastQueryTradeNo = tradeNo
 	p.queryCalls++
+	p.lastQueryType = payment.QueryPaymentTypeFromContext(ctx)
 	if len(p.responses) > 0 {
 		resp := p.responses[0]
 		if len(p.responses) > 1 {
@@ -77,8 +80,9 @@ func (p *paymentOrderLifecycleQueryProvider) Refund(context.Context, payment.Ref
 	panic("unexpected call")
 }
 
-func (p *paymentOrderLifecycleQueryProvider) CancelPayment(_ context.Context, tradeNo string) error {
+func (p *paymentOrderLifecycleQueryProvider) CancelPayment(ctx context.Context, tradeNo string) error {
 	p.lastCancelTradeNo = tradeNo
+	p.lastCancelType = payment.QueryPaymentTypeFromContext(ctx)
 	p.cancelCalls++
 	return nil
 }
@@ -249,6 +253,7 @@ func TestVerifyOrderByOutTradeNoBackfillsTradeNoFromPaidQuery(t *testing.T) {
 	got, err := svc.VerifyOrderByOutTradeNo(ctx, order.OutTradeNo, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, order.OutTradeNo, provider.lastQueryTradeNo)
+	require.Equal(t, payment.TypeAlipay, provider.lastQueryType)
 	require.Equal(t, OrderStatusCompleted, got.Status)
 	require.Equal(t, "upstream-trade-123", got.PaymentTradeNo)
 
@@ -357,6 +362,7 @@ func TestVerifyOrderByOutTradeNoRetriesZeroAmountPaidQueryOnce(t *testing.T) {
 	got, err := svc.VerifyOrderByOutTradeNo(ctx, order.OutTradeNo, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, 2, provider.queryCalls)
+	require.Equal(t, payment.TypeAlipay, provider.lastQueryType)
 	require.Equal(t, OrderStatusCompleted, got.Status)
 	require.Equal(t, "upstream-trade-retry", got.PaymentTradeNo)
 }
@@ -441,6 +447,7 @@ func TestVerifyOrderByOutTradeNoRejectsPaidQueryWithZeroAmount(t *testing.T) {
 	got, err := svc.VerifyOrderByOutTradeNo(ctx, order.OutTradeNo, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, order.OutTradeNo, provider.lastQueryTradeNo)
+	require.Equal(t, payment.TypeAlipay, provider.lastQueryType)
 	require.Equal(t, OrderStatusPending, got.Status)
 	require.Empty(t, got.PaymentTradeNo)
 
@@ -503,6 +510,7 @@ func TestVerifyOrderByOutTradeNoDoesNotCancelUnpaidUpstreamOrder(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, OrderStatusPending, got.Status)
 	require.Equal(t, order.OutTradeNo, provider.lastQueryTradeNo)
+	require.Equal(t, payment.TypeAlipay, provider.lastQueryType)
 	require.Zero(t, provider.cancelCalls)
 
 	reloaded, err := client.PaymentOrder.Get(ctx, order.ID)
@@ -560,6 +568,8 @@ func TestCancelOrderStillClosesUnpaidUpstreamOrder(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, checkPaidResultCancelled, outcome)
 	require.Equal(t, order.OutTradeNo, provider.lastCancelTradeNo)
+	require.Equal(t, payment.TypeAlipay, provider.lastQueryType)
+	require.Equal(t, payment.TypeAlipay, provider.lastCancelType)
 	require.Equal(t, 1, provider.cancelCalls)
 
 	reloaded, err := client.PaymentOrder.Get(ctx, order.ID)
@@ -659,6 +669,7 @@ func TestReconcilePendingWxpayOrdersBackfillsPaidOrder(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, recovered)
 	require.Equal(t, order.OutTradeNo, provider.lastQueryTradeNo)
+	require.Equal(t, payment.TypeWxpay, provider.lastQueryType)
 	require.Zero(t, provider.cancelCalls)
 
 	reloaded, err := client.PaymentOrder.Get(ctx, order.ID)
@@ -756,6 +767,7 @@ func TestVerifyOrderByOutTradeNoUsesOutTradeNoWhenPaymentTradeNoAlreadyExistsFor
 	got, err := svc.VerifyOrderByOutTradeNo(ctx, order.OutTradeNo, user.ID)
 	require.NoError(t, err)
 	require.Equal(t, order.OutTradeNo, provider.lastQueryTradeNo)
+	require.Equal(t, payment.TypeAlipay, provider.lastQueryType)
 	require.Equal(t, "upstream-trade-existing", got.PaymentTradeNo)
 }
 

@@ -43,6 +43,12 @@ func (h *PaymentWebhookHandler) EasyPayNotify(c *gin.Context) {
 	h.handleNotify(c, payment.TypeEasyPay)
 }
 
+// MuyinNotify handles Muyin payment notifications.
+// POST /api/v1/payment/webhook/muyin
+func (h *PaymentWebhookHandler) MuyinNotify(c *gin.Context) {
+	h.handleNotify(c, payment.TypeMuyin)
+}
+
 // AlipayNotify handles Alipay payment notifications.
 // POST /api/v1/payment/webhook/alipay
 func (h *PaymentWebhookHandler) AlipayNotify(c *gin.Context) {
@@ -77,7 +83,7 @@ func (h *PaymentWebhookHandler) handleNotify(c *gin.Context, providerKey string)
 		body, err := io.ReadAll(io.LimitReader(c.Request.Body, maxWebhookBodySize))
 		if err != nil {
 			slog.Error("[Payment Webhook] failed to read body", "provider", providerKey, "error", err)
-			c.String(http.StatusBadRequest, "failed to read body")
+			writeFailureResponse(c, providerKey, http.StatusBadRequest, "failed to read body")
 			return
 		}
 		rawBody = string(body)
@@ -86,12 +92,17 @@ func (h *PaymentWebhookHandler) handleNotify(c *gin.Context, providerKey string)
 	// Extract out_trade_no to look up the order's specific provider instance.
 	// This is needed when multiple instances of the same provider exist (e.g. multiple EasyPay accounts).
 	outTradeNo := extractOutTradeNo(rawBody, providerKey)
+	paymentID := extractPaymentID(rawBody, providerKey)
 
-	providers, err := h.paymentService.GetWebhookProviders(c.Request.Context(), providerKey, outTradeNo)
+	providers, err := h.paymentService.GetWebhookProvidersByPaymentID(c.Request.Context(), providerKey, outTradeNo, paymentID)
 	if err != nil {
-		slog.Warn("[Payment Webhook] provider not found", "provider", providerKey, "outTradeNo", outTradeNo, "error", err)
+		slog.Warn("[Payment Webhook] provider not found", "provider", providerKey, "outTradeNo", outTradeNo, "paymentID", paymentID, "error", err)
 		if providerKey == payment.TypeWxpay {
-			c.String(http.StatusBadRequest, "verify failed")
+			writeFailureResponse(c, providerKey, http.StatusBadRequest, "verify failed")
+			return
+		}
+		if providerKey == payment.TypeMuyin {
+			writeFailureResponse(c, providerKey, http.StatusOK, "fail")
 			return
 		}
 		writeSuccessResponse(c, providerKey)
@@ -111,7 +122,7 @@ func (h *PaymentWebhookHandler) handleNotify(c *gin.Context, providerKey string)
 		}
 		slog.Error("[Payment Webhook] verify failed", "provider", providerKey, "error", err, "method", c.Request.Method, "bodyLen", len(rawBody))
 		slog.Debug("[Payment Webhook] verify failed body", "provider", providerKey, "rawBody", truncatedBody)
-		c.String(http.StatusBadRequest, "verify failed")
+		writeFailureResponse(c, providerKey, http.StatusBadRequest, "verify failed")
 		return
 	}
 
@@ -137,7 +148,7 @@ func (h *PaymentWebhookHandler) handleNotify(c *gin.Context, providerKey string)
 			return
 		}
 		slog.Error("[Payment Webhook] handle notification failed", "provider", resolvedProviderKey, "error", err)
-		c.String(http.StatusInternalServerError, "handle failed")
+		writeFailureResponse(c, resolvedProviderKey, http.StatusInternalServerError, "handle failed")
 		return
 	}
 
@@ -152,6 +163,21 @@ func extractOutTradeNo(rawBody, providerKey string) string {
 		values, err := url.ParseQuery(rawBody)
 		if err == nil {
 			return values.Get("out_trade_no")
+		}
+	case payment.TypeMuyin:
+		values, err := url.ParseQuery(rawBody)
+		if err == nil {
+			for _, key := range []string{"orderId", "order_id", "out_trade_no", "merchantOrderId", "merchant_order_id"} {
+				if value := strings.TrimSpace(values.Get(key)); value != "" {
+					return value
+				}
+			}
+		}
+		var payload map[string]any
+		if err := json.Unmarshal([]byte(rawBody), &payload); err == nil {
+			if value := extractStringFromJSONMap(payload, "orderId", "order_id", "out_trade_no", "merchantOrderId", "merchant_order_id"); value != "" {
+				return value
+			}
 		}
 	case payment.TypeAirwallex:
 		var payload struct {
@@ -168,6 +194,54 @@ func extractOutTradeNo(rawBody, providerKey string) string {
 	// For other providers (Stripe, Alipay direct, WxPay direct), the registry
 	// typically has only one instance, so no instance lookup is needed.
 	return ""
+}
+
+func extractPaymentID(rawBody, providerKey string) string {
+	switch providerKey {
+	case payment.TypeMuyin:
+		values, err := url.ParseQuery(rawBody)
+		if err == nil {
+			for _, key := range []string{"paymentId", "payment_id"} {
+				if value := strings.TrimSpace(values.Get(key)); value != "" {
+					return value
+				}
+			}
+		}
+		var payload map[string]any
+		if err := json.Unmarshal([]byte(rawBody), &payload); err == nil {
+			if value := extractStringFromJSONMap(payload, "paymentId", "payment_id"); value != "" {
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+func extractStringFromJSONMap(payload map[string]any, keys ...string) string {
+	if len(payload) == 0 {
+		return ""
+	}
+	keySet := make(map[string]struct{}, len(keys))
+	for _, key := range keys {
+		keySet[strings.ToLower(key)] = struct{}{}
+	}
+	var walk func(map[string]any) string
+	walk = func(current map[string]any) string {
+		for k, value := range current {
+			if _, ok := keySet[strings.ToLower(k)]; ok {
+				if str, ok := value.(string); ok && strings.TrimSpace(str) != "" {
+					return strings.TrimSpace(str)
+				}
+			}
+			if nested, ok := value.(map[string]any); ok {
+				if found := walk(nested); found != "" {
+					return found
+				}
+			}
+		}
+		return ""
+	}
+	return walk(payload)
 }
 
 func verifyNotificationWithProviders(ctx context.Context, providers []payment.Provider, rawBody string, headers map[string]string) (string, *payment.PaymentNotification, error) {
@@ -213,4 +287,12 @@ func writeSuccessResponse(c *gin.Context, providerKey string) {
 	default:
 		c.String(http.StatusOK, "success")
 	}
+}
+
+func writeFailureResponse(c *gin.Context, providerKey string, statusCode int, body string) {
+	if providerKey == payment.TypeMuyin {
+		c.String(statusCode, "fail")
+		return
+	}
+	c.String(statusCode, body)
 }

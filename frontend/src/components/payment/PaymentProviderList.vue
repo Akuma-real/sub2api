@@ -165,6 +165,15 @@ function onDragEnd() {
 }
 
 function isEnabled(providerKey: string): boolean {
+  if (props.enabledPaymentTypes.includes(providerKey)) {
+    return true;
+  }
+  if (providerKey === "easypay" || providerKey === "muyin") {
+    return (
+      props.enabledPaymentTypes.includes("alipay") ||
+      props.enabledPaymentTypes.includes("wxpay")
+    );
+  }
   return props.enabledPaymentTypes.includes(providerKey);
 }
 

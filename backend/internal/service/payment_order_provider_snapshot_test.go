@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/payment"
 	"github.com/stretchr/testify/require"
 )
@@ -164,6 +165,96 @@ func TestBuildPaymentOrderProviderSnapshot_IncludesEasyPayMerchantIdentity(t *te
 	require.NotContains(t, snapshot, "pkey")
 }
 
+func TestBuildPaymentOrderProviderSnapshot_IncludesMuyinPlatformAndChannel(t *testing.T) {
+	t.Parallel()
+
+	snapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+		InstanceID:  "88",
+		ProviderKey: payment.TypeMuyin,
+		Config: map[string]string{
+			"token":         "secret-token",
+			"platform":      "merchant-platform",
+			"alipayChannel": "FACE_TO_FACE_PAYMENT",
+		},
+		PaymentMode: "redirect",
+	}, CreateOrderRequest{PaymentType: payment.TypeAlipay})
+
+	require.Equal(t, "merchant-platform", snapshot["platform"])
+	require.Equal(t, "FACE_TO_FACE_PAYMENT", snapshot["payment_channel"])
+	require.NotContains(t, snapshot, "token")
+
+	wxpaySnapshot := buildPaymentOrderProviderSnapshot(&payment.InstanceSelection{
+		InstanceID:  "89",
+		ProviderKey: payment.TypeMuyin,
+		Config:      map[string]string{},
+	}, CreateOrderRequest{PaymentType: payment.TypeWxpay})
+	require.NotContains(t, wxpaySnapshot, "platform")
+	require.Equal(t, "WECHATPAY_H5", wxpaySnapshot["payment_channel"])
+}
+
+func TestValidateProviderSnapshotMetadataChecksMuyinPaymentID(t *testing.T) {
+	t.Parallel()
+
+	order := &dbent.PaymentOrder{
+		OutTradeNo:     "sub2_order",
+		PaymentTradeNo: "pay_123",
+		ProviderSnapshot: map[string]any{
+			"schema_version": 2,
+			"provider_key":   payment.TypeMuyin,
+		},
+	}
+
+	require.NoError(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, map[string]string{
+		"payment_id": "pay_123",
+		"status":     "SUCCESS",
+	}))
+	require.ErrorContains(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, map[string]string{
+		"payment_id": "pay_other",
+		"status":     "SUCCESS",
+	}), "payment_id mismatch")
+	require.ErrorContains(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, map[string]string{
+		"payment_id": "pay_123",
+		"status":     "FAILED",
+	}), "status mismatch")
+}
+
+func TestValidateProviderSnapshotMetadataChecksMuyinTypeChannelAndPlatform(t *testing.T) {
+	t.Parallel()
+
+	order := &dbent.PaymentOrder{
+		OutTradeNo:     "sub2_order",
+		PaymentTradeNo: "pay_123",
+		PaymentType:    payment.TypeWxpay,
+		ProviderSnapshot: map[string]any{
+			"schema_version":  2,
+			"provider_key":    payment.TypeMuyin,
+			"payment_channel": "WECHATPAY_H5",
+			"platform":        "test-muyin-user",
+		},
+	}
+	goodMetadata := map[string]string{
+		"payment_id":      "pay_123",
+		"payment_type":    "WECHATPAY",
+		"payment_channel": "WECHATPAY_H5",
+		"platform":        "test-muyin-user",
+		"status":          "SUCCESS",
+	}
+
+	require.NoError(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, goodMetadata))
+
+	badType := cloneStringMap(goodMetadata)
+	badType["payment_type"] = "ALIPAY"
+	require.ErrorContains(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, badType), "payment_type mismatch")
+
+	badChannel := cloneStringMap(goodMetadata)
+	badChannel["payment_channel"] = "WECHATPAY_JSAPI"
+	require.ErrorContains(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, badChannel), "payment_channel mismatch")
+
+	badPlatform := cloneStringMap(goodMetadata)
+	badPlatform["platform"] = "other-platform"
+	require.ErrorContains(t, validateProviderSnapshotMetadata(order, payment.TypeMuyin, badPlatform), "platform mismatch")
+}
+
 func TestBuildPaymentOrderProviderSnapshot_IncludesProviderCurrency(t *testing.T) {
 	t.Parallel()
 
@@ -186,6 +277,14 @@ func TestBuildPaymentOrderProviderSnapshot_IncludesProviderCurrency(t *testing.T
 	}, CreateOrderRequest{})
 	require.Equal(t, "USD", airwallexSnapshot["currency"])
 	require.Equal(t, "acct-78", airwallexSnapshot["merchant_id"])
+}
+
+func cloneStringMap(in map[string]string) map[string]string {
+	out := make(map[string]string, len(in))
+	for key, value := range in {
+		out[key] = value
+	}
+	return out
 }
 
 func valueOrEmpty(v *string) string {

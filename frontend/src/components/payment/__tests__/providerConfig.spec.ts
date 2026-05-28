@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { PAYMENT_CURRENCY_OPTIONS, PROVIDER_CONFIG_FIELDS } from '@/components/payment/providerConfig'
+import {
+  MUYIN_ALIPAY_CHANNEL_OPTIONS,
+  MUYIN_WXPAY_CHANNEL_OPTIONS,
+  PAYMENT_CURRENCY_OPTIONS,
+  PROVIDER_CALLBACK_PATHS,
+  PROVIDER_CONFIG_FIELDS,
+  PROVIDER_SUPPORTED_TYPES,
+} from '@/components/payment/providerConfig'
 
 function findField(providerKey: string, key: string) {
   const fields = PROVIDER_CONFIG_FIELDS[providerKey] || []
@@ -38,6 +45,36 @@ describe('PROVIDER_CONFIG_FIELDS.airwallex', () => {
 
   it('explains that apiBase must match the Airwallex key environment', () => {
     expect(findField('airwallex', 'apiBase')?.hintKey).toBe('admin.settings.payment.field_airwallexApiBaseHint')
+  })
+})
+
+describe('PROVIDER_CONFIG_FIELDS.muyin', () => {
+  it('supports the visible Alipay and WeChat Pay methods through one provider', () => {
+    expect(PROVIDER_SUPPORTED_TYPES.muyin).toEqual(['alipay', 'wxpay'])
+  })
+
+  it('defaults to the documented API base and channel values', () => {
+    expect(findField('muyin', 'apiBase')?.defaultValue).toBe('https://auth.muyin.site')
+    expect(findField('muyin', 'alipayChannel')?.defaultValue).toBe('FACE_TO_FACE_PAYMENT')
+    expect(findField('muyin', 'wxpayChannel')?.defaultValue).toBe('WECHATPAY_H5')
+    expect(findField('muyin', 'alipayChannel')?.options).toBe(MUYIN_ALIPAY_CHANNEL_OPTIONS)
+    expect(findField('muyin', 'wxpayChannel')?.options).toBe(MUYIN_WXPAY_CHANNEL_OPTIONS)
+  })
+
+  it('marks the bearer token as sensitive and configures callback paths', () => {
+    expect(findField('muyin', 'token')?.sensitive).toBe(true)
+    expect(PROVIDER_CALLBACK_PATHS.muyin).toEqual({
+      notifyUrl: '/api/v1/payment/webhook/muyin',
+      returnUrl: '/payment/result',
+    })
+  })
+
+  it('requires admins to enter their MuYin username as the platform identifier', () => {
+    const platform = findField('muyin', 'platform')
+
+    expect(platform?.defaultValue).toBeUndefined()
+    expect(platform?.hintKey).toBe('admin.settings.payment.field_muyinPlatformHint')
+    expect(platform?.optional).toBeFalsy()
   })
 })
 

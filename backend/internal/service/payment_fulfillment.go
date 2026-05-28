@@ -440,6 +440,9 @@ func (s *PaymentService) doSub(ctx context.Context, o *dbent.PaymentOrder) error
 	if err != nil {
 		return fmt.Errorf("assign subscription: %w", err)
 	}
+	if err := s.applyAffiliateRebateForOrder(ctx, o); err != nil {
+		return err
+	}
 	return s.markCompleted(ctx, o, "SUBSCRIPTION_SUCCESS")
 }
 
@@ -452,7 +455,7 @@ func (s *PaymentService) hasAuditLog(ctx context.Context, orderID int64, action 
 }
 
 func (s *PaymentService) applyAffiliateRebateForOrder(ctx context.Context, o *dbent.PaymentOrder) error {
-	if o == nil || o.OrderType != payment.OrderTypeBalance || o.Amount <= 0 {
+	if o == nil || !paymentOrderCanAccrueAffiliateRebate(o) {
 		return nil
 	}
 	if s.affiliateService == nil {
@@ -527,6 +530,18 @@ func (s *PaymentService) applyAffiliateRebateForOrder(ctx context.Context, o *db
 	return nil
 }
 
+func paymentOrderCanAccrueAffiliateRebate(o *dbent.PaymentOrder) bool {
+	if o == nil || o.Amount <= 0 {
+		return false
+	}
+	switch o.OrderType {
+	case payment.OrderTypeBalance, payment.OrderTypeSubscription:
+		return true
+	default:
+		return false
+	}
+}
+
 func (s *PaymentService) tryClaimAffiliateRebateAudit(ctx context.Context, client *dbent.Client, orderID int64, baseAmount float64) (bool, error) {
 	if client == nil {
 		return false, errors.New("nil payment client")
@@ -536,17 +551,17 @@ func (s *PaymentService) tryClaimAffiliateRebateAudit(ctx context.Context, clien
 		"baseAmount": baseAmount,
 		"status":     "reserved",
 	})
-	rows, err := client.QueryContext(ctx, `
-INSERT INTO payment_audit_logs (order_id, action, detail, operator, created_at)
-SELECT $1::text, 'AFFILIATE_REBATE_APPLIED', $2::text, 'system', NOW()
-WHERE NOT EXISTS (
-	SELECT 1
-	FROM payment_audit_logs
-	WHERE order_id = $1::text
-	  AND action IN ('AFFILIATE_REBATE_APPLIED', 'AFFILIATE_REBATE_SKIPPED')
-)
-ON CONFLICT (order_id, action) DO NOTHING
-RETURNING id`, oid, string(detail))
+	rows, err := client.QueryContext(ctx, fmt.Sprintf(`
+	INSERT INTO payment_audit_logs (order_id, action, detail, operator, created_at)
+	SELECT %s, 'AFFILIATE_REBATE_APPLIED', %s, 'system', CURRENT_TIMESTAMP
+	WHERE NOT EXISTS (
+		SELECT 1
+		FROM payment_audit_logs
+		WHERE order_id = %s
+		  AND action IN ('AFFILIATE_REBATE_APPLIED', 'AFFILIATE_REBATE_SKIPPED')
+	)
+	ON CONFLICT (order_id, action) DO NOTHING
+	RETURNING id`, sqlStringLiteral(oid), sqlStringLiteral(string(detail)), sqlStringLiteral(oid)))
 	if err != nil {
 		return false, err
 	}
@@ -562,6 +577,10 @@ RETURNING id`, oid, string(detail))
 		return false, err
 	}
 	return true, nil
+}
+
+func sqlStringLiteral(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
 }
 
 func (s *PaymentService) updateClaimedAffiliateRebateAudit(ctx context.Context, client *dbent.Client, orderID int64, action string, detail map[string]any) error {

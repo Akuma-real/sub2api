@@ -294,6 +294,14 @@ func buildPaymentOrderProviderSnapshot(sel *payment.InstanceSelection, req Creat
 			snapshot["merchant_id"] = merchantID
 		}
 	}
+	if providerKey == payment.TypeMuyin {
+		if platform := strings.TrimSpace(sel.Config["platform"]); platform != "" {
+			snapshot["platform"] = platform
+		}
+		if channel := paymentOrderSnapshotMuyinChannel(sel, req); channel != "" {
+			snapshot["payment_channel"] = channel
+		}
+	}
 	if providerKey == payment.TypeStripe {
 		snapshot["currency"] = paymentProviderConfigCurrency(providerKey, sel.Config)
 	}
@@ -318,6 +326,26 @@ func paymentOrderSnapshotWxpayAppID(sel *payment.InstanceSelection, req CreateOr
 		return strings.TrimSpace(provider.ResolveWxpayJSAPIAppID(sel.Config))
 	}
 	return strings.TrimSpace(sel.Config["appId"])
+}
+
+func paymentOrderSnapshotMuyinChannel(sel *payment.InstanceSelection, req CreateOrderRequest) string {
+	if sel == nil || strings.TrimSpace(sel.ProviderKey) != payment.TypeMuyin {
+		return ""
+	}
+	switch payment.GetBasePaymentType(req.PaymentType) {
+	case payment.TypeAlipay:
+		if channel := strings.TrimSpace(sel.Config["alipayChannel"]); channel != "" {
+			return channel
+		}
+		return "FACE_TO_FACE_PAYMENT"
+	case payment.TypeWxpay:
+		if channel := strings.TrimSpace(sel.Config["wxpayChannel"]); channel != "" {
+			return channel
+		}
+		return "WECHATPAY_H5"
+	default:
+		return ""
+	}
 }
 
 func (s *PaymentService) checkDailyLimit(ctx context.Context, tx *dbent.Tx, userID int64, amount, limit float64) error {

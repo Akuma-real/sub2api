@@ -32,6 +32,7 @@ export interface CallbackPaths {
 /** Maps provider key → available payment types. */
 export const PROVIDER_SUPPORTED_TYPES: Record<string, string[]> = {
   easypay: ['alipay', 'wxpay'],
+  muyin: ['alipay', 'wxpay'],
   alipay: ['alipay'],
   wxpay: ['wxpay'],
   stripe: ['card', 'alipay', 'wxpay', 'link'],
@@ -67,6 +68,15 @@ export const PAYMENT_CURRENCY_OPTIONS: TypeOption[] = [
   { value: 'NZD', label: 'NZD' },
 ]
 
+export const MUYIN_ALIPAY_CHANNEL_OPTIONS: TypeOption[] = [
+  { value: 'FACE_TO_FACE_PAYMENT', label: 'FACE_TO_FACE_PAYMENT' },
+]
+
+export const MUYIN_WXPAY_CHANNEL_OPTIONS: TypeOption[] = [
+  { value: 'WECHATPAY_H5', label: 'WECHATPAY_H5' },
+  { value: 'WECHATPAY_JSAPI', label: 'WECHATPAY_JSAPI' },
+]
+
 // 与后端当前集成的 stripe-go v85.0.0 的 stripe.APIVersion 保持一致。
 export const STRIPE_SDK_API_VERSION = '2026-03-25.dahlia'
 
@@ -92,6 +102,7 @@ export function getPaymentPopupFeatures(): string {
 /** Webhook paths for each provider (relative to origin). */
 export const WEBHOOK_PATHS: Record<string, string> = {
   easypay: '/api/v1/payment/webhook/easypay',
+  muyin: '/api/v1/payment/webhook/muyin',
   alipay: '/api/v1/payment/webhook/alipay',
   wxpay: '/api/v1/payment/webhook/wxpay',
   stripe: '/api/v1/payment/webhook/stripe',
@@ -103,6 +114,7 @@ export const RETURN_PATH = '/payment/result'
 /** Fixed callback paths per provider — displayed as read-only after base URL. */
 export const PROVIDER_CALLBACK_PATHS: Record<string, CallbackPaths> = {
   easypay: { notifyUrl: WEBHOOK_PATHS.easypay, returnUrl: RETURN_PATH },
+  muyin: { notifyUrl: WEBHOOK_PATHS.muyin, returnUrl: RETURN_PATH },
   alipay: { notifyUrl: WEBHOOK_PATHS.alipay, returnUrl: RETURN_PATH },
   wxpay: { notifyUrl: WEBHOOK_PATHS.wxpay },
   // stripe: 不需要回调 URL 配置，Webhook 单独配置。
@@ -117,6 +129,15 @@ export const PROVIDER_CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
     { key: 'apiBase', label: '', sensitive: false },
     { key: 'cidAlipay', label: '', sensitive: false, optional: true },
     { key: 'cidWxpay', label: '', sensitive: false, optional: true },
+  ],
+  muyin: [
+    { key: 'apiBase', label: '', sensitive: false, defaultValue: 'https://auth.muyin.site', hintKey: 'admin.settings.payment.field_muyinApiBaseHint' },
+    { key: 'token', label: '', sensitive: true },
+    { key: 'platform', label: '', sensitive: false, hintKey: 'admin.settings.payment.field_muyinPlatformHint' },
+    { key: 'alipayChannel', label: '', sensitive: false, defaultValue: 'FACE_TO_FACE_PAYMENT', hintKey: 'admin.settings.payment.field_muyinAlipayChannelHint', options: MUYIN_ALIPAY_CHANNEL_OPTIONS },
+    { key: 'wxpayChannel', label: '', sensitive: false, defaultValue: 'WECHATPAY_H5', hintKey: 'admin.settings.payment.field_muyinWxpayChannelHint', options: MUYIN_WXPAY_CHANNEL_OPTIONS },
+    { key: 'wxpayH5AppName', label: '', sensitive: false, optional: true },
+    { key: 'wxpayH5AppUrl', label: '', sensitive: false, optional: true },
   ],
   alipay: [
     { key: 'appId', label: 'App ID', sensitive: false },

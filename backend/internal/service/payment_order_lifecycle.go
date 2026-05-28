@@ -158,7 +158,8 @@ func (s *PaymentService) checkPaidWithOptions(ctx context.Context, o *dbent.Paym
 	if queryRef == "" {
 		return ""
 	}
-	resp, err := prov.QueryOrder(ctx, queryRef)
+	queryCtx := payment.WithQueryPaymentType(ctx, o.PaymentType)
+	resp, err := prov.QueryOrder(queryCtx, queryRef)
 	if err != nil {
 		slog.Warn("query upstream failed", "orderID", o.ID, "error", err)
 		return ""
@@ -172,7 +173,7 @@ func (s *PaymentService) checkPaidWithOptions(ctx context.Context, o *dbent.Paym
 				"queryRef": queryRef,
 			})
 			slog.Warn("query upstream returned invalid paid amount", "orderID", o.ID, "queryRef", queryRef, "paid", resp.Amount)
-			retriedResp, retryOK := requeryPaidOrderOnce(ctx, prov, queryRef)
+			retriedResp, retryOK := requeryPaidOrderOnce(queryCtx, prov, queryRef)
 			if !retryOK {
 				return ""
 			}
@@ -200,7 +201,7 @@ func (s *PaymentService) checkPaidWithOptions(ctx context.Context, o *dbent.Paym
 		return ""
 	}
 	if cp, ok := prov.(payment.CancelableProvider); ok {
-		_ = cp.CancelPayment(ctx, queryRef)
+		_ = cp.CancelPayment(queryCtx, queryRef)
 	}
 	return ""
 }
@@ -242,7 +243,7 @@ func paymentOrderQueryReference(order *dbent.PaymentOrder, prov payment.Provider
 	}
 
 	switch payment.GetBasePaymentType(providerKey) {
-	case payment.TypeAlipay, payment.TypeEasyPay, payment.TypeWxpay:
+	case payment.TypeAlipay, payment.TypeEasyPay, payment.TypeMuyin, payment.TypeWxpay:
 		return strings.TrimSpace(order.OutTradeNo)
 	default:
 		if tradeNo := strings.TrimSpace(order.PaymentTradeNo); tradeNo != "" {

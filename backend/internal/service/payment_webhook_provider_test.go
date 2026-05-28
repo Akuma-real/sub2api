@@ -9,6 +9,8 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
@@ -75,6 +77,18 @@ func encryptValidWebhookWxpayConfig(t *testing.T, suffix string) string {
 		"publicKey":   string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubDER})),
 		"publicKeyId": "public-key-id-" + suffix,
 		"certSerial":  "cert-serial-" + suffix,
+	})
+}
+
+func encryptValidWebhookMuyinConfig(t *testing.T, apiBase string) string {
+	t.Helper()
+
+	return encryptWebhookProviderConfig(t, map[string]string{
+		"token":     "tok",
+		"apiBase":   apiBase,
+		"notifyUrl": "https://merchant.example.com/api/v1/payment/webhook/muyin",
+		"returnUrl": "https://merchant.example.com/payment/result",
+		"platform":  "test-muyin-user",
 	})
 }
 
@@ -361,6 +375,93 @@ func TestGetWebhookProvidersRejectAmbiguousFallbackForNonWxpay(t *testing.T) {
 	_, err = svc.GetWebhookProviders(ctx, payment.TypeAlipay, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "ambiguous")
+}
+
+func TestGetWebhookProvidersResolvesMuyinByPaymentID(t *testing.T) {
+	ctx := context.Background()
+	client := newPaymentConfigServiceTestClient(t)
+	user, err := client.User.Create().
+		SetEmail("muyin-webhook@example.com").
+		SetPasswordHash("hash").
+		SetUsername("muyin-webhook").
+		Save(ctx)
+	require.NoError(t, err)
+
+	wrongServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "wrong instance", http.StatusInternalServerError)
+	}))
+	defer wrongServer.Close()
+	rightServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/apis/platform.payment.muyin.site/v1alpha1/queryPaymentByOrderId":
+			_, _ = w.Write([]byte(`{
+				"orderId":"sub2_muyin_by_payment_id",
+				"paymentId":"pay_muyin_123",
+				"paymentType":"ALIPAY",
+				"status":"SUCCESS",
+				"amount":12.34
+			}`))
+		case "/apis/platform.payment.muyin.site/v1alpha1/listPaymentInfo":
+			_, _ = w.Write([]byte(`{"items":[]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer rightServer.Close()
+
+	_, err = client.PaymentProviderInstance.Create().
+		SetProviderKey(payment.TypeMuyin).
+		SetName("muyin-wrong").
+		SetConfig(encryptValidWebhookMuyinConfig(t, wrongServer.URL)).
+		SetSupportedTypes("alipay,wxpay").
+		SetEnabled(true).
+		Save(ctx)
+	require.NoError(t, err)
+	rightInst, err := client.PaymentProviderInstance.Create().
+		SetProviderKey(payment.TypeMuyin).
+		SetName("muyin-right").
+		SetConfig(encryptValidWebhookMuyinConfig(t, rightServer.URL)).
+		SetSupportedTypes("alipay,wxpay").
+		SetEnabled(true).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.PaymentOrder.Create().
+		SetUserID(user.ID).
+		SetUserEmail(user.Email).
+		SetUserName(user.Username).
+		SetAmount(12.34).
+		SetPayAmount(12.34).
+		SetFeeRate(0).
+		SetRechargeCode("MUYIN-PAYMENT-ID").
+		SetOutTradeNo("sub2_muyin_by_payment_id").
+		SetPaymentType(payment.TypeAlipay).
+		SetPaymentTradeNo("pay_muyin_123").
+		SetOrderType(payment.OrderTypeBalance).
+		SetStatus(OrderStatusPending).
+		SetExpiresAt(time.Now().Add(time.Hour)).
+		SetClientIP("127.0.0.1").
+		SetSrcHost("api.example.com").
+		SetProviderInstanceID(strconv.FormatInt(rightInst.ID, 10)).
+		SetProviderKey(payment.TypeMuyin).
+		Save(ctx)
+	require.NoError(t, err)
+
+	svc := &PaymentService{
+		entClient:       client,
+		loadBalancer:    newWebhookProviderTestLoadBalancer(client),
+		registry:        payment.NewRegistry(),
+		providersLoaded: true,
+	}
+
+	providers, err := svc.GetWebhookProvidersByPaymentID(ctx, payment.TypeMuyin, "", "pay_muyin_123")
+	require.NoError(t, err)
+	require.Len(t, providers, 1)
+	require.Equal(t, payment.TypeMuyin, providers[0].ProviderKey())
+
+	queryResp, err := providers[0].QueryOrder(ctx, "sub2_muyin_by_payment_id")
+	require.NoError(t, err)
+	require.Equal(t, "pay_muyin_123", queryResp.TradeNo)
 }
 
 func TestGetWebhookProviderAllowsSingleInstanceRegistryFallback(t *testing.T) {

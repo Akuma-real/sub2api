@@ -47,7 +47,10 @@ type DefaultLoadBalancer struct {
 
 type contextKey string
 
-const wxpayJSAPIAppIDContextKey contextKey = "payment.wxpay.jsapi_app_id"
+const (
+	wxpayJSAPIAppIDContextKey  contextKey = "payment.wxpay.jsapi_app_id"
+	queryPaymentTypeContextKey contextKey = "payment.query.payment_type"
+)
 
 // NewDefaultLoadBalancer creates a new load balancer.
 func NewDefaultLoadBalancer(db *dbent.Client, encryptionKey []byte) *DefaultLoadBalancer {
@@ -68,6 +71,25 @@ func wxpayJSAPIAppIDFromContext(ctx context.Context) string {
 	}
 	appID, _ := ctx.Value(wxpayJSAPIAppIDContextKey).(string)
 	return strings.TrimSpace(appID)
+}
+
+func WithQueryPaymentType(ctx context.Context, paymentType PaymentType) context.Context {
+	paymentType = strings.TrimSpace(paymentType)
+	if paymentType == "" {
+		return ctx
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, queryPaymentTypeContextKey, paymentType)
+}
+
+func QueryPaymentTypeFromContext(ctx context.Context) PaymentType {
+	if ctx == nil {
+		return ""
+	}
+	paymentType, _ := ctx.Value(queryPaymentTypeContextKey).(string)
+	return strings.TrimSpace(paymentType)
 }
 
 // instanceCandidate pairs an instance with its pre-fetched daily usage.

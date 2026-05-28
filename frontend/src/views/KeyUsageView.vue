@@ -699,6 +699,10 @@ const showDatePicker = ref(false);
 const resultData = ref<any>(null);
 const now = ref(new Date());
 let resetTimer: ReturnType<typeof setInterval> | null = null;
+let ringDelayTimer: ReturnType<typeof setTimeout> | null = null;
+let ringStartFrame: number | null = null;
+let ringTickFrame: number | null = null;
+let isUnmounted = false;
 
 // ==================== Date Range State ====================
 
@@ -785,6 +789,33 @@ const displayPcts = ref<number[]>([]);
 
 const ringTrackColor = computed(() => "#e6dfd8");
 
+function scheduleFrame(callback: (time: number) => void): number {
+  if (typeof requestAnimationFrame === "function") {
+    return requestAnimationFrame(callback);
+  }
+  return window.setTimeout(() => callback(performance.now()), 16);
+}
+
+function cancelFrame(frame: number | null) {
+  if (frame == null) return;
+  if (typeof cancelAnimationFrame === "function") {
+    cancelAnimationFrame(frame);
+  } else {
+    window.clearTimeout(frame);
+  }
+}
+
+function clearRingAnimationTimers() {
+  if (ringDelayTimer) {
+    clearTimeout(ringDelayTimer);
+    ringDelayTimer = null;
+  }
+  cancelFrame(ringStartFrame);
+  ringStartFrame = null;
+  cancelFrame(ringTickFrame);
+  ringTickFrame = null;
+}
+
 interface RingItem {
   title: string;
   pct: number;
@@ -801,12 +832,17 @@ function getRingOffset(ring: RingItem): number {
 }
 
 function triggerRingAnimation(items: RingItem[]) {
+  clearRingAnimationTimers();
   ringAnimated.value = false;
   displayPcts.value = items.map(() => 0);
 
   nextTick(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
+    if (isUnmounted) return;
+    ringStartFrame = scheduleFrame(() => {
+      ringStartFrame = null;
+      ringDelayTimer = setTimeout(() => {
+        ringDelayTimer = null;
+        if (isUnmounted) return;
         ringAnimated.value = true;
 
         // Animate percentage numbers
@@ -821,9 +857,13 @@ function triggerRingAnimation(items: RingItem[]) {
           displayPcts.value = targets.map((target) =>
             Math.round(ease * target),
           );
-          if (p < 1) requestAnimationFrame(tick);
+          if (p < 1 && !isUnmounted) {
+            ringTickFrame = scheduleFrame(tick);
+          } else {
+            ringTickFrame = null;
+          }
         }
-        requestAnimationFrame(tick);
+        ringTickFrame = scheduleFrame(tick);
       }, 50);
     });
   });
@@ -1310,6 +1350,7 @@ function formatResetTime(resetAt: string | null | undefined): string {
 }
 
 onMounted(() => {
+  isUnmounted = false;
   if (!appStore.publicSettingsLoaded) {
     appStore.fetchPublicSettings();
   }
@@ -1319,7 +1360,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  isUnmounted = true;
   if (resetTimer) clearInterval(resetTimer);
+  clearRingAnimationTimers();
 });
 </script>
 

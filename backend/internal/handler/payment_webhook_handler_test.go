@@ -62,6 +62,13 @@ func TestWriteSuccessResponse(t *testing.T) {
 			wantBody:        "success",
 		},
 		{
+			name:            "muyin returns plain text success",
+			providerKey:     payment.TypeMuyin,
+			wantCode:        http.StatusOK,
+			wantContentType: "text/plain",
+			wantBody:        "success",
+		},
+		{
 			name:            "alipay returns plain text success",
 			providerKey:     "alipay",
 			wantCode:        http.StatusOK,
@@ -100,6 +107,31 @@ func TestWriteSuccessResponse(t *testing.T) {
 	}
 }
 
+func TestWriteFailureResponse(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("muyin returns documented fail body", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		writeFailureResponse(c, payment.TypeMuyin, http.StatusOK, "verify failed")
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Header().Get("Content-Type"), "text/plain")
+		assert.Equal(t, "fail", w.Body.String())
+	})
+
+	t.Run("other providers keep the supplied failure body", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		writeFailureResponse(c, payment.TypeWxpay, http.StatusBadRequest, "verify failed")
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, "verify failed", w.Body.String())
+	})
+}
+
 // TestUnknownOrderWebhookAcksWithSuccess exercises the response contract that
 // handleNotify relies on when HandlePaymentNotification returns ErrOrderNotFound:
 // we still need to emit the provider-specific 2xx so the provider stops
@@ -111,7 +143,7 @@ func TestWriteSuccessResponse(t *testing.T) {
 //  2. writeSuccessResponse produces the provider-specific body for Stripe
 //     (empty 200) — matching what handleNotify calls on the ack path.
 //
-// If either contract breaks, the Stripe "unknown order → 500 loop" regresses.
+// If either contract breaks, unknown-order webhooks can regress into retry loops.
 func TestUnknownOrderWebhookAcksWithSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -127,14 +159,21 @@ func TestUnknownOrderWebhookAcksWithSuccess(t *testing.T) {
 	require.False(t, errors.Is(other, service.ErrOrderNotFound))
 
 	// 2) Provider-specific success body is what handleNotify emits on the
-	// ack path. Asserted again here because this is the shape Stripe expects
-	// to consider the webhook acknowledged.
+	// ack path. Asserted again here because providers require their own
+	// success response body to stop retrying.
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	writeSuccessResponse(c, payment.TypeStripe)
 	require.Equal(t, http.StatusOK, w.Code,
 		"Stripe requires 2xx to stop retrying; anything else restarts the retry loop")
 	require.Empty(t, w.Body.String(), "Stripe expects an empty body on the ack path")
+
+	w = httptest.NewRecorder()
+	c, _ = gin.CreateTestContext(w)
+	writeSuccessResponse(c, payment.TypeMuyin)
+	require.Equal(t, http.StatusOK, w.Code,
+		"MuYin requires success to stop retrying confirmed callbacks for unknown local orders")
+	require.Equal(t, "success", w.Body.String())
 }
 
 func TestWebhookConstants(t *testing.T) {
@@ -167,6 +206,18 @@ func TestExtractOutTradeNo(t *testing.T) {
 			want:        "sub2_456",
 		},
 		{
+			name:        "muyin query payload",
+			providerKey: payment.TypeMuyin,
+			rawBody:     "paymentId=pay_123&orderId=sub2_muyin_123",
+			want:        "sub2_muyin_123",
+		},
+		{
+			name:        "muyin nested json payload",
+			providerKey: payment.TypeMuyin,
+			rawBody:     `{"data":{"paymentId":"pay_123","merchantOrderId":"sub2_muyin_nested"}}`,
+			want:        "sub2_muyin_nested",
+		},
+		{
 			name:        "unknown provider",
 			providerKey: "wxpay",
 			rawBody:     "{}",
@@ -183,6 +234,46 @@ func TestExtractOutTradeNo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, extractOutTradeNo(tt.rawBody, tt.providerKey))
+		})
+	}
+}
+
+func TestExtractPaymentID(t *testing.T) {
+	tests := []struct {
+		name        string
+		providerKey string
+		rawBody     string
+		want        string
+	}{
+		{
+			name:        "muyin query payload",
+			providerKey: payment.TypeMuyin,
+			rawBody:     "paymentId=pay_123&orderId=sub2_muyin_123",
+			want:        "pay_123",
+		},
+		{
+			name:        "muyin snake case query payload",
+			providerKey: payment.TypeMuyin,
+			rawBody:     "payment_id=pay_snake_123",
+			want:        "pay_snake_123",
+		},
+		{
+			name:        "muyin nested json payload",
+			providerKey: payment.TypeMuyin,
+			rawBody:     `{"event":"paid","data":{"payment_id":"pay_nested_123"}}`,
+			want:        "pay_nested_123",
+		},
+		{
+			name:        "other provider ignored",
+			providerKey: payment.TypeWxpay,
+			rawBody:     "paymentId=pay_123",
+			want:        "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, extractPaymentID(tt.rawBody, tt.providerKey))
 		})
 	}
 }

@@ -18,6 +18,8 @@ type paymentOrderProviderSnapshot struct {
 	MerchantAppID      string
 	MerchantID         string
 	Currency           string
+	PaymentChannel     string
+	Platform           string
 }
 
 func psOrderProviderSnapshot(order *dbent.PaymentOrder) *paymentOrderProviderSnapshot {
@@ -33,6 +35,8 @@ func psOrderProviderSnapshot(order *dbent.PaymentOrder) *paymentOrderProviderSna
 		MerchantAppID:      psSnapshotStringValue(order.ProviderSnapshot["merchant_app_id"]),
 		MerchantID:         psSnapshotStringValue(order.ProviderSnapshot["merchant_id"]),
 		Currency:           psSnapshotStringValue(order.ProviderSnapshot["currency"]),
+		PaymentChannel:     psSnapshotStringValue(order.ProviderSnapshot["payment_channel"]),
+		Platform:           psSnapshotStringValue(order.ProviderSnapshot["platform"]),
 	}
 	if snapshot.SchemaVersion == 0 &&
 		snapshot.ProviderInstanceID == "" &&
@@ -40,7 +44,9 @@ func psOrderProviderSnapshot(order *dbent.PaymentOrder) *paymentOrderProviderSna
 		snapshot.PaymentMode == "" &&
 		snapshot.MerchantAppID == "" &&
 		snapshot.MerchantID == "" &&
-		snapshot.Currency == "" {
+		snapshot.Currency == "" &&
+		snapshot.PaymentChannel == "" &&
+		snapshot.Platform == "" {
 		return nil
 	}
 	return snapshot
@@ -188,6 +194,40 @@ func validateProviderSnapshotMetadata(order *dbent.PaymentOrder, providerKey str
 				return fmt.Errorf("easypay pid mismatch: expected %s, got %s", expected, actual)
 			}
 		}
+	case payment.TypeMuyin:
+		if expected := strings.TrimSpace(order.PaymentTradeNo); expected != "" && !strings.EqualFold(expected, strings.TrimSpace(order.OutTradeNo)) {
+			actual := strings.TrimSpace(metadata["payment_id"])
+			if actual == "" {
+				return fmt.Errorf("muyin payment_id missing")
+			}
+			if !strings.EqualFold(expected, actual) {
+				return fmt.Errorf("muyin payment_id mismatch: expected %s, got %s", expected, actual)
+			}
+		}
+		if expected := muyinExpectedPaymentType(order.PaymentType); expected != "" {
+			actual := strings.TrimSpace(metadata["payment_type"])
+			if actual == "" {
+				return fmt.Errorf("muyin payment_type missing")
+			}
+			if !strings.EqualFold(expected, actual) {
+				return fmt.Errorf("muyin payment_type mismatch: expected %s, got %s", expected, actual)
+			}
+		}
+		if expected := strings.TrimSpace(snapshot.PaymentChannel); expected != "" {
+			actual := strings.TrimSpace(metadata["payment_channel"])
+			if actual != "" && !strings.EqualFold(expected, actual) {
+				return fmt.Errorf("muyin payment_channel mismatch: expected %s, got %s", expected, actual)
+			}
+		}
+		if expected := strings.TrimSpace(snapshot.Platform); expected != "" {
+			actual := strings.TrimSpace(metadata["platform"])
+			if actual != "" && !strings.EqualFold(expected, actual) {
+				return fmt.Errorf("muyin platform mismatch: expected %s, got %s", expected, actual)
+			}
+		}
+		if actual := strings.TrimSpace(metadata["status"]); actual != "" && !strings.EqualFold(actual, "SUCCESS") {
+			return fmt.Errorf("muyin status mismatch: expected SUCCESS, got %s", actual)
+		}
 	case payment.TypeStripe:
 		if expected := strings.TrimSpace(snapshot.Currency); expected != "" {
 			actual := strings.ToUpper(strings.TrimSpace(metadata["currency"]))
@@ -223,6 +263,17 @@ func validateProviderSnapshotMetadata(order *dbent.PaymentOrder, providerKey str
 	}
 
 	return nil
+}
+
+func muyinExpectedPaymentType(paymentType string) string {
+	switch payment.GetBasePaymentType(strings.TrimSpace(paymentType)) {
+	case payment.TypeAlipay:
+		return "ALIPAY"
+	case payment.TypeWxpay:
+		return "WECHATPAY"
+	default:
+		return ""
+	}
 }
 
 func providerMerchantIdentityMetadata(prov payment.Provider) map[string]string {

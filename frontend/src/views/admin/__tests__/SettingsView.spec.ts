@@ -750,6 +750,90 @@ describe("admin SettingsView payment visible method controls", () => {
     expect(getProviders).toHaveBeenCalledTimes(2);
   });
 
+  it("allows multiple enabled providers for one visible method", async () => {
+    const existingProvider = {
+      id: 6,
+      provider_key: "easypay",
+      name: "EasyPay Alipay",
+      config: {},
+      supported_types: ["alipay"],
+      enabled: true,
+      payment_mode: "",
+      refund_enabled: false,
+      allow_user_refund: false,
+      limits: "",
+      sort_order: 0,
+    };
+    const provider = {
+      id: 7,
+      provider_key: "alipay",
+      name: "Official Alipay",
+      config: {},
+      supported_types: ["alipay"],
+      enabled: false,
+      payment_mode: "",
+      refund_enabled: false,
+      allow_user_refund: false,
+      limits: "",
+      sort_order: 1,
+    };
+    getProviders.mockReset();
+    getProviders
+      .mockResolvedValueOnce({ data: [existingProvider, provider] })
+      .mockResolvedValueOnce({
+        data: [existingProvider, { ...provider, enabled: true }],
+      });
+    updateProvider.mockResolvedValue({ data: { ...provider, enabled: true } });
+
+    const PaymentProviderListStub = defineComponent({
+      emits: ["toggleField"],
+      setup(_, { emit }) {
+        return () =>
+          h(
+            "button",
+            {
+              class: "provider-toggle-stub",
+              onClick: () => emit("toggleField", provider, "enabled"),
+            },
+            "toggle provider",
+          );
+      },
+    });
+
+    const wrapper = mount(SettingsView, {
+      global: {
+        stubs: {
+          AppLayout: AppLayoutStub,
+          RouterLink: RouterLinkStub,
+          Select: SelectStub,
+          Toggle: ToggleStub,
+          Icon: true,
+          ConfirmDialog: true,
+          PaymentProviderList: PaymentProviderListStub,
+          PaymentProviderDialog: true,
+          GroupBadge: true,
+          GroupOptionItem: true,
+          ProxySelector: true,
+          ImageUpload: ImageUploadStub,
+          BackupSettings: true,
+        },
+      },
+    });
+
+    await flushPromises();
+    await openPaymentTab(wrapper);
+    await wrapper.get(".provider-toggle-stub").trigger("click");
+    await flushPromises();
+
+    expect(showError).not.toHaveBeenCalledWith(
+      expect.stringContaining("enableConflict"),
+    );
+    expect(showError).not.toHaveBeenCalledWith(
+      expect.stringContaining("已有启用中的服务商实例"),
+    );
+    expect(updateProvider).toHaveBeenCalledWith(7, { enabled: true });
+  });
+
   it("renders advanced scheduler copy as local experimental gateway policy", async () => {
     const wrapper = mountView();
 

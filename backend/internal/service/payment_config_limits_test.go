@@ -383,6 +383,14 @@ func TestGetAvailableMethodLimitsUsesConfiguredVisibleMethodSource(t *testing.T)
 			wantGlobalMin:       20,
 			wantGlobalMax:       300,
 		},
+		{
+			name:                "muyin source",
+			sourceSetting:       VisibleMethodSourceMuyinAlipay,
+			wantAlipaySingleMin: 15,
+			wantAlipaySingleMax: 150,
+			wantGlobalMin:       15,
+			wantGlobalMax:       300,
+		},
 	}
 
 	for _, tt := range tests {
@@ -411,6 +419,17 @@ func TestGetAvailableMethodLimitsUsesConfiguredVisibleMethodSource(t *testing.T)
 				Save(ctx)
 			if err != nil {
 				t.Fatalf("create easypay alipay instance: %v", err)
+			}
+			_, err = client.PaymentProviderInstance.Create().
+				SetProviderKey(payment.TypeMuyin).
+				SetName("Muyin Alipay").
+				SetConfig("{}").
+				SetSupportedTypes("alipay").
+				SetLimits(`{"alipay":{"singleMin":15,"singleMax":150}}`).
+				SetEnabled(true).
+				Save(ctx)
+			if err != nil {
+				t.Fatalf("create muyin alipay instance: %v", err)
 			}
 			_, err = client.PaymentProviderInstance.Create().
 				SetProviderKey(payment.TypeWxpay).
@@ -444,6 +463,9 @@ func TestGetAvailableMethodLimitsUsesConfiguredVisibleMethodSource(t *testing.T)
 			}
 			if alipayLimits.SingleMin != tt.wantAlipaySingleMin || alipayLimits.SingleMax != tt.wantAlipaySingleMax {
 				t.Fatalf("alipay limits = %+v, want min=%v max=%v", alipayLimits, tt.wantAlipaySingleMin, tt.wantAlipaySingleMax)
+			}
+			if _, ok := resp.Methods[payment.TypeMuyin]; ok {
+				t.Fatalf("muyin must remain a backend provider source, not a user-visible payment method: %v", resp.Methods)
 			}
 
 			wxpayLimits, ok := resp.Methods[payment.TypeWxpay]

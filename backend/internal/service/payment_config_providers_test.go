@@ -52,6 +52,13 @@ func TestValidateProviderRequest(t *testing.T) {
 			wantErr:        false,
 		},
 		{
+			name:           "valid muyin provider",
+			providerKey:    payment.TypeMuyin,
+			providerName:   "Muyin Provider",
+			supportedTypes: "alipay,wxpay",
+			wantErr:        false,
+		},
+		{
 			name:           "valid alipay provider",
 			providerKey:    "alipay",
 			providerName:   "Alipay Direct",
@@ -149,6 +156,11 @@ func TestIsSensitiveProviderConfigField(t *testing.T) {
 		{"easypay", "pkey", true},
 		{"easypay", "pid", false},
 		{"easypay", "apiBase", false},
+
+		// Muyin
+		{payment.TypeMuyin, "token", true},
+		{payment.TypeMuyin, "apiBase", false},
+		{payment.TypeMuyin, "platform", false},
 
 		// Airwallex
 		{payment.TypeAirwallex, "apiKey", true},
