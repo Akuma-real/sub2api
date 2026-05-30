@@ -29,6 +29,7 @@ export const claudeModels = [
   'claude-opus-4-5-20251101',
   'claude-opus-4-6',
   'claude-opus-4-7',
+  'claude-opus-4-8',
   'claude-sonnet-4-6'
 ]
 
@@ -53,6 +54,7 @@ const antigravityModels = [
   'claude-opus-4-6',
   'claude-opus-4-6-thinking',
   'claude-opus-4-7',
+  'claude-opus-4-8',
   'claude-opus-4-5-thinking',
   'claude-sonnet-4-6',
   'claude-sonnet-4-5',
@@ -238,6 +240,7 @@ const anthropicPresetMappings = [
   { label: 'Opus 4.5', from: 'claude-opus-4-5-20251101', to: 'claude-opus-4-5-20251101', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Opus 4.6', from: 'claude-opus-4-6', to: 'claude-opus-4-6', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Opus 4.7', from: 'claude-opus-4-7', to: 'claude-opus-4-7', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
+  { label: 'Opus 4.8', from: 'claude-opus-4-8', to: 'claude-opus-4-8', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Haiku 3.5', from: 'claude-3-5-haiku-20241022', to: 'claude-3-5-haiku-20241022', color: 'bg-accent-teal/15 text-accent-teal hover:bg-surface-cream-strong' },
   { label: 'Haiku 4.5', from: 'claude-haiku-4-5-20251001', to: 'claude-haiku-4-5-20251001', color: 'bg-accent-teal/15 text-accent-teal hover:bg-surface-cream-strong' },
   { label: 'Opus->Sonnet', from: 'claude-opus-4-6', to: 'claude-sonnet-4-5-20250929', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' }
@@ -297,13 +300,15 @@ const antigravityPresetMappings = [
   { label: 'Sonnet 4.5', from: 'claude-sonnet-4-5', to: 'claude-sonnet-4-5', color: 'bg-surface-card text-primary-600 hover:bg-surface-cream-strong' },
   { label: 'Opus 4.6', from: 'claude-opus-4-6', to: 'claude-opus-4-6-thinking', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Opus 4.6-thinking', from: 'claude-opus-4-6-thinking', to: 'claude-opus-4-6-thinking', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
-  { label: 'Opus 4.7', from: 'claude-opus-4-7', to: 'claude-opus-4-7', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' }
+  { label: 'Opus 4.7', from: 'claude-opus-4-7', to: 'claude-opus-4-7', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
+  { label: 'Opus 4.8', from: 'claude-opus-4-8', to: 'claude-opus-4-8', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' }
 ]
 
 // Bedrock 预设映射（与后端 DefaultBedrockModelMapping 保持一致）
 const bedrockPresetMappings = [
   { label: 'Opus 4.6', from: 'claude-opus-4-6', to: 'us.anthropic.claude-opus-4-6-v1', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Opus 4.7', from: 'claude-opus-4-7', to: 'us.anthropic.claude-opus-4-7-v1', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
+  { label: 'Opus 4.8', from: 'claude-opus-4-8', to: 'us.anthropic.claude-opus-4-8-v1', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Sonnet 4.6', from: 'claude-sonnet-4-6', to: 'us.anthropic.claude-sonnet-4-6', color: 'bg-surface-card text-primary-600 hover:bg-surface-cream-strong' },
   { label: 'Opus 4.5', from: 'claude-opus-4-5-thinking', to: 'us.anthropic.claude-opus-4-5-20251101-v1:0', color: 'bg-surface-card text-accent-amber hover:bg-surface-cream-strong' },
   { label: 'Sonnet 4.5', from: 'claude-sonnet-4-5', to: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0', color: 'bg-surface-card text-primary-600 hover:bg-surface-cream-strong' },

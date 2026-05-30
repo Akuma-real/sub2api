@@ -1,18 +1,29 @@
+//go:build unit
+
 package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
-type noopUpdateCache struct{}
-
-func (noopUpdateCache) GetUpdateInfo(context.Context) (string, error) {
-	return "", context.Canceled
+type updateServiceCacheStub struct {
+	data string
 }
 
-func (noopUpdateCache) SetUpdateInfo(context.Context, string, time.Duration) error {
+func (s *updateServiceCacheStub) GetUpdateInfo(context.Context) (string, error) {
+	if s.data == "" {
+		return "", errors.New("cache miss")
+	}
+	return s.data, nil
+}
+
+func (s *updateServiceCacheStub) SetUpdateInfo(_ context.Context, data string, _ time.Duration) error {
+	s.data = data
 	return nil
 }
 
@@ -34,6 +45,22 @@ func (*recordingReleaseClient) DownloadFile(context.Context, string, string, int
 
 func (*recordingReleaseClient) FetchChecksumFile(context.Context, string) ([]byte, error) {
 	return nil, nil
+}
+
+type updateServiceGitHubClientStub struct {
+	release *GitHubRelease
+}
+
+func (s *updateServiceGitHubClientStub) FetchLatestRelease(context.Context, string) (*GitHubRelease, error) {
+	return s.release, nil
+}
+
+func (s *updateServiceGitHubClientStub) DownloadFile(context.Context, string, string, int64) error {
+	panic("DownloadFile should not be called when no update is available")
+}
+
+func (s *updateServiceGitHubClientStub) FetchChecksumFile(context.Context, string) ([]byte, error) {
+	panic("FetchChecksumFile should not be called when no update is available")
 }
 
 func TestCompareVersionsHandlesForkPrereleases(t *testing.T) {
@@ -87,7 +114,7 @@ func TestCompareVersionsHandlesForkPrereleases(t *testing.T) {
 
 func TestUpdateServiceUsesConfiguredGitHubRepo(t *testing.T) {
 	client := &recordingReleaseClient{}
-	svc := NewUpdateService(noopUpdateCache{}, client, "0.1.127-akuma.3", "release", "example/sub2api")
+	svc := NewUpdateService(&updateServiceCacheStub{}, client, "0.1.127-akuma.3", "release", "example/sub2api")
 
 	info, err := svc.CheckUpdate(context.Background(), true)
 	if err != nil {
@@ -103,7 +130,7 @@ func TestUpdateServiceUsesConfiguredGitHubRepo(t *testing.T) {
 
 func TestUpdateServiceDefaultsToForkGitHubRepo(t *testing.T) {
 	client := &recordingReleaseClient{}
-	svc := NewUpdateService(noopUpdateCache{}, client, "0.1.127-akuma.3", "release", "")
+	svc := NewUpdateService(&updateServiceCacheStub{}, client, "0.1.127-akuma.3", "release", "")
 
 	_, err := svc.CheckUpdate(context.Background(), true)
 	if err != nil {
@@ -112,4 +139,25 @@ func TestUpdateServiceDefaultsToForkGitHubRepo(t *testing.T) {
 	if client.repo != defaultGitHubRepo {
 		t.Fatalf("repo = %q, want %q", client.repo, defaultGitHubRepo)
 	}
+}
+
+func TestUpdateServicePerformUpdateNoUpdateReturnsSentinel(t *testing.T) {
+	svc := NewUpdateService(
+		&updateServiceCacheStub{},
+		&updateServiceGitHubClientStub{
+			release: &GitHubRelease{
+				TagName: "v0.1.132",
+				Name:    "v0.1.132",
+			},
+		},
+		"0.1.132",
+		"release",
+		"",
+	)
+
+	err := svc.PerformUpdate(context.Background())
+
+	require.Error(t, err)
+	require.True(t, errors.Is(err, ErrNoUpdateAvailable))
+	require.ErrorIs(t, err, ErrNoUpdateAvailable)
 }
