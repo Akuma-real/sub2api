@@ -152,8 +152,8 @@
   }
 
   .model-action-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-on-primary transition-colors;
-    @apply hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-on-primary transition-colors;
+    @apply hover:bg-primary-600 active:bg-primary-600 disabled:cursor-not-allowed disabled:bg-primary-200 disabled:text-muted;
   }
 
   /* ============ 输入框样式 ============ */
@@ -495,15 +495,15 @@
   }
 
   .toast-success {
-    @apply border-l-emerald-500;
+    @apply border-l-success;
   }
 
   .toast-error {
-    @apply border-l-red-500;
+    @apply border-l-error;
   }
 
   .toast-warning {
-    @apply border-l-amber-500;
+    @apply border-l-warning;
   }
 
   .toast-info {

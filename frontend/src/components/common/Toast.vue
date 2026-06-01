@@ -104,7 +104,7 @@ const getToastIconName = (
 
 const getIconColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: "text-primary-600",
+    success: "text-success",
     error: "text-error",
     warning: "text-warning",
     info: "text-accent-teal",
@@ -114,9 +114,9 @@ const getIconColor = (type: string): string => {
 
 const getBorderColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: "border-l-primary-600",
+    success: "border-l-success",
     error: "border-l-error",
-    warning: "border-l-accent-amber",
+    warning: "border-l-warning",
     info: "border-l-accent-teal",
   };
   return colors[type] || colors.info;
@@ -124,9 +124,9 @@ const getBorderColor = (type: string): string => {
 
 const getProgressBarColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: "bg-primary-600",
+    success: "bg-success",
     error: "bg-error",
-    warning: "bg-accent-amber",
+    warning: "bg-warning",
     info: "bg-accent-teal",
   };
   return colors[type] || colors.info;
