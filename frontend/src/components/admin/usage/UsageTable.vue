@@ -21,6 +21,12 @@
               {{ row.user.email }}
             </button>
             <span v-else class="font-medium text-ink">-</span>
+            <span
+              v-if="row.user?.deleted_at"
+              class="ml-1 inline-flex items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-error/15 text-error ring-1 ring-inset ring-error/25"
+            >
+              {{ t('admin.usage.userDeletedBadge') }}
+            </span>
             <span class="ml-1 text-muted">#{{ row.user_id }}</span>
           </div>
         </template>

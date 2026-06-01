@@ -23,6 +23,12 @@
             <div class="flex items-center gap-2">
               <p class="truncate font-medium text-ink">{{ user.email }}</p>
               <span
+                v-if="user.deleted_at"
+                class="inline-flex flex-shrink-0 items-center rounded px-1 py-px text-[10px] font-medium leading-tight bg-error/15 text-error ring-1 ring-inset ring-error/25"
+              >
+                {{ t('admin.usage.userDeletedBadge') }}
+              </span>
+              <span
                 v-if="user.username"
                 class="flex-shrink-0 rounded bg-primary-50 px-1.5 py-0.5 text-xs text-primary-600"
               >

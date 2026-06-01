@@ -77,6 +77,7 @@
         :start-date="startDate"
         :end-date="endDate"
         :exporting="exporting"
+        :model-options="modelNameOptions"
         @change="applyFilters"
         @refresh="refreshData"
         @reset="resetFilters"
@@ -281,9 +282,13 @@ const breakdownFilters = computed(() => {
   return f;
 });
 
+const modelNameOptions = computed(() =>
+  Array.from(new Set(requestedModelStats.value.map((m) => m.model).filter(Boolean))).sort()
+)
+
 const handleUserClick = async (userId: number) => {
   try {
-    const user = await adminAPI.users.getById(userId);
+    const user = await adminAPI.users.getById(userId, true);
     balanceHistoryUser.value = user;
     showBalanceHistoryModal.value = true;
   } catch {
@@ -435,7 +440,7 @@ const loadLogs = async () => {
     if (abortController === c) loading.value = false;
   }
 };
-const loadStats = async () => {
+const loadStats = async (force = false) => {
   const seq = ++statsReqSeq;
   endpointStatsLoading.value = true;
   try {
@@ -446,6 +451,7 @@ const loadStats = async () => {
     const s = await adminAPI.usage.getStats({
       ...filters.value,
       stream: legacyStream === null ? undefined : legacyStream,
+      ...(force ? { nocache: 1 } : {}),
     });
     if (seq !== statsReqSeq) return;
     usageStats.value = s;
@@ -463,10 +469,7 @@ const loadStats = async () => {
   }
 };
 
-const resetModelStatsCache = () => {
-  requestedModelStats.value = [];
-  upstreamModelStats.value = [];
-  mappingModelStats.value = [];
+const invalidateModelStatsCache = () => {
   loadedModelSources.requested = false;
   loadedModelSources.upstream = false;
   loadedModelSources.mapping = false;
@@ -569,16 +572,16 @@ const loadChartData = async () => {
 };
 const applyFilters = () => {
   pagination.page = 1;
-  resetModelStatsCache();
+  invalidateModelStatsCache();
   loadLogs();
   loadStats();
   loadModelStats(modelDistributionSource.value, true);
   loadChartData();
 };
 const refreshData = () => {
-  resetModelStatsCache();
+  invalidateModelStatsCache();
   loadLogs();
-  loadStats();
+  loadStats(true);
   loadModelStats(modelDistributionSource.value, true);
   loadChartData();
 };
@@ -853,4 +856,6 @@ onUnmounted(() => {
 watch(modelDistributionSource, (source) => {
   void loadModelStats(source);
 });
+
+defineExpose({ requestedModelStats, refreshData })
 </script>
