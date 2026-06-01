@@ -18,7 +18,7 @@
           :key="toast.id"
           :class="[
             'pointer-events-auto min-w-[320px] max-w-md overflow-hidden rounded-lg shadow-card',
-            'bg-canvas ',
+            'border-y border-r border-y-hairline border-r-hairline bg-canvas',
             'border-l-4',
             getBorderColor(toast.type),
           ]"
@@ -104,7 +104,7 @@ const getToastIconName = (
 
 const getIconColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: "text-success",
+    success: "text-primary-600",
     error: "text-error",
     warning: "text-warning",
     info: "text-accent-teal",
@@ -114,17 +114,17 @@ const getIconColor = (type: string): string => {
 
 const getBorderColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: "border-success",
-    error: "border-error",
-    warning: "border-accent-amber",
-    info: "border-accent-teal",
+    success: "border-l-primary-600",
+    error: "border-l-error",
+    warning: "border-l-accent-amber",
+    info: "border-l-accent-teal",
   };
   return colors[type] || colors.info;
 };
 
 const getProgressBarColor = (type: string): string => {
   const colors: Record<string, string> = {
-    success: "bg-success",
+    success: "bg-primary-600",
     error: "bg-error",
     warning: "bg-accent-amber",
     info: "bg-accent-teal",

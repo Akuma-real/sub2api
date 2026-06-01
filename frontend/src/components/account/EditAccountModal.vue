@@ -1003,7 +1003,7 @@
               type="button"
               @click="syncAntigravityUpstreamModels"
               :disabled="isSyncingAntigravityUpstream || !account?.id"
-              class="rounded-lg border border-success/25 px-3 py-1.5 text-sm text-success hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-60"
+              class="model-action-primary"
             >
               {{ isSyncingAntigravityUpstream ? t('admin.accounts.syncUpstreamModelsLoading') : t('admin.accounts.syncUpstreamModels') }}
             </button>
