@@ -23,6 +23,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	servermiddleware "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/Wei-Shaw/sub2api/internal/util/logredact"
 
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
@@ -228,7 +229,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 				exchangeErr.StatusCode,
 				exchangeErr.ProviderError,
 				exchangeErr.ProviderDescription,
-				truncateLogValue(exchangeErr.Body, 2048),
+				truncateLogValue(logredact.RedactText(exchangeErr.Body), 2048),
 			)
 			description = exchangeErr.Error()
 		} else {

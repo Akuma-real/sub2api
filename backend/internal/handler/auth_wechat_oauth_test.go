@@ -1470,12 +1470,24 @@ func (s *wechatOAuthRefreshTokenCacheStub) DeleteRefreshToken(context.Context, s
 	return nil
 }
 
+func (s *wechatOAuthRefreshTokenCacheStub) StoreUsedRefreshToken(context.Context, string, *service.RefreshTokenData, time.Duration) error {
+	return nil
+}
+
+func (s *wechatOAuthRefreshTokenCacheStub) GetUsedRefreshToken(context.Context, string) (*service.RefreshTokenData, error) {
+	return nil, service.ErrRefreshTokenNotFound
+}
+
 func (s *wechatOAuthRefreshTokenCacheStub) DeleteUserRefreshTokens(context.Context, int64) error {
 	return nil
 }
 
 func (s *wechatOAuthRefreshTokenCacheStub) DeleteTokenFamily(context.Context, string) error {
 	return nil
+}
+
+func (s *wechatOAuthRefreshTokenCacheStub) IsTokenFamilyRevoked(context.Context, string) (bool, error) {
+	return false, nil
 }
 
 func (s *wechatOAuthRefreshTokenCacheStub) AddToUserTokenSet(context.Context, int64, string, time.Duration) error {

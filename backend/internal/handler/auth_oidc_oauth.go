@@ -25,6 +25,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/oauth"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/Wei-Shaw/sub2api/internal/util/logredact"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -281,7 +282,7 @@ func (h *AuthHandler) OIDCOAuthCallback(c *gin.Context) {
 				exchangeErr.StatusCode,
 				exchangeErr.ProviderError,
 				exchangeErr.ProviderDescription,
-				truncateLogValue(exchangeErr.Body, 2048),
+				truncateLogValue(logredact.RedactText(exchangeErr.Body), 2048),
 			)
 			description = exchangeErr.Error()
 		} else {

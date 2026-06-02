@@ -131,12 +131,24 @@ func (s *refreshTokenCacheStub) DeleteRefreshToken(context.Context, string) erro
 	return nil
 }
 
+func (s *refreshTokenCacheStub) StoreUsedRefreshToken(context.Context, string, *RefreshTokenData, time.Duration) error {
+	return nil
+}
+
+func (s *refreshTokenCacheStub) GetUsedRefreshToken(context.Context, string) (*RefreshTokenData, error) {
+	return nil, ErrRefreshTokenNotFound
+}
+
 func (s *refreshTokenCacheStub) DeleteUserRefreshTokens(context.Context, int64) error {
 	return nil
 }
 
 func (s *refreshTokenCacheStub) DeleteTokenFamily(context.Context, string) error {
 	return nil
+}
+
+func (s *refreshTokenCacheStub) IsTokenFamilyRevoked(context.Context, string) (bool, error) {
+	return false, nil
 }
 
 func (s *refreshTokenCacheStub) AddToUserTokenSet(context.Context, int64, string, time.Duration) error {

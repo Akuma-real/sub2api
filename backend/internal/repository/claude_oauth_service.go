@@ -64,7 +64,7 @@ func (s *claudeOAuthService) GetOrganizationUUID(ctx context.Context, sessionKey
 	logger.LegacyPrintf("repository.claude_oauth", "[OAuth] Step 1 Response - Status: %d", resp.StatusCode)
 
 	if !resp.IsSuccessState() {
-		return "", fmt.Errorf("failed to get organizations: status %d, body: %s", resp.StatusCode, resp.String())
+		return "", fmt.Errorf("failed to get organizations: status %d, body: %s", resp.StatusCode, logredact.RedactText(resp.String()))
 	}
 
 	if len(orgs) == 0 {
@@ -139,10 +139,10 @@ func (s *claudeOAuthService) GetAuthorizationCode(ctx context.Context, sessionKe
 		return "", fmt.Errorf("request failed: %w", err)
 	}
 
-	logger.LegacyPrintf("repository.claude_oauth", "[OAuth] Step 2 Response - Status: %d, Body: %s", resp.StatusCode, logredact.RedactJSON(resp.Bytes()))
+	logger.LegacyPrintf("repository.claude_oauth", "[OAuth] Step 2 Response - Status: %d, Body: %s", resp.StatusCode, logredact.RedactJSON(resp.Bytes(), "redirect_uri"))
 
 	if !resp.IsSuccessState() {
-		return "", fmt.Errorf("failed to get authorization code: status %d, body: %s", resp.StatusCode, resp.String())
+		return "", fmt.Errorf("failed to get authorization code: status %d, body: %s", resp.StatusCode, logredact.RedactText(resp.String(), "redirect_uri"))
 	}
 
 	if result.RedirectURI == "" {
@@ -225,7 +225,7 @@ func (s *claudeOAuthService) ExchangeCodeForToken(ctx context.Context, code, cod
 	logger.LegacyPrintf("repository.claude_oauth", "[OAuth] Step 3 Response - Status: %d, Body: %s", resp.StatusCode, logredact.RedactJSON(resp.Bytes()))
 
 	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("token exchange failed: status %d, body: %s", resp.StatusCode, resp.String())
+		return nil, fmt.Errorf("token exchange failed: status %d, body: %s", resp.StatusCode, logredact.RedactText(resp.String()))
 	}
 
 	logger.LegacyPrintf("repository.claude_oauth", "[OAuth] Step 3 SUCCESS - Got access token")
@@ -260,7 +260,7 @@ func (s *claudeOAuthService) RefreshToken(ctx context.Context, refreshToken, pro
 	}
 
 	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("token refresh failed: status %d, body: %s", resp.StatusCode, resp.String())
+		return nil, fmt.Errorf("token refresh failed: status %d, body: %s", resp.StatusCode, logredact.RedactText(resp.String()))
 	}
 
 	return &tokenResp, nil

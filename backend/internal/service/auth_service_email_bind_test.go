@@ -596,23 +596,30 @@ func (s *emailBindCacheStub) IncrNotifyCodeUserRate(context.Context, int64, time
 }
 
 type emailBindRefreshTokenCacheStub struct {
-	mu       sync.Mutex
-	tokens   map[string]*service.RefreshTokenData
-	userSets map[int64]map[string]struct{}
-	families map[string]map[string]struct{}
+	mu              sync.Mutex
+	tokens          map[string]*service.RefreshTokenData
+	usedTokens      map[string]*service.RefreshTokenData
+	userSets        map[int64]map[string]struct{}
+	families        map[string]map[string]struct{}
+	revokedFamilies map[string]struct{}
 }
 
 func newEmailBindRefreshTokenCacheStub() *emailBindRefreshTokenCacheStub {
 	return &emailBindRefreshTokenCacheStub{
-		tokens:   make(map[string]*service.RefreshTokenData),
-		userSets: make(map[int64]map[string]struct{}),
-		families: make(map[string]map[string]struct{}),
+		tokens:          make(map[string]*service.RefreshTokenData),
+		usedTokens:      make(map[string]*service.RefreshTokenData),
+		userSets:        make(map[int64]map[string]struct{}),
+		families:        make(map[string]map[string]struct{}),
+		revokedFamilies: make(map[string]struct{}),
 	}
 }
 
 func (s *emailBindRefreshTokenCacheStub) StoreRefreshToken(_ context.Context, tokenHash string, data *service.RefreshTokenData, _ time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if _, revoked := s.revokedFamilies[data.FamilyID]; revoked {
+		return service.ErrRefreshTokenReused
+	}
 	cloned := *data
 	s.tokens[tokenHash] = &cloned
 	return nil
@@ -633,23 +640,52 @@ func (s *emailBindRefreshTokenCacheStub) DeleteRefreshToken(_ context.Context, t
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.tokens, tokenHash)
+	return nil
+}
+
+func (s *emailBindRefreshTokenCacheStub) StoreUsedRefreshToken(_ context.Context, tokenHash string, data *service.RefreshTokenData, _ time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, exists := s.usedTokens[tokenHash]; exists {
+		return service.ErrRefreshTokenReused
+	}
+	cloned := *data
+	s.usedTokens[tokenHash] = &cloned
+	return nil
+}
+
+func (s *emailBindRefreshTokenCacheStub) GetUsedRefreshToken(_ context.Context, tokenHash string) (*service.RefreshTokenData, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	data, ok := s.usedTokens[tokenHash]
+	if !ok {
+		return nil, service.ErrRefreshTokenNotFound
+	}
+	cloned := *data
+	return &cloned, nil
+}
+
+func (s *emailBindRefreshTokenCacheStub) deleteTokenFromSetsLocked(tokenHash string) {
+	delete(s.tokens, tokenHash)
+	delete(s.usedTokens, tokenHash)
 	for _, tokenSet := range s.userSets {
 		delete(tokenSet, tokenHash)
 	}
 	for _, tokenSet := range s.families {
 		delete(tokenSet, tokenHash)
 	}
-	return nil
+}
+
+func (s *emailBindRefreshTokenCacheStub) deleteTokenDataLocked(tokenHash string) {
+	delete(s.tokens, tokenHash)
+	delete(s.usedTokens, tokenHash)
 }
 
 func (s *emailBindRefreshTokenCacheStub) DeleteUserRefreshTokens(_ context.Context, userID int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for tokenHash := range s.userSets[userID] {
-		delete(s.tokens, tokenHash)
-		for _, tokenSet := range s.families {
-			delete(tokenSet, tokenHash)
-		}
+		s.deleteTokenFromSetsLocked(tokenHash)
 	}
 	delete(s.userSets, userID)
 	return nil
@@ -658,14 +694,19 @@ func (s *emailBindRefreshTokenCacheStub) DeleteUserRefreshTokens(_ context.Conte
 func (s *emailBindRefreshTokenCacheStub) DeleteTokenFamily(_ context.Context, familyID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.revokedFamilies[familyID] = struct{}{}
 	for tokenHash := range s.families[familyID] {
-		delete(s.tokens, tokenHash)
-		for _, tokenSet := range s.userSets {
-			delete(tokenSet, tokenHash)
-		}
+		s.deleteTokenFromSetsLocked(tokenHash)
 	}
 	delete(s.families, familyID)
 	return nil
+}
+
+func (s *emailBindRefreshTokenCacheStub) IsTokenFamilyRevoked(_ context.Context, familyID string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.revokedFamilies[familyID]
+	return ok, nil
 }
 
 func (s *emailBindRefreshTokenCacheStub) AddToUserTokenSet(_ context.Context, userID int64, tokenHash string, _ time.Duration) error {
@@ -681,6 +722,10 @@ func (s *emailBindRefreshTokenCacheStub) AddToUserTokenSet(_ context.Context, us
 func (s *emailBindRefreshTokenCacheStub) AddToFamilyTokenSet(_ context.Context, familyID string, tokenHash string, _ time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if _, revoked := s.revokedFamilies[familyID]; revoked {
+		s.deleteTokenDataLocked(tokenHash)
+		return service.ErrRefreshTokenReused
+	}
 	if s.families[familyID] == nil {
 		s.families[familyID] = make(map[string]struct{})
 	}

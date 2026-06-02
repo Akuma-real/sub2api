@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/oauth"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/Wei-Shaw/sub2api/internal/util/logredact"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
 	"github.com/tidwall/gjson"
@@ -473,7 +474,7 @@ func exchangeEmailOAuthCode(ctx context.Context, cfg config.EmailOAuthProviderCo
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("token endpoint status %d: %s", resp.StatusCode, truncateLogValue(resp.String(), 1024))
+		return nil, fmt.Errorf("token endpoint status %d: %s", resp.StatusCode, truncateLogValue(logredact.RedactText(resp.String()), 1024))
 	}
 	var tokenResp emailOAuthTokenResponse
 	if err := json.Unmarshal(resp.Bytes(), &tokenResp); err != nil {
@@ -496,7 +497,7 @@ func fetchEmailOAuthProfile(ctx context.Context, provider string, cfg config.Ema
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("userinfo endpoint status %d: %s", resp.StatusCode, truncateLogValue(resp.String(), 1024))
+		return nil, fmt.Errorf("userinfo endpoint status %d: %s", resp.StatusCode, truncateLogValue(logredact.RedactText(resp.String()), 1024))
 	}
 	switch strings.ToLower(strings.TrimSpace(provider)) {
 	case "github":
@@ -552,7 +553,7 @@ func fetchGitHubPrimaryVerifiedEmail(ctx context.Context, emailsURL string, acce
 		return "", err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("github emails endpoint status %d: %s", resp.StatusCode, truncateLogValue(resp.String(), 1024))
+		return "", fmt.Errorf("github emails endpoint status %d: %s", resp.StatusCode, truncateLogValue(logredact.RedactText(resp.String()), 1024))
 	}
 	items := gjson.Parse(resp.String()).Array()
 	for _, item := range items {

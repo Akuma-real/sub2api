@@ -2392,12 +2392,24 @@ func (s *oauthPendingFlowRefreshTokenCacheStub) DeleteRefreshToken(context.Conte
 	return nil
 }
 
+func (s *oauthPendingFlowRefreshTokenCacheStub) StoreUsedRefreshToken(context.Context, string, *service.RefreshTokenData, time.Duration) error {
+	return nil
+}
+
+func (s *oauthPendingFlowRefreshTokenCacheStub) GetUsedRefreshToken(context.Context, string) (*service.RefreshTokenData, error) {
+	return nil, service.ErrRefreshTokenNotFound
+}
+
 func (s *oauthPendingFlowRefreshTokenCacheStub) DeleteUserRefreshTokens(context.Context, int64) error {
 	return nil
 }
 
 func (s *oauthPendingFlowRefreshTokenCacheStub) DeleteTokenFamily(context.Context, string) error {
 	return nil
+}
+
+func (s *oauthPendingFlowRefreshTokenCacheStub) IsTokenFamilyRevoked(context.Context, string) (bool, error) {
+	return false, nil
 }
 
 func (s *oauthPendingFlowRefreshTokenCacheStub) AddToUserTokenSet(context.Context, int64, string, time.Duration) error {

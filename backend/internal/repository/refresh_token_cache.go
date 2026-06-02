@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,14 +12,22 @@ import (
 )
 
 const (
-	refreshTokenKeyPrefix   = "refresh_token:"
-	userRefreshTokensPrefix = "user_refresh_tokens:"
-	tokenFamilyPrefix       = "token_family:"
+	refreshTokenKeyPrefix    = "refresh_token:"
+	usedRefreshTokenPrefix   = "refresh_token_used:"
+	userRefreshTokensPrefix  = "user_refresh_tokens:"
+	tokenFamilyPrefix        = "token_family:"
+	tokenFamilyRevokedPrefix = "token_family_revoked:"
+	revokedTokenFamilyTTL    = 90 * 24 * time.Hour
 )
 
 // refreshTokenKey generates the Redis key for a refresh token.
 func refreshTokenKey(tokenHash string) string {
 	return refreshTokenKeyPrefix + tokenHash
+}
+
+// usedRefreshTokenKey generates the Redis key for a consumed refresh token.
+func usedRefreshTokenKey(tokenHash string) string {
+	return usedRefreshTokenPrefix + tokenHash
 }
 
 // userRefreshTokensKey generates the Redis key for user's token set.
@@ -29,6 +38,11 @@ func userRefreshTokensKey(userID int64) string {
 // tokenFamilyKey generates the Redis key for token family set.
 func tokenFamilyKey(familyID string) string {
 	return tokenFamilyPrefix + familyID
+}
+
+// tokenFamilyRevokedKey generates the Redis key for a revoked token family marker.
+func tokenFamilyRevokedKey(familyID string) string {
+	return tokenFamilyRevokedPrefix + familyID
 }
 
 type refreshTokenCache struct {
@@ -42,15 +56,55 @@ func NewRefreshTokenCache(rdb *redis.Client) service.RefreshTokenCache {
 
 func (c *refreshTokenCache) StoreRefreshToken(ctx context.Context, tokenHash string, data *service.RefreshTokenData, ttl time.Duration) error {
 	key := refreshTokenKey(tokenHash)
+	revokedKey := tokenFamilyRevokedKey(data.FamilyID)
 	val, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("marshal refresh token data: %w", err)
 	}
-	return c.rdb.Set(ctx, key, val, ttl).Err()
+	script := redis.NewScript(`
+if redis.call("EXISTS", KEYS[2]) == 1 then
+	return 0
+end
+redis.call("SET", KEYS[1], ARGV[1], "PX", ARGV[2])
+return 1
+`)
+	stored, err := script.Run(ctx, c.rdb, []string{key, revokedKey}, val, ttl.Milliseconds()).Int()
+	if err != nil {
+		return err
+	}
+	if stored == 0 {
+		return service.ErrRefreshTokenReused
+	}
+	return nil
+}
+
+func (c *refreshTokenCache) StoreUsedRefreshToken(ctx context.Context, tokenHash string, data *service.RefreshTokenData, ttl time.Duration) error {
+	key := usedRefreshTokenKey(tokenHash)
+	val, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("marshal refresh token data: %w", err)
+	}
+	stored, err := c.rdb.SetNX(ctx, key, val, ttl).Result()
+	if err != nil {
+		return err
+	}
+	if !stored {
+		return service.ErrRefreshTokenReused
+	}
+	return nil
 }
 
 func (c *refreshTokenCache) GetRefreshToken(ctx context.Context, tokenHash string) (*service.RefreshTokenData, error) {
 	key := refreshTokenKey(tokenHash)
+	return c.getTokenData(ctx, key)
+}
+
+func (c *refreshTokenCache) GetUsedRefreshToken(ctx context.Context, tokenHash string) (*service.RefreshTokenData, error) {
+	key := usedRefreshTokenKey(tokenHash)
+	return c.getTokenData(ctx, key)
+}
+
+func (c *refreshTokenCache) getTokenData(ctx context.Context, key string) (*service.RefreshTokenData, error) {
 	val, err := c.rdb.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -82,9 +136,10 @@ func (c *refreshTokenCache) DeleteUserRefreshTokens(ctx context.Context, userID 
 	}
 
 	// Build keys to delete
-	keys := make([]string, 0, len(tokenHashes)+1)
+	keys := make([]string, 0, len(tokenHashes)*2+1)
 	for _, hash := range tokenHashes {
 		keys = append(keys, refreshTokenKey(hash))
+		keys = append(keys, usedRefreshTokenKey(hash))
 	}
 	keys = append(keys, userRefreshTokensKey(userID))
 
@@ -104,24 +159,63 @@ func (c *refreshTokenCache) DeleteTokenFamily(ctx context.Context, familyID stri
 		return fmt.Errorf("get family token hashes: %w", err)
 	}
 
+	markerTTL, err := c.tokenFamilyRevocationTTL(ctx, tokenHashes)
+	if err != nil {
+		return fmt.Errorf("get family token revocation ttl: %w", err)
+	}
+	if markerTTL < revokedTokenFamilyTTL {
+		markerTTL = revokedTokenFamilyTTL
+	}
+
 	if len(tokenHashes) == 0 {
-		return nil
+		return c.rdb.Set(ctx, tokenFamilyRevokedKey(familyID), "1", markerTTL).Err()
 	}
 
 	// Build keys to delete
-	keys := make([]string, 0, len(tokenHashes)+1)
+	keys := make([]string, 0, len(tokenHashes)*2+1)
 	for _, hash := range tokenHashes {
 		keys = append(keys, refreshTokenKey(hash))
+		keys = append(keys, usedRefreshTokenKey(hash))
 	}
 	keys = append(keys, tokenFamilyKey(familyID))
 
 	// Delete all keys in a pipeline
 	pipe := c.rdb.Pipeline()
+	pipe.Set(ctx, tokenFamilyRevokedKey(familyID), "1", markerTTL)
 	for _, key := range keys {
 		pipe.Del(ctx, key)
 	}
 	_, err = pipe.Exec(ctx)
 	return err
+}
+
+func (c *refreshTokenCache) tokenFamilyRevocationTTL(ctx context.Context, tokenHashes []string) (time.Duration, error) {
+	now := time.Now()
+	var ttl time.Duration
+	for _, hash := range tokenHashes {
+		data, err := c.GetRefreshToken(ctx, hash)
+		if errors.Is(err, service.ErrRefreshTokenNotFound) {
+			data, err = c.GetUsedRefreshToken(ctx, hash)
+		}
+		if errors.Is(err, service.ErrRefreshTokenNotFound) {
+			continue
+		}
+		if err != nil {
+			return 0, err
+		}
+		if remaining := data.ExpiresAt.Sub(now); remaining > ttl {
+			ttl = remaining
+		}
+	}
+	return ttl, nil
+}
+
+func (c *refreshTokenCache) IsTokenFamilyRevoked(ctx context.Context, familyID string) (bool, error) {
+	count, err := c.rdb.Exists(ctx, tokenFamilyRevokedKey(familyID)).Result()
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (c *refreshTokenCache) AddToUserTokenSet(ctx context.Context, userID int64, tokenHash string, ttl time.Duration) error {
@@ -135,11 +229,23 @@ func (c *refreshTokenCache) AddToUserTokenSet(ctx context.Context, userID int64,
 
 func (c *refreshTokenCache) AddToFamilyTokenSet(ctx context.Context, familyID string, tokenHash string, ttl time.Duration) error {
 	key := tokenFamilyKey(familyID)
-	pipe := c.rdb.Pipeline()
-	pipe.SAdd(ctx, key, tokenHash)
-	pipe.Expire(ctx, key, ttl)
-	_, err := pipe.Exec(ctx)
-	return err
+	revokedKey := tokenFamilyRevokedKey(familyID)
+	script := redis.NewScript(`
+if redis.call("EXISTS", KEYS[2]) == 1 then
+	return 0
+end
+redis.call("SADD", KEYS[1], ARGV[1])
+redis.call("EXPIRE", KEYS[1], ARGV[2])
+return 1
+`)
+	added, err := script.Run(ctx, c.rdb, []string{key, revokedKey}, tokenHash, int64(ttl.Seconds())).Int()
+	if err != nil {
+		return err
+	}
+	if added == 0 {
+		return service.ErrRefreshTokenReused
+	}
+	return nil
 }
 
 func (c *refreshTokenCache) GetUserTokenHashes(ctx context.Context, userID int64) ([]string, error) {
