@@ -28,3 +28,24 @@ export function getBillingModeBadgeClass(
       return "bg-accent-teal/15 text-accent-teal";
   }
 }
+
+interface ImageBillingRow {
+  image_count: number
+  billing_mode?: string | null
+  total_cost: number
+}
+
+export function isImageUsage(row: Pick<ImageBillingRow, 'image_count' | 'billing_mode'> | null | undefined): boolean {
+  return (row?.image_count ?? 0) > 0 && row?.billing_mode !== BILLING_MODE_TOKEN
+}
+
+export function getDisplayBillingMode(row: Pick<ImageBillingRow, 'billing_mode' | 'image_count'> | null | undefined): string | null | undefined {
+  return row?.billing_mode
+}
+
+export function imageUnitPrice(row: Pick<ImageBillingRow, 'image_count' | 'total_cost'> | null): number {
+  if (!row || row.image_count <= 0) return 0
+  const total = row.total_cost ?? 0
+  const price = total / row.image_count
+  return Number.isFinite(price) ? price : 0
+}

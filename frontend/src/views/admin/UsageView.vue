@@ -131,24 +131,47 @@
           </div>
         </template>
       </UsageFilters>
-      <UsageTable
-        :data="usageLogs"
-        :loading="loading"
-        :columns="visibleColumns"
-        :server-side-sort="true"
-        :default-sort-key="'created_at'"
-        :default-sort-order="'desc'"
-        @sort="handleSort"
-        @userClick="handleUserClick"
-      />
-      <Pagination
-        v-if="pagination.total > 0"
-        :page="pagination.page"
-        :total="pagination.total"
-        :page-size="pagination.page_size"
-        @update:page="handlePageChange"
-        @update:pageSize="handlePageSizeChange"
-      />
+      <div class="mb-4 flex gap-2 border-b border-hairline">
+        <button class="tab" :class="{ 'tab-active': activeTab === 'usage' }" @click="activeTab = 'usage'">
+          {{ t('usage.tabs.usage') }}
+        </button>
+        <button class="tab" :class="{ 'tab-active': activeTab === 'errors' }" @click="switchToErrorsTab">
+          {{ t('usage.tabs.errors') }}
+        </button>
+      </div>
+      <div v-show="activeTab === 'usage'">
+        <UsageTable
+          :data="usageLogs"
+          :loading="loading"
+          :columns="visibleColumns"
+          :server-side-sort="true"
+          :default-sort-key="'created_at'"
+          :default-sort-order="'desc'"
+          @sort="handleSort"
+          @userClick="handleUserClick"
+        />
+        <Pagination
+          v-if="pagination.total > 0"
+          :page="pagination.page"
+          :total="pagination.total"
+          :page-size="pagination.page_size"
+          @update:page="handlePageChange"
+          @update:pageSize="handlePageSizeChange"
+        />
+      </div>
+      <div v-show="activeTab === 'errors'">
+        <OpsErrorLogTable
+          :rows="errRows"
+          :total="errTotal"
+          :loading="errLoading"
+          :page="errPage"
+          :page-size="errPageSize"
+          @openErrorDetail="openError"
+          @update:page="onErrPage"
+          @update:pageSize="onErrPageSize"
+        />
+        <OpsErrorDetailModal v-model:show="showErrorModal" :error-id="selectedErrorId" :error-type="'request'" />
+      </div>
     </div>
   </AppLayout>
   <UsageExportProgress
@@ -202,6 +225,9 @@ import UsageTable from "@/components/admin/usage/UsageTable.vue";
 import UsageExportProgress from "@/components/admin/usage/UsageExportProgress.vue";
 import UsageCleanupDialog from "@/components/admin/usage/UsageCleanupDialog.vue";
 import UserBalanceHistoryModal from "@/components/admin/user/UserBalanceHistoryModal.vue";
+import OpsErrorLogTable from "@/views/admin/ops/components/OpsErrorLogTable.vue";
+import OpsErrorDetailModal from "@/views/admin/ops/components/OpsErrorDetailModal.vue";
+import { listErrorLogs } from "@/api/admin/ops";
 import ModelDistributionChart from "@/components/charts/ModelDistributionChart.vue";
 import GroupDistributionChart from "@/components/charts/GroupDistributionChart.vue";
 import TokenUsageTrend from "@/components/charts/TokenUsageTrend.vue";
@@ -215,6 +241,7 @@ import type {
   EndpointStat,
   AdminUser,
 } from "@/types";
+import type { OpsErrorLog } from "@/api/admin/ops";
 import type {
   AdminUsageStatsResponse,
   AdminUsageQueryParams,
@@ -577,6 +604,12 @@ const applyFilters = () => {
   loadStats();
   loadModelStats(modelDistributionSource.value, true);
   loadChartData();
+  errPage.value = 1;
+  if (activeTab.value === "errors") {
+    loadAdminErrors();
+  } else {
+    errRows.value = [];
+  }
 };
 const refreshData = () => {
   invalidateModelStatsCache();
@@ -584,6 +617,7 @@ const refreshData = () => {
   loadStats(true);
   loadModelStats(modelDistributionSource.value, true);
   loadChartData();
+  if (activeTab.value === "errors") loadAdminErrors();
 };
 const resetFilters = () => {
   const range = getLast24HoursRangeDates();
@@ -826,6 +860,68 @@ const loadSavedColumns = () => {
 
 const showColumnDropdown = ref(false);
 const columnDropdownRef = ref<HTMLElement | null>(null);
+
+// Error tab state
+const activeTab = ref<"usage" | "errors">("usage");
+const errRows = ref<OpsErrorLog[]>([]);
+const errLoading = ref(false);
+const errPage = ref(1);
+const errPageSize = ref(20);
+const errTotal = ref(0);
+const showErrorModal = ref(false);
+const selectedErrorId = ref<number | null>(null);
+
+// 注意：'YYYY-MM-DDT00:00:00' 无时区后缀，按本地时区解析后再转 UTC——与页面其它日期处理语义一致，刻意如此，勿改成 'T00:00:00Z'
+const toRFC3339 = (
+  d: string | undefined,
+  endOfDay = false,
+): string | undefined =>
+  d
+    ? new Date(d + (endOfDay ? "T23:59:59.999" : "T00:00:00")).toISOString()
+    : undefined;
+
+const loadAdminErrors = async () => {
+  errLoading.value = true;
+  try {
+    const resp = await listErrorLogs({
+      page: errPage.value,
+      page_size: errPageSize.value,
+      view: "all",
+      start_time: toRFC3339(filters.value.start_date),
+      end_time: toRFC3339(filters.value.end_date, true),
+      user_id: filters.value.user_id ?? undefined,
+      api_key_id: filters.value.api_key_id ?? undefined,
+      account_id: filters.value.account_id ?? undefined,
+      group_id: filters.value.group_id ?? undefined,
+      model: filters.value.model || undefined,
+    });
+    errRows.value = resp.items;
+    errTotal.value = resp.total;
+  } catch (error) {
+    console.error("Failed to load admin errors:", error);
+    appStore.showError(t("usage.errors.failedToLoad"));
+  } finally {
+    errLoading.value = false;
+  }
+};
+
+const onErrPage = (p: number) => {
+  errPage.value = p;
+  loadAdminErrors();
+};
+const onErrPageSize = (s: number) => {
+  errPageSize.value = s;
+  errPage.value = 1;
+  loadAdminErrors();
+};
+const openError = (id: number) => {
+  selectedErrorId.value = id;
+  showErrorModal.value = true;
+};
+const switchToErrorsTab = () => {
+  activeTab.value = "errors";
+  if (errRows.value.length === 0) loadAdminErrors();
+};
 
 const handleColumnClickOutside = (event: MouseEvent) => {
   if (
