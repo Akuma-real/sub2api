@@ -211,7 +211,7 @@
                   <span class="rounded-full border border-primary-200 bg-primary-50 px-2.5 py-0.5 text-[11px] font-medium text-primary-700">
                     VIP
                   </span>
-                  <h3 class="text-[22px] leading-tight text-ink">{{ selectedVIPLevel.name }}</h3>
+                  <h3 class="text-[22px] font-semibold leading-tight text-ink">{{ vipLevelDisplayName(selectedVIPLevel) }}</h3>
                 </div>
                 <div class="flex flex-wrap items-baseline gap-2">
                   <span v-if="selectedVIPLevel.original_price" class="text-sm text-muted line-through">
@@ -277,7 +277,7 @@
                   <div>
                     <p class="text-xs font-medium text-muted-soft">{{ t('payment.vip.current') }}</p>
                     <p class="mt-1 text-base font-semibold text-ink">
-                      {{ vipOverview?.current?.level?.name || t('payment.vip.none') }}
+                      {{ vipOverview?.current?.level ? vipLevelDisplayName(vipOverview.current.level) : t('payment.vip.none') }}
                     </p>
                     <p v-if="vipOverview?.current?.expires_at" class="mt-0.5 text-sm text-muted">
                       {{ t('payment.vip.expiresAt') }}: {{ formatDate(vipOverview.current.expires_at) }}
@@ -303,7 +303,7 @@
                 >
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <h3 class="text-base font-semibold text-ink">{{ level.name }}</h3>
+                      <h3 class="text-base font-semibold text-ink">{{ vipLevelDisplayName(level) }}</h3>
                       <p v-if="level.description" class="mt-1 line-clamp-2 text-sm text-muted">{{ level.description }}</p>
                     </div>
                     <span class="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
@@ -857,6 +857,13 @@ function closeRenewalModal() {
 function selectVIPLevel(level: VIPLevel) {
   selectedVIPLevel.value = level
   errorMessage.value = ''
+}
+
+function vipLevelDisplayName(level: VIPLevel): string {
+  const name = String(level.name || '').trim()
+  if (!name) return `VIP #${level.id}`
+  if (/^\d+$/.test(name)) return `VIP ${name}`
+  return name
 }
 
 function vipFeatures(level: VIPLevel): string[] {

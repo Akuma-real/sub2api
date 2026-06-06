@@ -260,7 +260,14 @@ func (s *VIPService) GetTotalSavings(ctx context.Context, userID int64) (float64
 
 func (s *VIPService) ListUserSummaries(ctx context.Context, page, pageSize int) ([]VIPUserSummary, int, error) {
 	ps, pg := applyPagination(pageSize, page)
+	now := time.Now()
+	currentVIPUser := user.HasVipMembershipsWith(
+		uservipmembership.StatusEQ(VIPMembershipStatusActive),
+		uservipmembership.StartsAtLTE(now),
+		uservipmembership.ExpiresAtGT(now),
+	)
 	users, err := s.entClient.User.Query().
+		Where(currentVIPUser).
 		Order(user.ByID()).
 		Limit(ps).
 		Offset((pg - 1) * ps).
@@ -268,7 +275,9 @@ func (s *VIPService) ListUserSummaries(ctx context.Context, page, pageSize int) 
 	if err != nil {
 		return nil, 0, err
 	}
-	total, err := s.entClient.User.Query().Count(ctx)
+	total, err := s.entClient.User.Query().
+		Where(currentVIPUser).
+		Count(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
