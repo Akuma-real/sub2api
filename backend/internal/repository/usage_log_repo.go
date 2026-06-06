@@ -952,10 +952,10 @@ func usageLogInsertPlaceholders() string {
 	var b strings.Builder
 	for i := range usageLogInsertArgTypes {
 		if i > 0 {
-			b.WriteString(", ")
+			_, _ = b.WriteString(", ")
 		}
-		b.WriteString("$")
-		b.WriteString(strconv.Itoa(i + 1))
+		_, _ = b.WriteString("$")
+		_, _ = b.WriteString(strconv.Itoa(i + 1))
 	}
 	return b.String()
 }
