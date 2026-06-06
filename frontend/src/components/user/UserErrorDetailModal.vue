@@ -9,7 +9,7 @@
     </div>
 
     <!-- Error state -->
-    <div v-else-if="loadError" class="py-8 text-center text-sm text-red-500">
+    <div v-else-if="loadError" class="py-8 text-center text-sm text-error">
       {{ t('usage.errors.detail.loadFailed') }}
     </div>
 
@@ -18,53 +18,53 @@
       <div class="grid grid-cols-2 gap-x-6 gap-y-3">
         <!-- Time -->
         <div>
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.time') }}</span>
-          <p class="mt-0.5 text-gray-900 dark:text-dark-100">{{ formatDateTime(detail.created_at) }}</p>
+          <span class="font-medium text-muted">{{ t('usage.errors.time') }}</span>
+          <p class="mt-0.5 text-ink">{{ formatDateTime(detail.created_at) }}</p>
         </div>
         <!-- Model -->
         <div>
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.model') }}</span>
-          <p class="mt-0.5 text-gray-900 dark:text-dark-100">{{ detail.model || '-' }}</p>
+          <span class="font-medium text-muted">{{ t('usage.errors.model') }}</span>
+          <p class="mt-0.5 text-ink">{{ detail.model || '-' }}</p>
         </div>
         <!-- Endpoint -->
         <div>
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.endpoint') }}</span>
-          <p class="mt-0.5 text-gray-900 dark:text-dark-100">{{ detail.inbound_endpoint || '-' }}</p>
+          <span class="font-medium text-muted">{{ t('usage.errors.endpoint') }}</span>
+          <p class="mt-0.5 text-ink">{{ detail.inbound_endpoint || '-' }}</p>
         </div>
         <!-- Status Code -->
         <div>
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.status') }}</span>
+          <span class="font-medium text-muted">{{ t('usage.errors.status') }}</span>
           <p class="mt-0.5">
             <span class="badge" :class="statusClass(detail.status_code)">{{ detail.status_code || '-' }}</span>
           </p>
         </div>
         <!-- Category -->
         <div>
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.category') }}</span>
-          <p class="mt-0.5 text-gray-900 dark:text-dark-100">{{ t('usage.errors.categories.' + detail.category) }}</p>
+          <span class="font-medium text-muted">{{ t('usage.errors.category') }}</span>
+          <p class="mt-0.5 text-ink">{{ t('usage.errors.categories.' + detail.category) }}</p>
         </div>
         <!-- Platform -->
         <div>
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.platform') }}</span>
-          <p class="mt-0.5 text-gray-900 dark:text-dark-100">{{ detail.platform || '-' }}</p>
+          <span class="font-medium text-muted">{{ t('usage.errors.platform') }}</span>
+          <p class="mt-0.5 text-ink">{{ detail.platform || '-' }}</p>
         </div>
         <!-- Upstream status code -->
         <div v-if="detail.upstream_status_code != null">
-          <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.detail.upstreamStatus') }}</span>
-          <p class="mt-0.5 text-gray-900 dark:text-dark-100">{{ detail.upstream_status_code }}</p>
+          <span class="font-medium text-muted">{{ t('usage.errors.detail.upstreamStatus') }}</span>
+          <p class="mt-0.5 text-ink">{{ detail.upstream_status_code }}</p>
         </div>
       </div>
 
       <!-- Message -->
       <div v-if="detail.message">
-        <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.message') }}</span>
-        <p class="mt-0.5 text-gray-900 dark:text-dark-100 break-all">{{ detail.message }}</p>
+        <span class="font-medium text-muted">{{ t('usage.errors.message') }}</span>
+        <p class="mt-0.5 break-all text-ink">{{ detail.message }}</p>
       </div>
 
       <!-- Error Body -->
       <div v-if="detail.error_body">
-        <span class="font-medium text-gray-500 dark:text-dark-400">{{ t('usage.errors.detail.responseBody') }}</span>
-        <pre class="mt-1 overflow-auto max-h-[40vh] whitespace-pre-wrap break-all rounded-lg bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-dark-700 p-3 text-xs text-gray-800 dark:text-dark-200">{{ detail.error_body }}</pre>
+        <span class="font-medium text-muted">{{ t('usage.errors.detail.responseBody') }}</span>
+        <pre class="mt-1 max-h-[40vh] overflow-auto whitespace-pre-wrap break-all rounded-lg border border-hairline bg-surface-soft p-3 text-xs text-body-strong">{{ detail.error_body }}</pre>
       </div>
     </div>
   </BaseDialog>
