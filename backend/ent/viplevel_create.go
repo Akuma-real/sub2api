@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 	"github.com/Wei-Shaw/sub2api/ent/viplevel"
@@ -181,6 +182,21 @@ func (_c *VIPLevelCreate) AddMemberships(v ...*UserVIPMembership) *VIPLevelCreat
 		ids[i] = v[i].ID
 	}
 	return _c.AddMembershipIDs(ids...)
+}
+
+// AddRedeemCodeIDs adds the "redeem_codes" edge to the RedeemCode entity by IDs.
+func (_c *VIPLevelCreate) AddRedeemCodeIDs(ids ...int64) *VIPLevelCreate {
+	_c.mutation.AddRedeemCodeIDs(ids...)
+	return _c
+}
+
+// AddRedeemCodes adds the "redeem_codes" edges to the RedeemCode entity.
+func (_c *VIPLevelCreate) AddRedeemCodes(v ...*RedeemCode) *VIPLevelCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRedeemCodeIDs(ids...)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -388,6 +404,22 @@ func (_c *VIPLevelCreate) createSpec() (*VIPLevel, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RedeemCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

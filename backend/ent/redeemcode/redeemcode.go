@@ -36,10 +36,16 @@ const (
 	FieldGroupID = "group_id"
 	// FieldValidityDays holds the string denoting the validity_days field in the database.
 	FieldValidityDays = "validity_days"
+	// FieldVipLevelID holds the string denoting the vip_level_id field in the database.
+	FieldVipLevelID = "vip_level_id"
+	// FieldVipDays holds the string denoting the vip_days field in the database.
+	FieldVipDays = "vip_days"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeGroup holds the string denoting the group edge name in mutations.
 	EdgeGroup = "group"
+	// EdgeVipLevel holds the string denoting the vip_level edge name in mutations.
+	EdgeVipLevel = "vip_level"
 	// Table holds the table name of the redeemcode in the database.
 	Table = "redeem_codes"
 	// UserTable is the table that holds the user relation/edge.
@@ -56,6 +62,13 @@ const (
 	GroupInverseTable = "groups"
 	// GroupColumn is the table column denoting the group relation/edge.
 	GroupColumn = "group_id"
+	// VipLevelTable is the table that holds the vip_level relation/edge.
+	VipLevelTable = "redeem_codes"
+	// VipLevelInverseTable is the table name for the VIPLevel entity.
+	// It exists in this package in order to avoid circular dependency with the "viplevel" package.
+	VipLevelInverseTable = "vip_levels"
+	// VipLevelColumn is the table column denoting the vip_level relation/edge.
+	VipLevelColumn = "vip_level_id"
 )
 
 // Columns holds all SQL columns for redeemcode fields.
@@ -72,6 +85,8 @@ var Columns = []string{
 	FieldExpiresAt,
 	FieldGroupID,
 	FieldValidityDays,
+	FieldVipLevelID,
+	FieldVipDays,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -101,6 +116,8 @@ var (
 	DefaultCreatedAt func() time.Time
 	// DefaultValidityDays holds the default value on creation for the "validity_days" field.
 	DefaultValidityDays int
+	// DefaultVipDays holds the default value on creation for the "vip_days" field.
+	DefaultVipDays int
 )
 
 // OrderOption defines the ordering options for the RedeemCode queries.
@@ -166,6 +183,16 @@ func ByValidityDays(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldValidityDays, opts...).ToFunc()
 }
 
+// ByVipLevelID orders the results by the vip_level_id field.
+func ByVipLevelID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipLevelID, opts...).ToFunc()
+}
+
+// ByVipDays orders the results by the vip_days field.
+func ByVipDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipDays, opts...).ToFunc()
+}
+
 // ByUserField orders the results by user field.
 func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -177,6 +204,13 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 func ByGroupField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newGroupStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByVipLevelField orders the results by vip_level field.
+func ByVipLevelField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVipLevelStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newUserStep() *sqlgraph.Step {
@@ -191,5 +225,12 @@ func newGroupStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(GroupInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, GroupTable, GroupColumn),
+	)
+}
+func newVipLevelStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VipLevelInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, VipLevelTable, VipLevelColumn),
 	)
 }

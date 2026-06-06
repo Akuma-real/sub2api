@@ -242,6 +242,13 @@ func (h *PaymentHandler) DeletePlan(c *gin.Context) {
 
 // --- VIP Levels ---
 
+type AssignVIPRequest struct {
+	UserID     int64  `json:"user_id" binding:"required,gt=0"`
+	VIPLevelID int64  `json:"vip_level_id" binding:"required,gt=0"`
+	Days       int    `json:"days" binding:"required,min=1,max=36500"`
+	Notes      string `json:"notes"`
+}
+
 // ListVIPLevels returns all VIP levels.
 // GET /api/v1/admin/payment/vip-levels
 func (h *PaymentHandler) ListVIPLevels(c *gin.Context) {
@@ -301,6 +308,67 @@ func (h *PaymentHandler) DeleteVIPLevel(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{"message": "deleted"})
+}
+
+// AssignVIP assigns or extends a VIP membership for a user.
+// POST /api/v1/admin/payment/vip-memberships/assign
+func (h *PaymentHandler) AssignVIP(c *gin.Context) {
+	var req AssignVIPRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	membership, _, err := h.vipService.AssignOrExtendVIP(c.Request.Context(), service.AssignVIPInput{
+		UserID:     req.UserID,
+		VIPLevelID: req.VIPLevelID,
+		Days:       req.Days,
+		Source:     "后台手动分配",
+		Notes:      req.Notes,
+	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, service.UserVIPMembership{
+		ID:         membership.ID,
+		UserID:     membership.UserID,
+		VIPLevelID: membership.VipLevelID,
+		StartsAt:   membership.StartsAt,
+		ExpiresAt:  membership.ExpiresAt,
+		Status:     membership.Status,
+		Notes:      stringValue(membership.Notes),
+		CreatedAt:  membership.CreatedAt,
+		UpdatedAt:  membership.UpdatedAt,
+		Level:      vipLevelFromEnt(membership.Edges.VipLevel),
+	})
+}
+
+func stringValue(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+func vipLevelFromEnt(level *dbent.VIPLevel) *service.VIPLevel {
+	if level == nil {
+		return nil
+	}
+	return &service.VIPLevel{
+		ID:                 level.ID,
+		Name:               level.Name,
+		Description:        level.Description,
+		Price:              level.Price,
+		OriginalPrice:      level.OriginalPrice,
+		ValidityDays:       level.ValidityDays,
+		DiscountMultiplier: level.DiscountMultiplier,
+		Features:           level.Features,
+		Benefits:           level.Benefits,
+		ForSale:            level.ForSale,
+		SortOrder:          level.SortOrder,
+		CreatedAt:          level.CreatedAt,
+		UpdatedAt:          level.UpdatedAt,
+	}
 }
 
 // ListVIPUsers returns user VIP and savings summaries.

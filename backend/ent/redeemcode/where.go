@@ -110,6 +110,16 @@ func ValidityDays(v int) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldValidityDays, v))
 }
 
+// VipLevelID applies equality check predicate on the "vip_level_id" field. It's identical to VipLevelIDEQ.
+func VipLevelID(v int64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldVipLevelID, v))
+}
+
+// VipDays applies equality check predicate on the "vip_days" field. It's identical to VipDaysEQ.
+func VipDays(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldVipDays, v))
+}
+
 // CodeEQ applies the EQ predicate on the "code" field.
 func CodeEQ(v string) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldCode, v))
@@ -660,6 +670,76 @@ func ValidityDaysLTE(v int) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldLTE(FieldValidityDays, v))
 }
 
+// VipLevelIDEQ applies the EQ predicate on the "vip_level_id" field.
+func VipLevelIDEQ(v int64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldVipLevelID, v))
+}
+
+// VipLevelIDNEQ applies the NEQ predicate on the "vip_level_id" field.
+func VipLevelIDNEQ(v int64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldVipLevelID, v))
+}
+
+// VipLevelIDIn applies the In predicate on the "vip_level_id" field.
+func VipLevelIDIn(vs ...int64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldVipLevelID, vs...))
+}
+
+// VipLevelIDNotIn applies the NotIn predicate on the "vip_level_id" field.
+func VipLevelIDNotIn(vs ...int64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldVipLevelID, vs...))
+}
+
+// VipLevelIDIsNil applies the IsNil predicate on the "vip_level_id" field.
+func VipLevelIDIsNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIsNull(FieldVipLevelID))
+}
+
+// VipLevelIDNotNil applies the NotNil predicate on the "vip_level_id" field.
+func VipLevelIDNotNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotNull(FieldVipLevelID))
+}
+
+// VipDaysEQ applies the EQ predicate on the "vip_days" field.
+func VipDaysEQ(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldVipDays, v))
+}
+
+// VipDaysNEQ applies the NEQ predicate on the "vip_days" field.
+func VipDaysNEQ(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldVipDays, v))
+}
+
+// VipDaysIn applies the In predicate on the "vip_days" field.
+func VipDaysIn(vs ...int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldVipDays, vs...))
+}
+
+// VipDaysNotIn applies the NotIn predicate on the "vip_days" field.
+func VipDaysNotIn(vs ...int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldVipDays, vs...))
+}
+
+// VipDaysGT applies the GT predicate on the "vip_days" field.
+func VipDaysGT(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGT(FieldVipDays, v))
+}
+
+// VipDaysGTE applies the GTE predicate on the "vip_days" field.
+func VipDaysGTE(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGTE(FieldVipDays, v))
+}
+
+// VipDaysLT applies the LT predicate on the "vip_days" field.
+func VipDaysLT(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLT(FieldVipDays, v))
+}
+
+// VipDaysLTE applies the LTE predicate on the "vip_days" field.
+func VipDaysLTE(v int) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLTE(FieldVipDays, v))
+}
+
 // HasUser applies the HasEdge predicate on the "user" edge.
 func HasUser() predicate.RedeemCode {
 	return predicate.RedeemCode(func(s *sql.Selector) {
@@ -698,6 +778,29 @@ func HasGroup() predicate.RedeemCode {
 func HasGroupWith(preds ...predicate.Group) predicate.RedeemCode {
 	return predicate.RedeemCode(func(s *sql.Selector) {
 		step := newGroupStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasVipLevel applies the HasEdge predicate on the "vip_level" edge.
+func HasVipLevel() predicate.RedeemCode {
+	return predicate.RedeemCode(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, VipLevelTable, VipLevelColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVipLevelWith applies the HasEdge predicate on the "vip_level" edge with a given conditions (other predicates).
+func HasVipLevelWith(preds ...predicate.VIPLevel) predicate.RedeemCode {
+	return predicate.RedeemCode(func(s *sql.Selector) {
+		step := newVipLevelStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -108,6 +108,10 @@ func RegisterPaymentRoutes(
 			vipLevels.DELETE("/:id", adminPaymentHandler.DeleteVIPLevel)
 		}
 		adminGroup.GET("/vip-users", adminPaymentHandler.ListVIPUsers)
+		vipMemberships := adminGroup.Group("/vip-memberships")
+		{
+			vipMemberships.POST("/assign", adminPaymentHandler.AssignVIP)
+		}
 
 		// Provider Instances
 		providers := adminGroup.Group("/providers")

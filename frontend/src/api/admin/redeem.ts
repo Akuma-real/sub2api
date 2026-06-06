@@ -70,7 +70,9 @@ export async function generate(
   value: number,
   groupId?: number | null,
   validityDays?: number,
-  expiresInDays?: number | null
+  expiresInDays?: number | null,
+  vipLevelId?: number | null,
+  vipDays?: number
 ): Promise<RedeemCode[]> {
   const payload: GenerateRedeemCodesRequest = {
     count,
@@ -83,6 +85,12 @@ export async function generate(
     payload.group_id = groupId
     if (validityDays && validityDays > 0) {
       payload.validity_days = validityDays
+    }
+  }
+  if (type === 'vip') {
+    payload.vip_level_id = vipLevelId
+    if (vipDays && vipDays > 0) {
+      payload.vip_days = vipDays
     }
   }
   if (expiresInDays && expiresInDays > 0) {

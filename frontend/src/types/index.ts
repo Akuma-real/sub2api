@@ -1188,7 +1188,7 @@ export interface CodexSessionImportResult {
 
 // ==================== Usage & Redeem Types ====================
 
-export type RedeemCodeType = 'balance' | 'concurrency' | 'subscription' | 'invitation'
+export type RedeemCodeType = 'balance' | 'concurrency' | 'subscription' | 'vip' | 'invitation'
 export type UsageRequestType = 'unknown' | 'sync' | 'stream' | 'ws_v2'
 export type ImageSizeSource = 'output' | 'input' | 'default' | 'legacy'
 export type ImageSizeBreakdown = Record<string, number>
@@ -1324,8 +1324,11 @@ export interface RedeemCode {
   notes?: string
   group_id?: number | null // 订阅类型专用
   validity_days?: number // 订阅类型专用
+  vip_level_id?: number | null // VIP 类型专用
+  vip_days?: number // VIP 类型专用
   user?: User
   group?: Group // 关联的分组
+  vip_level?: import('./payment').VIPLevel
 }
 
 export interface GenerateRedeemCodesRequest {
@@ -1334,6 +1337,8 @@ export interface GenerateRedeemCodesRequest {
   value: number
   group_id?: number | null // 订阅类型专用
   validity_days?: number // 订阅类型专用
+  vip_level_id?: number | null // VIP 类型专用
+  vip_days?: number // VIP 类型专用
   expires_at?: string | null
   expires_in_days?: number
 }
@@ -1343,6 +1348,7 @@ export interface BatchUpdateRedeemCodeFields {
   expires_at?: string | null
   notes?: string
   group_id?: number | null
+  vip_level_id?: number | null
 }
 
 export interface BatchUpdateRedeemCodesRequest {

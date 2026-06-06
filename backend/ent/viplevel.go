@@ -52,11 +52,13 @@ type VIPLevel struct {
 type VIPLevelEdges struct {
 	// Memberships holds the value of the memberships edge.
 	Memberships []*UserVIPMembership `json:"memberships,omitempty"`
+	// RedeemCodes holds the value of the redeem_codes edge.
+	RedeemCodes []*RedeemCode `json:"redeem_codes,omitempty"`
 	// UsageLogs holds the value of the usage_logs edge.
 	UsageLogs []*UsageLog `json:"usage_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // MembershipsOrErr returns the Memberships value or an error if the edge
@@ -68,10 +70,19 @@ func (e VIPLevelEdges) MembershipsOrErr() ([]*UserVIPMembership, error) {
 	return nil, &NotLoadedError{edge: "memberships"}
 }
 
+// RedeemCodesOrErr returns the RedeemCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e VIPLevelEdges) RedeemCodesOrErr() ([]*RedeemCode, error) {
+	if e.loadedTypes[1] {
+		return e.RedeemCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "redeem_codes"}
+}
+
 // UsageLogsOrErr returns the UsageLogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e VIPLevelEdges) UsageLogsOrErr() ([]*UsageLog, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.UsageLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_logs"}
@@ -206,6 +217,11 @@ func (_m *VIPLevel) Value(name string) (ent.Value, error) {
 // QueryMemberships queries the "memberships" edge of the VIPLevel entity.
 func (_m *VIPLevel) QueryMemberships() *UserVIPMembershipQuery {
 	return NewVIPLevelClient(_m.config).QueryMemberships(_m)
+}
+
+// QueryRedeemCodes queries the "redeem_codes" edge of the VIPLevel entity.
+func (_m *VIPLevel) QueryRedeemCodes() *RedeemCodeQuery {
+	return NewVIPLevelClient(_m.config).QueryRedeemCodes(_m)
 }
 
 // QueryUsageLogs queries the "usage_logs" edge of the VIPLevel entity.

@@ -4178,6 +4178,22 @@ func (c *RedeemCodeClient) QueryGroup(_m *RedeemCode) *GroupQuery {
 	return query
 }
 
+// QueryVipLevel queries the vip_level edge of a RedeemCode.
+func (c *RedeemCodeClient) QueryVipLevel(_m *RedeemCode) *VIPLevelQuery {
+	query := (&VIPLevelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(redeemcode.Table, redeemcode.FieldID, id),
+			sqlgraph.To(viplevel.Table, viplevel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redeemcode.VipLevelTable, redeemcode.VipLevelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *RedeemCodeClient) Hooks() []Hook {
 	return c.hooks.RedeemCode
@@ -6552,6 +6568,22 @@ func (c *VIPLevelClient) QueryMemberships(_m *VIPLevel) *UserVIPMembershipQuery 
 			sqlgraph.From(viplevel.Table, viplevel.FieldID, id),
 			sqlgraph.To(uservipmembership.Table, uservipmembership.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, viplevel.MembershipsTable, viplevel.MembershipsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRedeemCodes queries the redeem_codes edge of a VIPLevel.
+func (c *VIPLevelClient) QueryRedeemCodes(_m *VIPLevel) *RedeemCodeQuery {
+	query := (&RedeemCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(viplevel.Table, viplevel.FieldID, id),
+			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, viplevel.RedeemCodesTable, viplevel.RedeemCodesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

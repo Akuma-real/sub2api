@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/user"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 )
 
 // RedeemCodeUpdate is the builder for updating RedeemCode entities.
@@ -214,6 +215,47 @@ func (_u *RedeemCodeUpdate) AddValidityDays(v int) *RedeemCodeUpdate {
 	return _u
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (_u *RedeemCodeUpdate) SetVipLevelID(v int64) *RedeemCodeUpdate {
+	_u.mutation.SetVipLevelID(v)
+	return _u
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableVipLevelID(v *int64) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetVipLevelID(*v)
+	}
+	return _u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (_u *RedeemCodeUpdate) ClearVipLevelID() *RedeemCodeUpdate {
+	_u.mutation.ClearVipLevelID()
+	return _u
+}
+
+// SetVipDays sets the "vip_days" field.
+func (_u *RedeemCodeUpdate) SetVipDays(v int) *RedeemCodeUpdate {
+	_u.mutation.ResetVipDays()
+	_u.mutation.SetVipDays(v)
+	return _u
+}
+
+// SetNillableVipDays sets the "vip_days" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableVipDays(v *int) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetVipDays(*v)
+	}
+	return _u
+}
+
+// AddVipDays adds value to the "vip_days" field.
+func (_u *RedeemCodeUpdate) AddVipDays(v int) *RedeemCodeUpdate {
+	_u.mutation.AddVipDays(v)
+	return _u
+}
+
 // SetUserID sets the "user" edge to the User entity by ID.
 func (_u *RedeemCodeUpdate) SetUserID(id int64) *RedeemCodeUpdate {
 	_u.mutation.SetUserID(id)
@@ -238,6 +280,11 @@ func (_u *RedeemCodeUpdate) SetGroup(v *Group) *RedeemCodeUpdate {
 	return _u.SetGroupID(v.ID)
 }
 
+// SetVipLevel sets the "vip_level" edge to the VIPLevel entity.
+func (_u *RedeemCodeUpdate) SetVipLevel(v *VIPLevel) *RedeemCodeUpdate {
+	return _u.SetVipLevelID(v.ID)
+}
+
 // Mutation returns the RedeemCodeMutation object of the builder.
 func (_u *RedeemCodeUpdate) Mutation() *RedeemCodeMutation {
 	return _u.mutation
@@ -252,6 +299,12 @@ func (_u *RedeemCodeUpdate) ClearUser() *RedeemCodeUpdate {
 // ClearGroup clears the "group" edge to the Group entity.
 func (_u *RedeemCodeUpdate) ClearGroup() *RedeemCodeUpdate {
 	_u.mutation.ClearGroup()
+	return _u
+}
+
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (_u *RedeemCodeUpdate) ClearVipLevel() *RedeemCodeUpdate {
+	_u.mutation.ClearVipLevel()
 	return _u
 }
 
@@ -353,6 +406,12 @@ func (_u *RedeemCodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.AddedValidityDays(); ok {
 		_spec.AddField(redeemcode.FieldValidityDays, field.TypeInt, value)
 	}
+	if value, ok := _u.mutation.VipDays(); ok {
+		_spec.SetField(redeemcode.FieldVipDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVipDays(); ok {
+		_spec.AddField(redeemcode.FieldVipDays, field.TypeInt, value)
+	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -404,6 +463,35 @@ func (_u *RedeemCodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipLevelCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.VipLevelTable,
+			Columns: []string{redeemcode.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipLevelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.VipLevelTable,
+			Columns: []string{redeemcode.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -615,6 +703,47 @@ func (_u *RedeemCodeUpdateOne) AddValidityDays(v int) *RedeemCodeUpdateOne {
 	return _u
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (_u *RedeemCodeUpdateOne) SetVipLevelID(v int64) *RedeemCodeUpdateOne {
+	_u.mutation.SetVipLevelID(v)
+	return _u
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableVipLevelID(v *int64) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetVipLevelID(*v)
+	}
+	return _u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (_u *RedeemCodeUpdateOne) ClearVipLevelID() *RedeemCodeUpdateOne {
+	_u.mutation.ClearVipLevelID()
+	return _u
+}
+
+// SetVipDays sets the "vip_days" field.
+func (_u *RedeemCodeUpdateOne) SetVipDays(v int) *RedeemCodeUpdateOne {
+	_u.mutation.ResetVipDays()
+	_u.mutation.SetVipDays(v)
+	return _u
+}
+
+// SetNillableVipDays sets the "vip_days" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableVipDays(v *int) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetVipDays(*v)
+	}
+	return _u
+}
+
+// AddVipDays adds value to the "vip_days" field.
+func (_u *RedeemCodeUpdateOne) AddVipDays(v int) *RedeemCodeUpdateOne {
+	_u.mutation.AddVipDays(v)
+	return _u
+}
+
 // SetUserID sets the "user" edge to the User entity by ID.
 func (_u *RedeemCodeUpdateOne) SetUserID(id int64) *RedeemCodeUpdateOne {
 	_u.mutation.SetUserID(id)
@@ -639,6 +768,11 @@ func (_u *RedeemCodeUpdateOne) SetGroup(v *Group) *RedeemCodeUpdateOne {
 	return _u.SetGroupID(v.ID)
 }
 
+// SetVipLevel sets the "vip_level" edge to the VIPLevel entity.
+func (_u *RedeemCodeUpdateOne) SetVipLevel(v *VIPLevel) *RedeemCodeUpdateOne {
+	return _u.SetVipLevelID(v.ID)
+}
+
 // Mutation returns the RedeemCodeMutation object of the builder.
 func (_u *RedeemCodeUpdateOne) Mutation() *RedeemCodeMutation {
 	return _u.mutation
@@ -653,6 +787,12 @@ func (_u *RedeemCodeUpdateOne) ClearUser() *RedeemCodeUpdateOne {
 // ClearGroup clears the "group" edge to the Group entity.
 func (_u *RedeemCodeUpdateOne) ClearGroup() *RedeemCodeUpdateOne {
 	_u.mutation.ClearGroup()
+	return _u
+}
+
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (_u *RedeemCodeUpdateOne) ClearVipLevel() *RedeemCodeUpdateOne {
+	_u.mutation.ClearVipLevel()
 	return _u
 }
 
@@ -784,6 +924,12 @@ func (_u *RedeemCodeUpdateOne) sqlSave(ctx context.Context) (_node *RedeemCode, 
 	if value, ok := _u.mutation.AddedValidityDays(); ok {
 		_spec.AddField(redeemcode.FieldValidityDays, field.TypeInt, value)
 	}
+	if value, ok := _u.mutation.VipDays(); ok {
+		_spec.SetField(redeemcode.FieldVipDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVipDays(); ok {
+		_spec.AddField(redeemcode.FieldVipDays, field.TypeInt, value)
+	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -835,6 +981,35 @@ func (_u *RedeemCodeUpdateOne) sqlSave(ctx context.Context) (_node *RedeemCode, 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipLevelCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.VipLevelTable,
+			Columns: []string{redeemcode.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipLevelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.VipLevelTable,
+			Columns: []string{redeemcode.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

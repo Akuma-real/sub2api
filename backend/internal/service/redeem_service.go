@@ -94,10 +94,11 @@ type NullableInt64Update struct {
 }
 
 type RedeemCodeBatchUpdateFields struct {
-	Status    *string
-	ExpiresAt NullableTimeUpdate
-	Notes     *string
-	GroupID   NullableInt64Update
+	Status     *string
+	ExpiresAt  NullableTimeUpdate
+	Notes      *string
+	GroupID    NullableInt64Update
+	VIPLevelID NullableInt64Update
 
 	// Core fields are intentionally modeled only so service validation can
 	// reject payloads that try to mutate redemption value semantics in bulk.
@@ -110,6 +111,7 @@ func (f RedeemCodeBatchUpdateFields) HasChanges() bool {
 		f.ExpiresAt.Set ||
 		f.Notes != nil ||
 		f.GroupID.Set ||
+		f.VIPLevelID.Set ||
 		f.Type != nil ||
 		f.Value != nil
 }
@@ -119,7 +121,7 @@ func (f RedeemCodeBatchUpdateFields) HasCoreFieldChanges() bool {
 }
 
 func (f RedeemCodeBatchUpdateFields) TouchesUsedSensitiveFields() bool {
-	return f.Status != nil || f.ExpiresAt.Set || f.GroupID.Set
+	return f.Status != nil || f.ExpiresAt.Set || f.GroupID.Set || f.VIPLevelID.Set
 }
 
 type RedeemCodeBatchUpdateInput struct {
@@ -136,6 +138,7 @@ type RedeemService struct {
 	redeemRepo           RedeemCodeRepository
 	userRepo             UserRepository
 	subscriptionService  *SubscriptionService
+	vipService           *VIPService
 	cache                RedeemCache
 	billingCacheService  *BillingCacheService
 	entClient            *dbent.Client
@@ -166,6 +169,10 @@ func NewRedeemService(
 	}
 }
 
+func (s *RedeemService) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
+}
+
 // GenerateRandomCode 生成随机兑换码
 func (s *RedeemService) GenerateRandomCode() (string, error) {
 	// 生成16字节随机数据
@@ -194,8 +201,8 @@ func (s *RedeemService) GenerateCodes(ctx context.Context, req GenerateCodesRequ
 		return nil, errors.New("count must be greater than 0")
 	}
 
-	// 邀请码类型不需要数值，其他类型需要非零值（支持负数用于退款）
-	if req.Type != RedeemTypeInvitation && req.Value == 0 {
+	// 邀请码和 VIP 类型不需要面值，其他类型需要非零值（支持负数用于退款）
+	if req.Type != RedeemTypeInvitation && req.Type != RedeemTypeVIP && req.Value == 0 {
 		return nil, errors.New("value must not be zero")
 	}
 
@@ -208,9 +215,9 @@ func (s *RedeemService) GenerateCodes(ctx context.Context, req GenerateCodesRequ
 		codeType = RedeemTypeBalance
 	}
 
-	// 邀请码类型的 value 设为 0
+	// 邀请码和 VIP 类型的 value 设为 0
 	value := req.Value
-	if codeType == RedeemTypeInvitation {
+	if codeType == RedeemTypeInvitation || codeType == RedeemTypeVIP {
 		value = 0
 	}
 
@@ -251,8 +258,20 @@ func (s *RedeemService) CreateCode(ctx context.Context, code *RedeemCode) error 
 	if code.Type == "" {
 		code.Type = RedeemTypeBalance
 	}
-	if code.Type != RedeemTypeInvitation && code.Value == 0 {
+	if code.Type != RedeemTypeInvitation && code.Type != RedeemTypeVIP && code.Value == 0 {
 		return errors.New("value must not be zero")
+	}
+	if code.Type == RedeemTypeVIP {
+		if code.VIPLevelID == nil {
+			return errors.New("vip_level_id is required for vip type")
+		}
+		if code.VIPDays <= 0 {
+			return errors.New("vip_days must be greater than zero for vip type")
+		}
+		code.Value = 0
+	}
+	if code.Type == RedeemTypeInvitation {
+		code.Value = 0
 	}
 	if code.Status == "" {
 		code.Status = StatusUnused
@@ -313,6 +332,9 @@ func (s *RedeemService) BatchUpdate(ctx context.Context, input *RedeemCodeBatchU
 	}
 	if input.Fields.GroupID.Set && input.Fields.GroupID.Value != nil && *input.Fields.GroupID.Value <= 0 {
 		return nil, infraerrors.BadRequest("REDEEM_CODE_GROUP_ID_INVALID", "group_id must be positive")
+	}
+	if input.Fields.VIPLevelID.Set && input.Fields.VIPLevelID.Value != nil && *input.Fields.VIPLevelID.Value <= 0 {
+		return nil, infraerrors.BadRequest("REDEEM_CODE_VIP_LEVEL_ID_INVALID", "vip_level_id must be positive")
 	}
 
 	updated, err := s.redeemRepo.BatchUpdate(ctx, ids, input.Fields)
@@ -411,6 +433,17 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	if redeemCode.Type == RedeemTypeSubscription && redeemCode.GroupID == nil {
 		return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid subscription redeem code: missing group_id")
 	}
+	if redeemCode.Type == RedeemTypeVIP {
+		if redeemCode.VIPLevelID == nil {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid vip redeem code: missing vip_level_id")
+		}
+		if redeemCode.VIPDays <= 0 {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid vip redeem code: vip_days must be > 0")
+		}
+		if s.vipService == nil {
+			return nil, infraerrors.InternalServer("VIP_SERVICE_UNAVAILABLE", "vip service is not configured")
+		}
+	}
 
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(ctx, userID)
@@ -482,6 +515,16 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 			}
 		}
 
+	case RedeemTypeVIP:
+		if _, _, err := s.vipService.AssignOrExtendVIP(txCtx, AssignVIPInput{
+			UserID:     userID,
+			VIPLevelID: *redeemCode.VIPLevelID,
+			Days:       redeemCode.VIPDays,
+			Source:     fmt.Sprintf("通过兑换码 %s 兑换", redeemCode.Code),
+		}); err != nil {
+			return nil, fmt.Errorf("assign or extend vip: %w", err)
+		}
+
 	default:
 		return nil, fmt.Errorf("unsupported redeem type: %s", redeemCode.Type)
 	}
@@ -544,6 +587,10 @@ func (s *RedeemService) invalidateRedeemCaches(ctx context.Context, userID int64
 				defer cancel()
 				_ = s.billingCacheService.InvalidateSubscription(cacheCtx, userID, groupID)
 			}()
+		}
+	case RedeemTypeVIP:
+		if s.authCacheInvalidator != nil {
+			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 		}
 	}
 }

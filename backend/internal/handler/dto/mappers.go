@@ -538,8 +538,11 @@ func redeemCodeFromServiceBase(rc *service.RedeemCode) RedeemCode {
 		ExpiresAt:    rc.ExpiresAt,
 		GroupID:      rc.GroupID,
 		ValidityDays: rc.ValidityDays,
+		VIPLevelID:   rc.VIPLevelID,
+		VIPDays:      rc.VIPDays,
 		User:         UserFromServiceShallow(rc.User),
 		Group:        GroupFromServiceShallow(rc.Group),
+		VIPLevel:     VIPLevelFromService(rc.VIPLevel),
 	}
 	if rc.IsExpired() {
 		out.Status = service.StatusExpired
@@ -563,6 +566,27 @@ func AccountSummaryFromService(a *service.Account) *AccountSummary {
 	return &AccountSummary{
 		ID:   a.ID,
 		Name: a.Name,
+	}
+}
+
+func VIPLevelFromService(level *service.VIPLevel) *VIPLevel {
+	if level == nil {
+		return nil
+	}
+	return &VIPLevel{
+		ID:                 level.ID,
+		Name:               level.Name,
+		Description:        level.Description,
+		Price:              level.Price,
+		OriginalPrice:      level.OriginalPrice,
+		ValidityDays:       level.ValidityDays,
+		DiscountMultiplier: level.DiscountMultiplier,
+		Features:           level.Features,
+		Benefits:           level.Benefits,
+		ForSale:            level.ForSale,
+		SortOrder:          level.SortOrder,
+		CreatedAt:          level.CreatedAt,
+		UpdatedAt:          level.UpdatedAt,
 	}
 }
 

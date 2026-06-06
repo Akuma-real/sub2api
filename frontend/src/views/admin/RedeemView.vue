@@ -48,7 +48,7 @@
               <Icon name="edit" size="md" class="mr-2" />
               {{ t('admin.redeem.batchUpdate') }}
             </button>
-            <button @click="showGenerateDialog = true" class="btn btn-primary">
+            <button @click="openGenerateDialog" class="btn btn-primary">
               {{ t('admin.redeem.generateCodes') }}
             </button>
           </div>
@@ -135,6 +135,12 @@
                 {{ row.validity_days || 30 }} {{ t('admin.redeem.days') }}
                 <span v-if="row.group" class="ml-1 text-xs text-muted"
                   >({{ row.group.name }})</span
+                >
+              </template>
+              <template v-else-if="row.type === 'vip'">
+                {{ row.vip_days || 0 }} {{ t('admin.redeem.days') }}
+                <span v-if="row.vip_level" class="ml-1 text-xs text-muted"
+                  >({{ vipLevelDisplayName(row.vip_level) }})</span
                 >
               </template>
               <template v-else>{{ value }}</template>
@@ -288,7 +294,7 @@
               <Select v-model="generateForm.type" :options="typeOptions" />
             </div>
             <!-- 余额/并发类型：显示数值输入 -->
-            <div v-if="generateForm.type !== 'subscription' && generateForm.type !== 'invitation'">
+            <div v-if="generateForm.type !== 'subscription' && generateForm.type !== 'vip' && generateForm.type !== 'invitation'">
               <label class="input-label">
                 {{
                   generateForm.type === 'balance'
@@ -311,6 +317,27 @@
                 {{ t('admin.redeem.invitationHint') }}
               </p>
             </div>
+            <template v-if="generateForm.type === 'vip'">
+              <div>
+                <label class="input-label">{{ t('admin.redeem.selectVIPLevel') }}</label>
+                <Select
+                  v-model="generateForm.vip_level_id"
+                  :options="vipLevelOptions"
+                  :placeholder="t('admin.redeem.selectVIPLevelPlaceholder')"
+                />
+              </div>
+              <div>
+                <label class="input-label">{{ t('admin.redeem.vipDays') }}</label>
+                <input
+                  v-model.number="generateForm.vip_days"
+                  type="number"
+                  min="1"
+                  max="36500"
+                  required
+                  class="input"
+                />
+              </div>
+            </template>
             <!-- 订阅类型：显示分组选择和有效天数 -->
             <template v-if="generateForm.type === 'subscription'">
               <div>
@@ -615,6 +642,7 @@ import { useClipboard } from '@/composables/useClipboard'
 import { useTableSelection } from '@/composables/useTableSelection'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { adminAPI } from '@/api/admin'
+import { adminPaymentAPI } from '@/api/admin/payment'
 import { formatDateTime } from '@/utils/format'
 import type {
   RedeemCode,
@@ -624,6 +652,7 @@ import type {
   SubscriptionType,
   BatchUpdateRedeemCodeFields
 } from '@/types'
+import type { VIPLevel } from '@/types/payment'
 import type { Column } from '@/components/common/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -652,6 +681,7 @@ const showGenerateDialog = ref(false)
 const showResultDialog = ref(false)
 const generatedCodes = ref<RedeemCode[]>([])
 const subscriptionGroups = ref<Group[]>([])
+const vipLevels = ref<VIPLevel[]>([])
 
 // 订阅类型分组选项
 const subscriptionGroupOptions = computed(() => {
@@ -671,6 +701,20 @@ const batchGroupOptions = computed(() => [
   { value: null, label: t('admin.redeem.clearGroup') },
   ...subscriptionGroupOptions.value
 ])
+
+const vipLevelOptions = computed(() =>
+  vipLevels.value.map((level) => ({
+    value: level.id,
+    label: `${vipLevelDisplayName(level)} · ${level.validity_days}${t('admin.redeem.days')}`
+  }))
+)
+
+function vipLevelDisplayName(level: VIPLevel): string {
+  const name = String(level.name || '').trim()
+  if (!name) return `VIP #${level.id}`
+  if (/^\d+$/.test(name)) return `VIP ${name}`
+  return name
+}
 
 const generatedCodesText = computed(() => {
   return generatedCodes.value.map((code) => code.code).join('\n')
@@ -735,6 +779,7 @@ const typeOptions = computed(() => [
   { value: 'balance', label: t('admin.redeem.balance') },
   { value: 'concurrency', label: t('admin.redeem.concurrency') },
   { value: 'subscription', label: t('admin.redeem.subscription') },
+  { value: 'vip', label: t('admin.redeem.vip') },
   { value: 'invitation', label: t('admin.redeem.invitation') }
 ])
 
@@ -743,6 +788,7 @@ const filterTypeOptions = computed(() => [
   { value: 'balance', label: t('admin.redeem.balance') },
   { value: 'concurrency', label: t('admin.redeem.concurrency') },
   { value: 'subscription', label: t('admin.redeem.subscription') },
+  { value: 'vip', label: t('admin.redeem.vip') },
   { value: 'invitation', label: t('admin.redeem.invitation') }
 ])
 
@@ -833,21 +879,33 @@ const generateForm = reactive({
   count: 1,
   group_id: null as number | null,
   validity_days: 30,
+  vip_level_id: null as number | null,
+  vip_days: 30,
   expiry_option: 'never' as RedeemCodeExpiryOption,
   custom_expiry_days: 7
 })
 
-// 监听类型变化，邀请码类型时自动设置 value 为 0
+// 监听类型变化，无面值权益类型自动设置 value 为 0
 watch(
   () => generateForm.type,
   (newType) => {
-    if (newType === 'invitation') {
+    if (newType === 'invitation' || newType === 'vip') {
       generateForm.value = 0
     } else if (generateForm.value === 0) {
       generateForm.value = 10
     }
+    if (newType === 'vip') {
+      loadVIPLevels()
+    }
   }
 )
+
+const openGenerateDialog = () => {
+  showGenerateDialog.value = true
+  if (generateForm.type === 'vip') {
+    loadVIPLevels()
+  }
+}
 
 const buildRedeemQueryFilters = () => ({
   type: (filters.type || undefined) as RedeemCodeType | undefined,
@@ -1023,6 +1081,14 @@ const handleGenerateCodes = async () => {
     appStore.showError(t('admin.redeem.groupRequired'))
     return
   }
+  if (generateForm.type === 'vip' && !generateForm.vip_level_id) {
+    appStore.showError(t('admin.redeem.vipLevelRequired'))
+    return
+  }
+  if (generateForm.type === 'vip' && (!generateForm.vip_days || generateForm.vip_days < 1)) {
+    appStore.showError(t('admin.redeem.vipDaysRequired'))
+    return
+  }
 
   const expiresInDays = getRedeemCodeExpiresInDays()
   if (expiresInDays === null) {
@@ -1038,7 +1104,9 @@ const handleGenerateCodes = async () => {
       generateForm.value,
       generateForm.type === 'subscription' ? generateForm.group_id : undefined,
       generateForm.type === 'subscription' ? generateForm.validity_days : undefined,
-      expiresInDays
+      expiresInDays,
+      generateForm.type === 'vip' ? generateForm.vip_level_id : undefined,
+      generateForm.type === 'vip' ? generateForm.vip_days : undefined
     )
     showGenerateDialog.value = false
     generatedCodes.value = result
@@ -1046,6 +1114,8 @@ const handleGenerateCodes = async () => {
     // 重置表单
     generateForm.group_id = null
     generateForm.validity_days = 30
+    generateForm.vip_level_id = null
+    generateForm.vip_days = 30
     generateForm.expiry_option = 'never'
     generateForm.custom_expiry_days = 7
     loadCodes()
@@ -1174,6 +1244,15 @@ const loadSubscriptionGroups = async () => {
     subscriptionGroups.value = groups
   } catch (error) {
     console.error('Error loading subscription groups:', error)
+  }
+}
+
+const loadVIPLevels = async () => {
+  try {
+    const res = await adminPaymentAPI.getVIPLevels()
+    vipLevels.value = res.data || []
+  } catch (error) {
+    console.error('Error loading VIP levels:', error)
   }
 }
 

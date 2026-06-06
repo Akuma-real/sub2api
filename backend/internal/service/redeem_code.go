@@ -20,9 +20,12 @@ type RedeemCode struct {
 
 	GroupID      *int64
 	ValidityDays int
+	VIPLevelID   *int64
+	VIPDays      int
 
-	User  *User
-	Group *Group
+	User     *User
+	Group    *Group
+	VIPLevel *VIPLevel
 }
 
 func (r *RedeemCode) IsUsed() bool {

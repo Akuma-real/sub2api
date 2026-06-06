@@ -638,6 +638,29 @@ func HasMembershipsWith(preds ...predicate.UserVIPMembership) predicate.VIPLevel
 	})
 }
 
+// HasRedeemCodes applies the HasEdge predicate on the "redeem_codes" edge.
+func HasRedeemCodes() predicate.VIPLevel {
+	return predicate.VIPLevel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RedeemCodesTable, RedeemCodesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRedeemCodesWith applies the HasEdge predicate on the "redeem_codes" edge with a given conditions (other predicates).
+func HasRedeemCodesWith(preds ...predicate.RedeemCode) predicate.VIPLevel {
+	return predicate.VIPLevel(func(s *sql.Selector) {
+		step := newRedeemCodesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUsageLogs applies the HasEdge predicate on the "usage_logs" edge.
 func HasUsageLogs() predicate.VIPLevel {
 	return predicate.VIPLevel(func(s *sql.Selector) {

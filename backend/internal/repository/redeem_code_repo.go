@@ -34,6 +34,8 @@ func (r *redeemCodeRepository) Create(ctx context.Context, code *service.RedeemC
 		SetNillableUsedBy(code.UsedBy).
 		SetNillableUsedAt(code.UsedAt).
 		SetNillableGroupID(code.GroupID).
+		SetNillableVipLevelID(code.VIPLevelID).
+		SetVipDays(code.VIPDays).
 		Save(ctx)
 	if err == nil {
 		code.ID = created.ID
@@ -60,7 +62,9 @@ func (r *redeemCodeRepository) CreateBatch(ctx context.Context, codes []service.
 			SetNillableExpiresAt(c.ExpiresAt).
 			SetNillableUsedBy(c.UsedBy).
 			SetNillableUsedAt(c.UsedAt).
-			SetNillableGroupID(c.GroupID)
+			SetNillableGroupID(c.GroupID).
+			SetNillableVipLevelID(c.VIPLevelID).
+			SetVipDays(c.VIPDays)
 		builders = append(builders, b)
 	}
 
@@ -149,6 +153,7 @@ func (r *redeemCodeRepository) ListWithFilters(ctx context.Context, params pagin
 	codesQuery := q.
 		WithUser().
 		WithGroup().
+		WithVipLevel().
 		Offset(params.Offset()).
 		Limit(params.Limit())
 	for _, order := range redeemCodeListOrder(params) {
@@ -219,6 +224,12 @@ func (r *redeemCodeRepository) Update(ctx context.Context, code *service.RedeemC
 	} else {
 		up.ClearGroupID()
 	}
+	if code.VIPLevelID != nil {
+		up.SetVipLevelID(*code.VIPLevelID)
+	} else {
+		up.ClearVipLevelID()
+	}
+	up.SetVipDays(code.VIPDays)
 	if code.ExpiresAt != nil {
 		up.SetExpiresAt(*code.ExpiresAt)
 	} else {
@@ -310,6 +321,13 @@ func (r *redeemCodeRepository) batchUpdate(ctx context.Context, client *dbent.Cl
 			up.ClearGroupID()
 		}
 	}
+	if fields.VIPLevelID.Set {
+		if fields.VIPLevelID.Value != nil {
+			up.SetVipLevelID(*fields.VIPLevelID.Value)
+		} else {
+			up.ClearVipLevelID()
+		}
+	}
 
 	affected, err := up.Save(ctx)
 	if err != nil {
@@ -347,6 +365,7 @@ func (r *redeemCodeRepository) ListByUser(ctx context.Context, userID int64, lim
 	codes, err := r.client.RedeemCode.Query().
 		Where(redeemcode.UsedByEQ(userID)).
 		WithGroup().
+		WithVipLevel().
 		Order(dbent.Desc(redeemcode.FieldUsedAt)).
 		Limit(limit).
 		All(ctx)
@@ -375,6 +394,7 @@ func (r *redeemCodeRepository) ListByUserPaginated(ctx context.Context, userID i
 
 	codes, err := q.
 		WithGroup().
+		WithVipLevel().
 		Offset(params.Offset()).
 		Limit(params.Limit()).
 		Order(dbent.Desc(redeemcode.FieldUsedAt)).
@@ -425,6 +445,8 @@ func redeemCodeEntityToService(m *dbent.RedeemCode) *service.RedeemCode {
 		ExpiresAt:    m.ExpiresAt,
 		GroupID:      m.GroupID,
 		ValidityDays: m.ValidityDays,
+		VIPLevelID:   m.VipLevelID,
+		VIPDays:      m.VipDays,
 	}
 	if m.Edges.User != nil {
 		out.User = userEntityToService(m.Edges.User)
@@ -432,7 +454,31 @@ func redeemCodeEntityToService(m *dbent.RedeemCode) *service.RedeemCode {
 	if m.Edges.Group != nil {
 		out.Group = groupEntityToService(m.Edges.Group)
 	}
+	if m.Edges.VipLevel != nil {
+		out.VIPLevel = vipLevelEntityToService(m.Edges.VipLevel)
+	}
 	return out
+}
+
+func vipLevelEntityToService(m *dbent.VIPLevel) *service.VIPLevel {
+	if m == nil {
+		return nil
+	}
+	return &service.VIPLevel{
+		ID:                 m.ID,
+		Name:               m.Name,
+		Description:        m.Description,
+		Price:              m.Price,
+		OriginalPrice:      m.OriginalPrice,
+		ValidityDays:       m.ValidityDays,
+		DiscountMultiplier: m.DiscountMultiplier,
+		Features:           m.Features,
+		Benefits:           m.Benefits,
+		ForSale:            m.ForSale,
+		SortOrder:          m.SortOrder,
+		CreatedAt:          m.CreatedAt,
+		UpdatedAt:          m.UpdatedAt,
+	}
 }
 
 func redeemCodeEntitiesToService(models []*dbent.RedeemCode) []service.RedeemCode {

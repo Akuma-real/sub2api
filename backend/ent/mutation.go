@@ -29072,11 +29072,15 @@ type RedeemCodeMutation struct {
 	expires_at       *time.Time
 	validity_days    *int
 	addvalidity_days *int
+	vip_days         *int
+	addvip_days      *int
 	clearedFields    map[string]struct{}
 	user             *int64
 	cleareduser      bool
 	group            *int64
 	clearedgroup     bool
+	vip_level        *int64
+	clearedvip_level bool
 	done             bool
 	oldValue         func(context.Context) (*RedeemCode, error)
 	predicates       []predicate.RedeemCode
@@ -29681,6 +29685,111 @@ func (m *RedeemCodeMutation) ResetValidityDays() {
 	m.addvalidity_days = nil
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (m *RedeemCodeMutation) SetVipLevelID(i int64) {
+	m.vip_level = &i
+}
+
+// VipLevelID returns the value of the "vip_level_id" field in the mutation.
+func (m *RedeemCodeMutation) VipLevelID() (r int64, exists bool) {
+	v := m.vip_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipLevelID returns the old "vip_level_id" field's value of the RedeemCode entity.
+// If the RedeemCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedeemCodeMutation) OldVipLevelID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipLevelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipLevelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipLevelID: %w", err)
+	}
+	return oldValue.VipLevelID, nil
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (m *RedeemCodeMutation) ClearVipLevelID() {
+	m.vip_level = nil
+	m.clearedFields[redeemcode.FieldVipLevelID] = struct{}{}
+}
+
+// VipLevelIDCleared returns if the "vip_level_id" field was cleared in this mutation.
+func (m *RedeemCodeMutation) VipLevelIDCleared() bool {
+	_, ok := m.clearedFields[redeemcode.FieldVipLevelID]
+	return ok
+}
+
+// ResetVipLevelID resets all changes to the "vip_level_id" field.
+func (m *RedeemCodeMutation) ResetVipLevelID() {
+	m.vip_level = nil
+	delete(m.clearedFields, redeemcode.FieldVipLevelID)
+}
+
+// SetVipDays sets the "vip_days" field.
+func (m *RedeemCodeMutation) SetVipDays(i int) {
+	m.vip_days = &i
+	m.addvip_days = nil
+}
+
+// VipDays returns the value of the "vip_days" field in the mutation.
+func (m *RedeemCodeMutation) VipDays() (r int, exists bool) {
+	v := m.vip_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipDays returns the old "vip_days" field's value of the RedeemCode entity.
+// If the RedeemCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedeemCodeMutation) OldVipDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipDays: %w", err)
+	}
+	return oldValue.VipDays, nil
+}
+
+// AddVipDays adds i to the "vip_days" field.
+func (m *RedeemCodeMutation) AddVipDays(i int) {
+	if m.addvip_days != nil {
+		*m.addvip_days += i
+	} else {
+		m.addvip_days = &i
+	}
+}
+
+// AddedVipDays returns the value that was added to the "vip_days" field in this mutation.
+func (m *RedeemCodeMutation) AddedVipDays() (r int, exists bool) {
+	v := m.addvip_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVipDays resets all changes to the "vip_days" field.
+func (m *RedeemCodeMutation) ResetVipDays() {
+	m.vip_days = nil
+	m.addvip_days = nil
+}
+
 // SetUserID sets the "user" edge to the User entity by id.
 func (m *RedeemCodeMutation) SetUserID(id int64) {
 	m.user = &id
@@ -29748,6 +29857,33 @@ func (m *RedeemCodeMutation) ResetGroup() {
 	m.clearedgroup = false
 }
 
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (m *RedeemCodeMutation) ClearVipLevel() {
+	m.clearedvip_level = true
+	m.clearedFields[redeemcode.FieldVipLevelID] = struct{}{}
+}
+
+// VipLevelCleared reports if the "vip_level" edge to the VIPLevel entity was cleared.
+func (m *RedeemCodeMutation) VipLevelCleared() bool {
+	return m.VipLevelIDCleared() || m.clearedvip_level
+}
+
+// VipLevelIDs returns the "vip_level" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VipLevelID instead. It exists only for internal usage by the builders.
+func (m *RedeemCodeMutation) VipLevelIDs() (ids []int64) {
+	if id := m.vip_level; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVipLevel resets all changes to the "vip_level" edge.
+func (m *RedeemCodeMutation) ResetVipLevel() {
+	m.vip_level = nil
+	m.clearedvip_level = false
+}
+
 // Where appends a list predicates to the RedeemCodeMutation builder.
 func (m *RedeemCodeMutation) Where(ps ...predicate.RedeemCode) {
 	m.predicates = append(m.predicates, ps...)
@@ -29782,7 +29918,7 @@ func (m *RedeemCodeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RedeemCodeMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 13)
 	if m.code != nil {
 		fields = append(fields, redeemcode.FieldCode)
 	}
@@ -29816,6 +29952,12 @@ func (m *RedeemCodeMutation) Fields() []string {
 	if m.validity_days != nil {
 		fields = append(fields, redeemcode.FieldValidityDays)
 	}
+	if m.vip_level != nil {
+		fields = append(fields, redeemcode.FieldVipLevelID)
+	}
+	if m.vip_days != nil {
+		fields = append(fields, redeemcode.FieldVipDays)
+	}
 	return fields
 }
 
@@ -29846,6 +29988,10 @@ func (m *RedeemCodeMutation) Field(name string) (ent.Value, bool) {
 		return m.GroupID()
 	case redeemcode.FieldValidityDays:
 		return m.ValidityDays()
+	case redeemcode.FieldVipLevelID:
+		return m.VipLevelID()
+	case redeemcode.FieldVipDays:
+		return m.VipDays()
 	}
 	return nil, false
 }
@@ -29877,6 +30023,10 @@ func (m *RedeemCodeMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldGroupID(ctx)
 	case redeemcode.FieldValidityDays:
 		return m.OldValidityDays(ctx)
+	case redeemcode.FieldVipLevelID:
+		return m.OldVipLevelID(ctx)
+	case redeemcode.FieldVipDays:
+		return m.OldVipDays(ctx)
 	}
 	return nil, fmt.Errorf("unknown RedeemCode field %s", name)
 }
@@ -29963,6 +30113,20 @@ func (m *RedeemCodeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetValidityDays(v)
 		return nil
+	case redeemcode.FieldVipLevelID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipLevelID(v)
+		return nil
+	case redeemcode.FieldVipDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown RedeemCode field %s", name)
 }
@@ -29977,6 +30141,9 @@ func (m *RedeemCodeMutation) AddedFields() []string {
 	if m.addvalidity_days != nil {
 		fields = append(fields, redeemcode.FieldValidityDays)
 	}
+	if m.addvip_days != nil {
+		fields = append(fields, redeemcode.FieldVipDays)
+	}
 	return fields
 }
 
@@ -29989,6 +30156,8 @@ func (m *RedeemCodeMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedValue()
 	case redeemcode.FieldValidityDays:
 		return m.AddedValidityDays()
+	case redeemcode.FieldVipDays:
+		return m.AddedVipDays()
 	}
 	return nil, false
 }
@@ -30012,6 +30181,13 @@ func (m *RedeemCodeMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddValidityDays(v)
 		return nil
+	case redeemcode.FieldVipDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVipDays(v)
+		return nil
 	}
 	return fmt.Errorf("unknown RedeemCode numeric field %s", name)
 }
@@ -30034,6 +30210,9 @@ func (m *RedeemCodeMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(redeemcode.FieldGroupID) {
 		fields = append(fields, redeemcode.FieldGroupID)
+	}
+	if m.FieldCleared(redeemcode.FieldVipLevelID) {
+		fields = append(fields, redeemcode.FieldVipLevelID)
 	}
 	return fields
 }
@@ -30063,6 +30242,9 @@ func (m *RedeemCodeMutation) ClearField(name string) error {
 		return nil
 	case redeemcode.FieldGroupID:
 		m.ClearGroupID()
+		return nil
+	case redeemcode.FieldVipLevelID:
+		m.ClearVipLevelID()
 		return nil
 	}
 	return fmt.Errorf("unknown RedeemCode nullable field %s", name)
@@ -30105,18 +30287,27 @@ func (m *RedeemCodeMutation) ResetField(name string) error {
 	case redeemcode.FieldValidityDays:
 		m.ResetValidityDays()
 		return nil
+	case redeemcode.FieldVipLevelID:
+		m.ResetVipLevelID()
+		return nil
+	case redeemcode.FieldVipDays:
+		m.ResetVipDays()
+		return nil
 	}
 	return fmt.Errorf("unknown RedeemCode field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RedeemCodeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.user != nil {
 		edges = append(edges, redeemcode.EdgeUser)
 	}
 	if m.group != nil {
 		edges = append(edges, redeemcode.EdgeGroup)
+	}
+	if m.vip_level != nil {
+		edges = append(edges, redeemcode.EdgeVipLevel)
 	}
 	return edges
 }
@@ -30133,13 +30324,17 @@ func (m *RedeemCodeMutation) AddedIDs(name string) []ent.Value {
 		if id := m.group; id != nil {
 			return []ent.Value{*id}
 		}
+	case redeemcode.EdgeVipLevel:
+		if id := m.vip_level; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RedeemCodeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	return edges
 }
 
@@ -30151,12 +30346,15 @@ func (m *RedeemCodeMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RedeemCodeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.cleareduser {
 		edges = append(edges, redeemcode.EdgeUser)
 	}
 	if m.clearedgroup {
 		edges = append(edges, redeemcode.EdgeGroup)
+	}
+	if m.clearedvip_level {
+		edges = append(edges, redeemcode.EdgeVipLevel)
 	}
 	return edges
 }
@@ -30169,6 +30367,8 @@ func (m *RedeemCodeMutation) EdgeCleared(name string) bool {
 		return m.cleareduser
 	case redeemcode.EdgeGroup:
 		return m.clearedgroup
+	case redeemcode.EdgeVipLevel:
+		return m.clearedvip_level
 	}
 	return false
 }
@@ -30183,6 +30383,9 @@ func (m *RedeemCodeMutation) ClearEdge(name string) error {
 	case redeemcode.EdgeGroup:
 		m.ClearGroup()
 		return nil
+	case redeemcode.EdgeVipLevel:
+		m.ClearVipLevel()
+		return nil
 	}
 	return fmt.Errorf("unknown RedeemCode unique edge %s", name)
 }
@@ -30196,6 +30399,9 @@ func (m *RedeemCodeMutation) ResetEdge(name string) error {
 		return nil
 	case redeemcode.EdgeGroup:
 		m.ResetGroup()
+		return nil
+	case redeemcode.EdgeVipLevel:
+		m.ResetVipLevel()
 		return nil
 	}
 	return fmt.Errorf("unknown RedeemCode edge %s", name)
@@ -48106,6 +48312,9 @@ type VIPLevelMutation struct {
 	memberships            map[int64]struct{}
 	removedmemberships     map[int64]struct{}
 	clearedmemberships     bool
+	redeem_codes           map[int64]struct{}
+	removedredeem_codes    map[int64]struct{}
+	clearedredeem_codes    bool
 	usage_logs             map[int64]struct{}
 	removedusage_logs      map[int64]struct{}
 	clearedusage_logs      bool
@@ -48825,6 +49034,60 @@ func (m *VIPLevelMutation) ResetMemberships() {
 	m.removedmemberships = nil
 }
 
+// AddRedeemCodeIDs adds the "redeem_codes" edge to the RedeemCode entity by ids.
+func (m *VIPLevelMutation) AddRedeemCodeIDs(ids ...int64) {
+	if m.redeem_codes == nil {
+		m.redeem_codes = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.redeem_codes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearRedeemCodes clears the "redeem_codes" edge to the RedeemCode entity.
+func (m *VIPLevelMutation) ClearRedeemCodes() {
+	m.clearedredeem_codes = true
+}
+
+// RedeemCodesCleared reports if the "redeem_codes" edge to the RedeemCode entity was cleared.
+func (m *VIPLevelMutation) RedeemCodesCleared() bool {
+	return m.clearedredeem_codes
+}
+
+// RemoveRedeemCodeIDs removes the "redeem_codes" edge to the RedeemCode entity by IDs.
+func (m *VIPLevelMutation) RemoveRedeemCodeIDs(ids ...int64) {
+	if m.removedredeem_codes == nil {
+		m.removedredeem_codes = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.redeem_codes, ids[i])
+		m.removedredeem_codes[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedRedeemCodes returns the removed IDs of the "redeem_codes" edge to the RedeemCode entity.
+func (m *VIPLevelMutation) RemovedRedeemCodesIDs() (ids []int64) {
+	for id := range m.removedredeem_codes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// RedeemCodesIDs returns the "redeem_codes" edge IDs in the mutation.
+func (m *VIPLevelMutation) RedeemCodesIDs() (ids []int64) {
+	for id := range m.redeem_codes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetRedeemCodes resets all changes to the "redeem_codes" edge.
+func (m *VIPLevelMutation) ResetRedeemCodes() {
+	m.redeem_codes = nil
+	m.clearedredeem_codes = false
+	m.removedredeem_codes = nil
+}
+
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by ids.
 func (m *VIPLevelMutation) AddUsageLogIDs(ids ...int64) {
 	if m.usage_logs == nil {
@@ -49277,9 +49540,12 @@ func (m *VIPLevelMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *VIPLevelMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.memberships != nil {
 		edges = append(edges, viplevel.EdgeMemberships)
+	}
+	if m.redeem_codes != nil {
+		edges = append(edges, viplevel.EdgeRedeemCodes)
 	}
 	if m.usage_logs != nil {
 		edges = append(edges, viplevel.EdgeUsageLogs)
@@ -49297,6 +49563,12 @@ func (m *VIPLevelMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case viplevel.EdgeRedeemCodes:
+		ids := make([]ent.Value, 0, len(m.redeem_codes))
+		for id := range m.redeem_codes {
+			ids = append(ids, id)
+		}
+		return ids
 	case viplevel.EdgeUsageLogs:
 		ids := make([]ent.Value, 0, len(m.usage_logs))
 		for id := range m.usage_logs {
@@ -49309,9 +49581,12 @@ func (m *VIPLevelMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *VIPLevelMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedmemberships != nil {
 		edges = append(edges, viplevel.EdgeMemberships)
+	}
+	if m.removedredeem_codes != nil {
+		edges = append(edges, viplevel.EdgeRedeemCodes)
 	}
 	if m.removedusage_logs != nil {
 		edges = append(edges, viplevel.EdgeUsageLogs)
@@ -49329,6 +49604,12 @@ func (m *VIPLevelMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case viplevel.EdgeRedeemCodes:
+		ids := make([]ent.Value, 0, len(m.removedredeem_codes))
+		for id := range m.removedredeem_codes {
+			ids = append(ids, id)
+		}
+		return ids
 	case viplevel.EdgeUsageLogs:
 		ids := make([]ent.Value, 0, len(m.removedusage_logs))
 		for id := range m.removedusage_logs {
@@ -49341,9 +49622,12 @@ func (m *VIPLevelMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *VIPLevelMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedmemberships {
 		edges = append(edges, viplevel.EdgeMemberships)
+	}
+	if m.clearedredeem_codes {
+		edges = append(edges, viplevel.EdgeRedeemCodes)
 	}
 	if m.clearedusage_logs {
 		edges = append(edges, viplevel.EdgeUsageLogs)
@@ -49357,6 +49641,8 @@ func (m *VIPLevelMutation) EdgeCleared(name string) bool {
 	switch name {
 	case viplevel.EdgeMemberships:
 		return m.clearedmemberships
+	case viplevel.EdgeRedeemCodes:
+		return m.clearedredeem_codes
 	case viplevel.EdgeUsageLogs:
 		return m.clearedusage_logs
 	}
@@ -49377,6 +49663,9 @@ func (m *VIPLevelMutation) ResetEdge(name string) error {
 	switch name {
 	case viplevel.EdgeMemberships:
 		m.ResetMemberships()
+		return nil
+	case viplevel.EdgeRedeemCodes:
+		m.ResetRedeemCodes()
 		return nil
 	case viplevel.EdgeUsageLogs:
 		m.ResetUsageLogs()

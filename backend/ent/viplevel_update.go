@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
+	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 	"github.com/Wei-Shaw/sub2api/ent/viplevel"
@@ -230,6 +231,21 @@ func (_u *VIPLevelUpdate) AddMemberships(v ...*UserVIPMembership) *VIPLevelUpdat
 	return _u.AddMembershipIDs(ids...)
 }
 
+// AddRedeemCodeIDs adds the "redeem_codes" edge to the RedeemCode entity by IDs.
+func (_u *VIPLevelUpdate) AddRedeemCodeIDs(ids ...int64) *VIPLevelUpdate {
+	_u.mutation.AddRedeemCodeIDs(ids...)
+	return _u
+}
+
+// AddRedeemCodes adds the "redeem_codes" edges to the RedeemCode entity.
+func (_u *VIPLevelUpdate) AddRedeemCodes(v ...*RedeemCode) *VIPLevelUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRedeemCodeIDs(ids...)
+}
+
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
 func (_u *VIPLevelUpdate) AddUsageLogIDs(ids ...int64) *VIPLevelUpdate {
 	_u.mutation.AddUsageLogIDs(ids...)
@@ -269,6 +285,27 @@ func (_u *VIPLevelUpdate) RemoveMemberships(v ...*UserVIPMembership) *VIPLevelUp
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMembershipIDs(ids...)
+}
+
+// ClearRedeemCodes clears all "redeem_codes" edges to the RedeemCode entity.
+func (_u *VIPLevelUpdate) ClearRedeemCodes() *VIPLevelUpdate {
+	_u.mutation.ClearRedeemCodes()
+	return _u
+}
+
+// RemoveRedeemCodeIDs removes the "redeem_codes" edge to RedeemCode entities by IDs.
+func (_u *VIPLevelUpdate) RemoveRedeemCodeIDs(ids ...int64) *VIPLevelUpdate {
+	_u.mutation.RemoveRedeemCodeIDs(ids...)
+	return _u
+}
+
+// RemoveRedeemCodes removes "redeem_codes" edges to RedeemCode entities.
+func (_u *VIPLevelUpdate) RemoveRedeemCodes(v ...*RedeemCode) *VIPLevelUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRedeemCodeIDs(ids...)
 }
 
 // ClearUsageLogs clears all "usage_logs" edges to the UsageLog entity.
@@ -442,6 +479,51 @@ func (_u *VIPLevelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RedeemCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRedeemCodesIDs(); len(nodes) > 0 && !_u.mutation.RedeemCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RedeemCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -714,6 +796,21 @@ func (_u *VIPLevelUpdateOne) AddMemberships(v ...*UserVIPMembership) *VIPLevelUp
 	return _u.AddMembershipIDs(ids...)
 }
 
+// AddRedeemCodeIDs adds the "redeem_codes" edge to the RedeemCode entity by IDs.
+func (_u *VIPLevelUpdateOne) AddRedeemCodeIDs(ids ...int64) *VIPLevelUpdateOne {
+	_u.mutation.AddRedeemCodeIDs(ids...)
+	return _u
+}
+
+// AddRedeemCodes adds the "redeem_codes" edges to the RedeemCode entity.
+func (_u *VIPLevelUpdateOne) AddRedeemCodes(v ...*RedeemCode) *VIPLevelUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRedeemCodeIDs(ids...)
+}
+
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
 func (_u *VIPLevelUpdateOne) AddUsageLogIDs(ids ...int64) *VIPLevelUpdateOne {
 	_u.mutation.AddUsageLogIDs(ids...)
@@ -753,6 +850,27 @@ func (_u *VIPLevelUpdateOne) RemoveMemberships(v ...*UserVIPMembership) *VIPLeve
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveMembershipIDs(ids...)
+}
+
+// ClearRedeemCodes clears all "redeem_codes" edges to the RedeemCode entity.
+func (_u *VIPLevelUpdateOne) ClearRedeemCodes() *VIPLevelUpdateOne {
+	_u.mutation.ClearRedeemCodes()
+	return _u
+}
+
+// RemoveRedeemCodeIDs removes the "redeem_codes" edge to RedeemCode entities by IDs.
+func (_u *VIPLevelUpdateOne) RemoveRedeemCodeIDs(ids ...int64) *VIPLevelUpdateOne {
+	_u.mutation.RemoveRedeemCodeIDs(ids...)
+	return _u
+}
+
+// RemoveRedeemCodes removes "redeem_codes" edges to RedeemCode entities.
+func (_u *VIPLevelUpdateOne) RemoveRedeemCodes(v ...*RedeemCode) *VIPLevelUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRedeemCodeIDs(ids...)
 }
 
 // ClearUsageLogs clears all "usage_logs" edges to the UsageLog entity.
@@ -956,6 +1074,51 @@ func (_u *VIPLevelUpdateOne) sqlSave(ctx context.Context) (_node *VIPLevel, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RedeemCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRedeemCodesIDs(); len(nodes) > 0 && !_u.mutation.RedeemCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RedeemCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   viplevel.RedeemCodesTable,
+			Columns: []string{viplevel.RedeemCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(redeemcode.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

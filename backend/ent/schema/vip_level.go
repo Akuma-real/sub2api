@@ -66,6 +66,7 @@ func (VIPLevel) Fields() []ent.Field {
 func (VIPLevel) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("memberships", UserVIPMembership.Type),
+		edge.To("redeem_codes", RedeemCode.Type),
 		edge.To("usage_logs", UsageLog.Type),
 	}
 }

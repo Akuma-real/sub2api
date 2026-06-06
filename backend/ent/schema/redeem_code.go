@@ -72,6 +72,11 @@ func (RedeemCode) Fields() []ent.Field {
 			Nillable(),
 		field.Int("validity_days").
 			Default(30),
+		field.Int64("vip_level_id").
+			Optional().
+			Nillable(),
+		field.Int("vip_days").
+			Default(0),
 	}
 }
 
@@ -85,6 +90,10 @@ func (RedeemCode) Edges() []ent.Edge {
 			Ref("redeem_codes").
 			Field("group_id").
 			Unique(),
+		edge.From("vip_level", VIPLevel.Type).
+			Ref("redeem_codes").
+			Field("vip_level_id").
+			Unique(),
 	}
 }
 
@@ -94,6 +103,7 @@ func (RedeemCode) Indexes() []ent.Index {
 		index.Fields("status"),
 		index.Fields("used_by"),
 		index.Fields("group_id"),
+		index.Fields("vip_level_id"),
 		index.Fields("expires_at"),
 	}
 }

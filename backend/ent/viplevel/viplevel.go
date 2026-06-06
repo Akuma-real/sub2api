@@ -40,6 +40,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeMemberships holds the string denoting the memberships edge name in mutations.
 	EdgeMemberships = "memberships"
+	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
+	EdgeRedeemCodes = "redeem_codes"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
 	EdgeUsageLogs = "usage_logs"
 	// Table holds the table name of the viplevel in the database.
@@ -51,6 +53,13 @@ const (
 	MembershipsInverseTable = "user_vip_memberships"
 	// MembershipsColumn is the table column denoting the memberships relation/edge.
 	MembershipsColumn = "vip_level_id"
+	// RedeemCodesTable is the table that holds the redeem_codes relation/edge.
+	RedeemCodesTable = "redeem_codes"
+	// RedeemCodesInverseTable is the table name for the RedeemCode entity.
+	// It exists in this package in order to avoid circular dependency with the "redeemcode" package.
+	RedeemCodesInverseTable = "redeem_codes"
+	// RedeemCodesColumn is the table column denoting the redeem_codes relation/edge.
+	RedeemCodesColumn = "vip_level_id"
 	// UsageLogsTable is the table that holds the usage_logs relation/edge.
 	UsageLogsTable = "usage_logs"
 	// UsageLogsInverseTable is the table name for the UsageLog entity.
@@ -187,6 +196,20 @@ func ByMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByRedeemCodesCount orders the results by redeem_codes count.
+func ByRedeemCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRedeemCodesStep(), opts...)
+	}
+}
+
+// ByRedeemCodes orders the results by redeem_codes terms.
+func ByRedeemCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRedeemCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUsageLogsCount orders the results by usage_logs count.
 func ByUsageLogsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -205,6 +228,13 @@ func newMembershipsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MembershipsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
+	)
+}
+func newRedeemCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RedeemCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RedeemCodesTable, RedeemCodesColumn),
 	)
 }
 func newUsageLogsStep() *sqlgraph.Step {

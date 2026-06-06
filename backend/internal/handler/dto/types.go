@@ -346,13 +346,32 @@ type RedeemCode struct {
 
 	GroupID      *int64 `json:"group_id"`
 	ValidityDays int    `json:"validity_days"`
+	VIPLevelID   *int64 `json:"vip_level_id"`
+	VIPDays      int    `json:"vip_days"`
 
 	// Notes is only populated for admin_balance/admin_concurrency types
 	// so users can see why they were charged or credited
 	Notes *string `json:"notes,omitempty"`
 
-	User  *User  `json:"user,omitempty"`
-	Group *Group `json:"group,omitempty"`
+	User     *User     `json:"user,omitempty"`
+	Group    *Group    `json:"group,omitempty"`
+	VIPLevel *VIPLevel `json:"vip_level,omitempty"`
+}
+
+type VIPLevel struct {
+	ID                 int64          `json:"id"`
+	Name               string         `json:"name"`
+	Description        string         `json:"description"`
+	Price              float64        `json:"price"`
+	OriginalPrice      *float64       `json:"original_price,omitempty"`
+	ValidityDays       int            `json:"validity_days"`
+	DiscountMultiplier float64        `json:"discount_multiplier"`
+	Features           string         `json:"features"`
+	Benefits           map[string]any `json:"benefits,omitempty"`
+	ForSale            bool           `json:"for_sale"`
+	SortOrder          int            `json:"sort_order"`
+	CreatedAt          time.Time      `json:"created_at,omitempty"`
+	UpdatedAt          time.Time      `json:"updated_at,omitempty"`
 }
 
 // AdminRedeemCode 是管理员接口使用的 redeem code DTO（包含 notes 等字段）。
@@ -402,10 +421,11 @@ func (f *NullableInt64Field) UnmarshalJSON(data []byte) error {
 }
 
 type BatchUpdateRedeemCodeFields struct {
-	Status    *string            `json:"status,omitempty"`
-	ExpiresAt NullableTimeField  `json:"expires_at,omitempty"`
-	Notes     *string            `json:"notes,omitempty"`
-	GroupID   NullableInt64Field `json:"group_id,omitempty"`
+	Status     *string            `json:"status,omitempty"`
+	ExpiresAt  NullableTimeField  `json:"expires_at,omitempty"`
+	Notes      *string            `json:"notes,omitempty"`
+	GroupID    NullableInt64Field `json:"group_id,omitempty"`
+	VIPLevelID NullableInt64Field `json:"vip_level_id,omitempty"`
 
 	Type  *string  `json:"type,omitempty"`
 	Value *float64 `json:"value,omitempty"`

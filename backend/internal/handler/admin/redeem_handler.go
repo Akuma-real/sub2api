@@ -35,10 +35,12 @@ func NewRedeemHandler(adminService service.AdminService, redeemService *service.
 // GenerateRedeemCodesRequest represents generate redeem codes request
 type GenerateRedeemCodesRequest struct {
 	Count         int        `json:"count" binding:"required,min=1,max=100"`
-	Type          string     `json:"type" binding:"required,oneof=balance concurrency subscription invitation"`
+	Type          string     `json:"type" binding:"required,oneof=balance concurrency subscription vip invitation"`
 	Value         float64    `json:"value"`
 	GroupID       *int64     `json:"group_id"`      // 订阅类型必填
 	ValidityDays  int        `json:"validity_days"` // 订阅类型使用，正数增加/负数退款扣减
+	VIPLevelID    *int64     `json:"vip_level_id"`  // VIP 类型必填
+	VIPDays       int        `json:"vip_days"`      // VIP 类型有效天数
 	ExpiresAt     *time.Time `json:"expires_at"`
 	ExpiresInDays *int       `json:"expires_in_days" binding:"omitempty,min=1,max=3650"`
 }
@@ -47,11 +49,13 @@ type GenerateRedeemCodesRequest struct {
 // Type 为 omitempty 而非 required 是为了向后兼容旧版调用方（不传 type 时默认 balance）。
 type CreateAndRedeemCodeRequest struct {
 	Code          string     `json:"code" binding:"required,min=3,max=128"`
-	Type          string     `json:"type" binding:"omitempty,oneof=balance concurrency subscription invitation"` // 不传时默认 balance（向后兼容）
-	Value         float64    `json:"value" binding:"required"`
+	Type          string     `json:"type" binding:"omitempty,oneof=balance concurrency subscription vip invitation"` // 不传时默认 balance（向后兼容）
+	Value         float64    `json:"value"`
 	UserID        int64      `json:"user_id" binding:"required,gt=0"`
 	GroupID       *int64     `json:"group_id"`      // subscription 类型必填
 	ValidityDays  int        `json:"validity_days"` // subscription 类型：正数增加，负数退款扣减
+	VIPLevelID    *int64     `json:"vip_level_id"`  // VIP 类型必填
+	VIPDays       int        `json:"vip_days"`      // VIP 类型有效天数
 	Notes         string     `json:"notes"`
 	ExpiresAt     *time.Time `json:"expires_at"`
 	ExpiresInDays *int       `json:"expires_in_days" binding:"omitempty,min=1,max=3650"`
@@ -149,6 +153,8 @@ func (h *RedeemHandler) Generate(c *gin.Context) {
 			Value:        req.Value,
 			GroupID:      req.GroupID,
 			ValidityDays: req.ValidityDays,
+			VIPLevelID:   req.VIPLevelID,
+			VIPDays:      req.VIPDays,
 			ExpiresAt:    expiresAt,
 		})
 		if execErr != nil {
@@ -193,6 +199,16 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 			return
 		}
 	}
+	if req.Type == "vip" {
+		if req.VIPLevelID == nil {
+			response.BadRequest(c, "vip_level_id is required for vip type")
+			return
+		}
+		if req.VIPDays <= 0 {
+			response.BadRequest(c, "vip_days must be greater than zero for vip type")
+			return
+		}
+	}
 
 	expiresAt, err := resolveRedeemCodeExpiresAt(req.ExpiresAt, req.ExpiresInDays)
 	if err != nil {
@@ -217,6 +233,8 @@ func (h *RedeemHandler) CreateAndRedeem(c *gin.Context) {
 			Notes:        req.Notes,
 			GroupID:      req.GroupID,
 			ValidityDays: req.ValidityDays,
+			VIPLevelID:   req.VIPLevelID,
+			VIPDays:      req.VIPDays,
 			ExpiresAt:    expiresAt,
 		})
 		if createErr != nil {
@@ -348,6 +366,9 @@ func redeemBatchUpdateFieldsFromDTO(in dto.BatchUpdateRedeemCodeFields) service.
 	}
 	if in.GroupID.Set {
 		out.GroupID = service.NullableInt64Update{Set: true, Value: in.GroupID.Value}
+	}
+	if in.VIPLevelID.Set {
+		out.VIPLevelID = service.NullableInt64Update{Set: true, Value: in.VIPLevelID.Value}
 	}
 	return out
 }

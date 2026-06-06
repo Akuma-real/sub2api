@@ -102,7 +102,6 @@
                   {{ t("redeem.redeemSuccess") }}
                 </h3>
                 <div class="mt-2 text-sm text-success">
-                  <p>{{ redeemResult.message }}</p>
                   <div class="mt-3 space-y-1">
                     <p
                       v-if="redeemResult.type === 'balance'"
@@ -124,8 +123,8 @@
                       class="font-medium"
                     >
                       {{ t("redeem.subscriptionAssigned") }}
-                      <span v-if="redeemResult.group_name">
-                        - {{ redeemResult.group_name }}</span
+                      <span v-if="redeemResult.group">
+                        - {{ redeemResult.group.name }}</span
                       >
                       <span v-if="redeemResult.validity_days">
                         ({{
@@ -135,17 +134,20 @@
                         }})</span
                       >
                     </p>
-                    <p v-if="redeemResult.new_balance !== undefined">
-                      {{ t("redeem.newBalance") }}:
-                      <span class="font-semibold"
-                        >${{ redeemResult.new_balance.toFixed(2) }}</span
+                    <p
+                      v-else-if="isVIPType(redeemResult.type)"
+                      class="font-medium"
+                    >
+                      {{ t("redeem.vipAssigned") }}
+                      <span v-if="redeemResult.vip_level">
+                        - {{ vipLevelDisplayName(redeemResult.vip_level) }}</span
                       >
-                    </p>
-                    <p v-if="redeemResult.new_concurrency !== undefined">
-                      {{ t("redeem.newConcurrency") }}:
-                      <span class="font-semibold"
-                        >{{ redeemResult.new_concurrency }}
-                        {{ t("redeem.requests") }}</span
+                      <span v-if="redeemResult.vip_days">
+                        ({{
+                          t("redeem.vipDays", {
+                            days: redeemResult.vip_days,
+                          })
+                        }})</span
                       >
                     </p>
                   </div>
@@ -262,7 +264,7 @@
                       ? item.value >= 0
                         ? 'bg-success/15 '
                         : 'bg-error/15 '
-                      : isSubscriptionType(item.type)
+                      : isSubscriptionType(item.type) || isVIPType(item.type)
                         ? 'bg-primary-100 '
                         : item.value >= 0
                           ? 'bg-accent-teal/15 '
@@ -282,6 +284,13 @@
                   <Icon
                     v-else-if="isSubscriptionType(item.type)"
                     name="badge"
+                    size="md"
+                    class="text-primary-700"
+                  />
+                  <!-- VIP 类型图标 -->
+                  <Icon
+                    v-else-if="isVIPType(item.type)"
+                    name="gift"
                     size="md"
                     class="text-primary-700"
                   />
@@ -312,7 +321,7 @@
                       ? item.value >= 0
                         ? 'text-success '
                         : 'text-error '
-                      : isSubscriptionType(item.type)
+                      : isSubscriptionType(item.type) || isVIPType(item.type)
                         ? 'text-primary-700 '
                         : item.value >= 0
                           ? 'text-primary-700 '
@@ -365,7 +374,10 @@ import { useI18n } from "vue-i18n";
 import { useAuthStore } from "@/stores/auth";
 import { useAppStore } from "@/stores/app";
 import { useSubscriptionStore } from "@/stores/subscriptions";
+import { usePaymentStore } from "@/stores/payment";
 import { redeemAPI, authAPI, type RedeemHistoryItem } from "@/api";
+import type { RedeemCode } from "@/types";
+import type { VIPLevel } from "@/types/payment";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import Icon from "@/components/icons/Icon.vue";
 import { formatDateTime } from "@/utils/format";
@@ -374,20 +386,13 @@ const { t } = useI18n();
 const authStore = useAuthStore();
 const appStore = useAppStore();
 const subscriptionStore = useSubscriptionStore();
+const paymentStore = usePaymentStore();
 
 const user = computed(() => authStore.user);
 
 const redeemCode = ref("");
 const submitting = ref(false);
-const redeemResult = ref<{
-  message: string;
-  type: string;
-  value: number;
-  new_balance?: number;
-  new_concurrency?: number;
-  group_name?: string;
-  validity_days?: number;
-} | null>(null);
+const redeemResult = ref<RedeemCode | null>(null);
 const errorMessage = ref("");
 
 // History data
@@ -404,8 +409,19 @@ const isSubscriptionType = (type: string) => {
   return type === "subscription";
 };
 
+const isVIPType = (type: string) => {
+  return type === "vip";
+};
+
 const isAdminAdjustment = (type: string) => {
   return type === "admin_balance" || type === "admin_concurrency";
+};
+
+const vipLevelDisplayName = (level: VIPLevel) => {
+  const name = String(level.name || "").trim();
+  if (!name) return `VIP #${level.id}`;
+  if (/^\d+$/.test(name)) return `VIP ${name}`;
+  return name;
 };
 
 const getHistoryItemTitle = (item: RedeemHistoryItem) => {
@@ -423,6 +439,8 @@ const getHistoryItemTitle = (item: RedeemHistoryItem) => {
       : t("redeem.concurrencyReducedAdmin");
   } else if (item.type === "subscription") {
     return t("redeem.subscriptionAssigned");
+  } else if (item.type === "vip") {
+    return t("redeem.vipAssigned");
   }
   return t("common.unknown");
 };
@@ -437,6 +455,12 @@ const formatHistoryValue = (item: RedeemHistoryItem) => {
     const groupName = item.group?.name || "";
     return groupName
       ? `${days}${t("redeem.days")} - ${groupName}`
+      : `${days}${t("redeem.days")}`;
+  } else if (isVIPType(item.type)) {
+    const days = item.vip_days || Math.round(item.value);
+    const levelName = item.vip_level ? vipLevelDisplayName(item.vip_level) : "";
+    return levelName
+      ? `${days}${t("redeem.days")} - ${levelName}`
       : `${days}${t("redeem.days")}`;
   } else {
     const sign = item.value >= 0 ? "+" : "";
@@ -480,6 +504,14 @@ const handleRedeem = async () => {
       } catch (error) {
         console.error("Failed to refresh subscriptions after redeem: ", error);
         appStore.showWarning(t("redeem.subscriptionRefreshFailed"));
+      }
+    }
+    if (result.type === "vip") {
+      try {
+        await paymentStore.fetchVIPOverview();
+      } catch (error) {
+        console.error("Failed to refresh VIP overview after redeem: ", error);
+        appStore.showWarning(t("redeem.vipRefreshFailed"));
       }
     }
 

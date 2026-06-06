@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
+	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 	"github.com/Wei-Shaw/sub2api/ent/viplevel"
@@ -27,6 +28,7 @@ type VIPLevelQuery struct {
 	inters          []Interceptor
 	predicates      []predicate.VIPLevel
 	withMemberships *UserVIPMembershipQuery
+	withRedeemCodes *RedeemCodeQuery
 	withUsageLogs   *UsageLogQuery
 	modifiers       []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -80,6 +82,28 @@ func (_q *VIPLevelQuery) QueryMemberships() *UserVIPMembershipQuery {
 			sqlgraph.From(viplevel.Table, viplevel.FieldID, selector),
 			sqlgraph.To(uservipmembership.Table, uservipmembership.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, viplevel.MembershipsTable, viplevel.MembershipsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRedeemCodes chains the current query on the "redeem_codes" edge.
+func (_q *VIPLevelQuery) QueryRedeemCodes() *RedeemCodeQuery {
+	query := (&RedeemCodeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(viplevel.Table, viplevel.FieldID, selector),
+			sqlgraph.To(redeemcode.Table, redeemcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, viplevel.RedeemCodesTable, viplevel.RedeemCodesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -302,6 +326,7 @@ func (_q *VIPLevelQuery) Clone() *VIPLevelQuery {
 		inters:          append([]Interceptor{}, _q.inters...),
 		predicates:      append([]predicate.VIPLevel{}, _q.predicates...),
 		withMemberships: _q.withMemberships.Clone(),
+		withRedeemCodes: _q.withRedeemCodes.Clone(),
 		withUsageLogs:   _q.withUsageLogs.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
@@ -317,6 +342,17 @@ func (_q *VIPLevelQuery) WithMemberships(opts ...func(*UserVIPMembershipQuery)) 
 		opt(query)
 	}
 	_q.withMemberships = query
+	return _q
+}
+
+// WithRedeemCodes tells the query-builder to eager-load the nodes that are connected to
+// the "redeem_codes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *VIPLevelQuery) WithRedeemCodes(opts ...func(*RedeemCodeQuery)) *VIPLevelQuery {
+	query := (&RedeemCodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRedeemCodes = query
 	return _q
 }
 
@@ -409,8 +445,9 @@ func (_q *VIPLevelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*VIP
 	var (
 		nodes       = []*VIPLevel{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withMemberships != nil,
+			_q.withRedeemCodes != nil,
 			_q.withUsageLogs != nil,
 		}
 	)
@@ -439,6 +476,13 @@ func (_q *VIPLevelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*VIP
 		if err := _q.loadMemberships(ctx, query, nodes,
 			func(n *VIPLevel) { n.Edges.Memberships = []*UserVIPMembership{} },
 			func(n *VIPLevel, e *UserVIPMembership) { n.Edges.Memberships = append(n.Edges.Memberships, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRedeemCodes; query != nil {
+		if err := _q.loadRedeemCodes(ctx, query, nodes,
+			func(n *VIPLevel) { n.Edges.RedeemCodes = []*RedeemCode{} },
+			func(n *VIPLevel, e *RedeemCode) { n.Edges.RedeemCodes = append(n.Edges.RedeemCodes, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -477,6 +521,39 @@ func (_q *VIPLevelQuery) loadMemberships(ctx context.Context, query *UserVIPMemb
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "vip_level_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *VIPLevelQuery) loadRedeemCodes(ctx context.Context, query *RedeemCodeQuery, nodes []*VIPLevel, init func(*VIPLevel), assign func(*VIPLevel, *RedeemCode)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*VIPLevel)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(redeemcode.FieldVipLevelID)
+	}
+	query.Where(predicate.RedeemCode(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(viplevel.RedeemCodesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.VipLevelID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "vip_level_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "vip_level_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

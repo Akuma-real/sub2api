@@ -16,18 +16,20 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/user"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 )
 
 // RedeemCodeQuery is the builder for querying RedeemCode entities.
 type RedeemCodeQuery struct {
 	config
-	ctx        *QueryContext
-	order      []redeemcode.OrderOption
-	inters     []Interceptor
-	predicates []predicate.RedeemCode
-	withUser   *UserQuery
-	withGroup  *GroupQuery
-	modifiers  []func(*sql.Selector)
+	ctx          *QueryContext
+	order        []redeemcode.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.RedeemCode
+	withUser     *UserQuery
+	withGroup    *GroupQuery
+	withVipLevel *VIPLevelQuery
+	modifiers    []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,6 +103,28 @@ func (_q *RedeemCodeQuery) QueryGroup() *GroupQuery {
 			sqlgraph.From(redeemcode.Table, redeemcode.FieldID, selector),
 			sqlgraph.To(group.Table, group.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, redeemcode.GroupTable, redeemcode.GroupColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryVipLevel chains the current query on the "vip_level" edge.
+func (_q *RedeemCodeQuery) QueryVipLevel() *VIPLevelQuery {
+	query := (&VIPLevelClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(redeemcode.Table, redeemcode.FieldID, selector),
+			sqlgraph.To(viplevel.Table, viplevel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redeemcode.VipLevelTable, redeemcode.VipLevelColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -295,13 +319,14 @@ func (_q *RedeemCodeQuery) Clone() *RedeemCodeQuery {
 		return nil
 	}
 	return &RedeemCodeQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]redeemcode.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.RedeemCode{}, _q.predicates...),
-		withUser:   _q.withUser.Clone(),
-		withGroup:  _q.withGroup.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]redeemcode.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.RedeemCode{}, _q.predicates...),
+		withUser:     _q.withUser.Clone(),
+		withGroup:    _q.withGroup.Clone(),
+		withVipLevel: _q.withVipLevel.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -327,6 +352,17 @@ func (_q *RedeemCodeQuery) WithGroup(opts ...func(*GroupQuery)) *RedeemCodeQuery
 		opt(query)
 	}
 	_q.withGroup = query
+	return _q
+}
+
+// WithVipLevel tells the query-builder to eager-load the nodes that are connected to
+// the "vip_level" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RedeemCodeQuery) WithVipLevel(opts ...func(*VIPLevelQuery)) *RedeemCodeQuery {
+	query := (&VIPLevelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withVipLevel = query
 	return _q
 }
 
@@ -408,9 +444,10 @@ func (_q *RedeemCodeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	var (
 		nodes       = []*RedeemCode{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withUser != nil,
 			_q.withGroup != nil,
+			_q.withVipLevel != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -443,6 +480,12 @@ func (_q *RedeemCodeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	if query := _q.withGroup; query != nil {
 		if err := _q.loadGroup(ctx, query, nodes, nil,
 			func(n *RedeemCode, e *Group) { n.Edges.Group = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withVipLevel; query != nil {
+		if err := _q.loadVipLevel(ctx, query, nodes, nil,
+			func(n *RedeemCode, e *VIPLevel) { n.Edges.VipLevel = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -513,6 +556,38 @@ func (_q *RedeemCodeQuery) loadGroup(ctx context.Context, query *GroupQuery, nod
 	}
 	return nil
 }
+func (_q *RedeemCodeQuery) loadVipLevel(ctx context.Context, query *VIPLevelQuery, nodes []*RedeemCode, init func(*RedeemCode), assign func(*RedeemCode, *VIPLevel)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*RedeemCode)
+	for i := range nodes {
+		if nodes[i].VipLevelID == nil {
+			continue
+		}
+		fk := *nodes[i].VipLevelID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(viplevel.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "vip_level_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *RedeemCodeQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -547,6 +622,9 @@ func (_q *RedeemCodeQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withGroup != nil {
 			_spec.Node.AddColumnOnce(redeemcode.FieldGroupID)
+		}
+		if _q.withVipLevel != nil {
+			_spec.Node.AddColumnOnce(redeemcode.FieldVipLevelID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

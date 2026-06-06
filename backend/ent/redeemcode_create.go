@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/user"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 )
 
 // RedeemCodeCreate is the builder for creating a RedeemCode entity.
@@ -170,6 +171,34 @@ func (_c *RedeemCodeCreate) SetNillableValidityDays(v *int) *RedeemCodeCreate {
 	return _c
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (_c *RedeemCodeCreate) SetVipLevelID(v int64) *RedeemCodeCreate {
+	_c.mutation.SetVipLevelID(v)
+	return _c
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableVipLevelID(v *int64) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetVipLevelID(*v)
+	}
+	return _c
+}
+
+// SetVipDays sets the "vip_days" field.
+func (_c *RedeemCodeCreate) SetVipDays(v int) *RedeemCodeCreate {
+	_c.mutation.SetVipDays(v)
+	return _c
+}
+
+// SetNillableVipDays sets the "vip_days" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableVipDays(v *int) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetVipDays(*v)
+	}
+	return _c
+}
+
 // SetUserID sets the "user" edge to the User entity by ID.
 func (_c *RedeemCodeCreate) SetUserID(id int64) *RedeemCodeCreate {
 	_c.mutation.SetUserID(id)
@@ -192,6 +221,11 @@ func (_c *RedeemCodeCreate) SetUser(v *User) *RedeemCodeCreate {
 // SetGroup sets the "group" edge to the Group entity.
 func (_c *RedeemCodeCreate) SetGroup(v *Group) *RedeemCodeCreate {
 	return _c.SetGroupID(v.ID)
+}
+
+// SetVipLevel sets the "vip_level" edge to the VIPLevel entity.
+func (_c *RedeemCodeCreate) SetVipLevel(v *VIPLevel) *RedeemCodeCreate {
+	return _c.SetVipLevelID(v.ID)
 }
 
 // Mutation returns the RedeemCodeMutation object of the builder.
@@ -249,6 +283,10 @@ func (_c *RedeemCodeCreate) defaults() {
 		v := redeemcode.DefaultValidityDays
 		_c.mutation.SetValidityDays(v)
 	}
+	if _, ok := _c.mutation.VipDays(); !ok {
+		v := redeemcode.DefaultVipDays
+		_c.mutation.SetVipDays(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -285,6 +323,9 @@ func (_c *RedeemCodeCreate) check() error {
 	}
 	if _, ok := _c.mutation.ValidityDays(); !ok {
 		return &ValidationError{Name: "validity_days", err: errors.New(`ent: missing required field "RedeemCode.validity_days"`)}
+	}
+	if _, ok := _c.mutation.VipDays(); !ok {
+		return &ValidationError{Name: "vip_days", err: errors.New(`ent: missing required field "RedeemCode.vip_days"`)}
 	}
 	return nil
 }
@@ -349,6 +390,10 @@ func (_c *RedeemCodeCreate) createSpec() (*RedeemCode, *sqlgraph.CreateSpec) {
 		_spec.SetField(redeemcode.FieldValidityDays, field.TypeInt, value)
 		_node.ValidityDays = value
 	}
+	if value, ok := _c.mutation.VipDays(); ok {
+		_spec.SetField(redeemcode.FieldVipDays, field.TypeInt, value)
+		_node.VipDays = value
+	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -381,6 +426,23 @@ func (_c *RedeemCodeCreate) createSpec() (*RedeemCode, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.GroupID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.VipLevelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   redeemcode.VipLevelTable,
+			Columns: []string{redeemcode.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.VipLevelID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -594,6 +656,42 @@ func (u *RedeemCodeUpsert) UpdateValidityDays() *RedeemCodeUpsert {
 // AddValidityDays adds v to the "validity_days" field.
 func (u *RedeemCodeUpsert) AddValidityDays(v int) *RedeemCodeUpsert {
 	u.Add(redeemcode.FieldValidityDays, v)
+	return u
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *RedeemCodeUpsert) SetVipLevelID(v int64) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldVipLevelID, v)
+	return u
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateVipLevelID() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldVipLevelID)
+	return u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *RedeemCodeUpsert) ClearVipLevelID() *RedeemCodeUpsert {
+	u.SetNull(redeemcode.FieldVipLevelID)
+	return u
+}
+
+// SetVipDays sets the "vip_days" field.
+func (u *RedeemCodeUpsert) SetVipDays(v int) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldVipDays, v)
+	return u
+}
+
+// UpdateVipDays sets the "vip_days" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateVipDays() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldVipDays)
+	return u
+}
+
+// AddVipDays adds v to the "vip_days" field.
+func (u *RedeemCodeUpsert) AddVipDays(v int) *RedeemCodeUpsert {
+	u.Add(redeemcode.FieldVipDays, v)
 	return u
 }
 
@@ -828,6 +926,48 @@ func (u *RedeemCodeUpsertOne) AddValidityDays(v int) *RedeemCodeUpsertOne {
 func (u *RedeemCodeUpsertOne) UpdateValidityDays() *RedeemCodeUpsertOne {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValidityDays()
+	})
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *RedeemCodeUpsertOne) SetVipLevelID(v int64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetVipLevelID(v)
+	})
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateVipLevelID() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateVipLevelID()
+	})
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *RedeemCodeUpsertOne) ClearVipLevelID() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearVipLevelID()
+	})
+}
+
+// SetVipDays sets the "vip_days" field.
+func (u *RedeemCodeUpsertOne) SetVipDays(v int) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetVipDays(v)
+	})
+}
+
+// AddVipDays adds v to the "vip_days" field.
+func (u *RedeemCodeUpsertOne) AddVipDays(v int) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddVipDays(v)
+	})
+}
+
+// UpdateVipDays sets the "vip_days" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateVipDays() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateVipDays()
 	})
 }
 
@@ -1228,6 +1368,48 @@ func (u *RedeemCodeUpsertBulk) AddValidityDays(v int) *RedeemCodeUpsertBulk {
 func (u *RedeemCodeUpsertBulk) UpdateValidityDays() *RedeemCodeUpsertBulk {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValidityDays()
+	})
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *RedeemCodeUpsertBulk) SetVipLevelID(v int64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetVipLevelID(v)
+	})
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateVipLevelID() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateVipLevelID()
+	})
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *RedeemCodeUpsertBulk) ClearVipLevelID() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearVipLevelID()
+	})
+}
+
+// SetVipDays sets the "vip_days" field.
+func (u *RedeemCodeUpsertBulk) SetVipDays(v int) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetVipDays(v)
+	})
+}
+
+// AddVipDays adds v to the "vip_days" field.
+func (u *RedeemCodeUpsertBulk) AddVipDays(v int) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddVipDays(v)
+	})
+}
+
+// UpdateVipDays sets the "vip_days" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateVipDays() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateVipDays()
 	})
 }
 

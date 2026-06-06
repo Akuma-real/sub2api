@@ -66,6 +66,14 @@ type VIPUserSummary struct {
 	TotalSavings float64            `json:"total_savings_usd"`
 }
 
+type AssignVIPInput struct {
+	UserID     int64
+	VIPLevelID int64
+	Days       int
+	Source     string
+	Notes      string
+}
+
 type CreateVIPLevelRequest struct {
 	Name               string         `json:"name"`
 	Description        string         `json:"description"`
@@ -94,11 +102,19 @@ type UpdateVIPLevelRequest struct {
 }
 
 type VIPService struct {
-	entClient *dbent.Client
+	entClient            *dbent.Client
+	authCacheInvalidator APIKeyAuthCacheInvalidator
 }
 
-func NewVIPService(entClient *dbent.Client) *VIPService {
-	return &VIPService{entClient: entClient}
+func NewVIPService(entClient *dbent.Client, authCacheInvalidator APIKeyAuthCacheInvalidator) *VIPService {
+	return &VIPService{entClient: entClient, authCacheInvalidator: authCacheInvalidator}
+}
+
+func (s *VIPService) clientFromContext(ctx context.Context) *dbent.Client {
+	if tx := dbent.TxFromContext(ctx); tx != nil {
+		return tx.Client()
+	}
+	return s.entClient
 }
 
 func (s *VIPService) ListLevels(ctx context.Context, forSaleOnly bool) ([]*dbent.VIPLevel, error) {
@@ -107,6 +123,120 @@ func (s *VIPService) ListLevels(ctx context.Context, forSaleOnly bool) ([]*dbent
 		q = q.Where(viplevel.ForSaleEQ(true))
 	}
 	return q.All(ctx)
+}
+
+func (s *VIPService) AssignOrExtendVIP(ctx context.Context, input AssignVIPInput) (*dbent.UserVIPMembership, bool, error) {
+	if input.UserID <= 0 {
+		return nil, false, infraerrors.BadRequest("VIP_USER_REQUIRED", "user_id is required")
+	}
+	if input.VIPLevelID <= 0 {
+		return nil, false, infraerrors.BadRequest("VIP_LEVEL_REQUIRED", "vip_level_id is required")
+	}
+	if input.Days <= 0 {
+		return nil, false, infraerrors.BadRequest("VIP_DAYS_INVALID", "vip days must be > 0")
+	}
+
+	client := s.clientFromContext(ctx)
+	if _, err := client.User.Get(ctx, input.UserID); err != nil {
+		return nil, false, infraerrors.NotFound("USER_NOT_FOUND", "user not found")
+	}
+	if _, err := client.VIPLevel.Get(ctx, input.VIPLevelID); err != nil {
+		return nil, false, infraerrors.NotFound("VIP_LEVEL_NOT_FOUND", "vip level not found")
+	}
+
+	now := time.Now()
+	active, err := client.UserVIPMembership.Query().
+		Where(
+			uservipmembership.UserIDEQ(input.UserID),
+			uservipmembership.VipLevelIDEQ(input.VIPLevelID),
+			uservipmembership.StatusEQ(VIPMembershipStatusActive),
+			uservipmembership.ExpiresAtGT(now),
+		).
+		WithVipLevel().
+		Order(uservipmembership.ByExpiresAt(entsql.OrderDesc())).
+		First(ctx)
+	if err != nil && !dbent.IsNotFound(err) {
+		return nil, false, err
+	}
+
+	note := buildVIPAssignmentNote(input.Source, input.Notes)
+	if active != nil {
+		update := client.UserVIPMembership.UpdateOneID(active.ID).
+			SetExpiresAt(active.ExpiresAt.AddDate(0, 0, input.Days))
+		if note != "" {
+			update.SetNotes(appendVIPNotes(derefVIPString(active.Notes), note))
+		}
+		membership, err := update.Save(ctx)
+		if err != nil {
+			return nil, false, err
+		}
+		s.invalidateUserVIPCache(ctx, input.UserID)
+		out, err := client.UserVIPMembership.Query().
+			Where(uservipmembership.IDEQ(membership.ID)).
+			WithVipLevel().
+			Only(ctx)
+		return out, true, err
+	}
+
+	create := client.UserVIPMembership.Create().
+		SetUserID(input.UserID).
+		SetVipLevelID(input.VIPLevelID).
+		SetStartsAt(now).
+		SetExpiresAt(now.AddDate(0, 0, input.Days)).
+		SetStatus(VIPMembershipStatusActive)
+	if note != "" {
+		create.SetNotes(note)
+	}
+	membership, err := create.Save(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+	s.invalidateUserVIPCache(ctx, input.UserID)
+	out, err := client.UserVIPMembership.Query().
+		Where(uservipmembership.IDEQ(membership.ID)).
+		WithVipLevel().
+		Only(ctx)
+	return out, false, err
+}
+
+func (s *VIPService) invalidateUserVIPCache(ctx context.Context, userID int64) {
+	if dbent.TxFromContext(ctx) != nil {
+		return
+	}
+	if s.authCacheInvalidator != nil {
+		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
+	}
+}
+
+func buildVIPAssignmentNote(source, notes string) string {
+	source = strings.TrimSpace(source)
+	notes = strings.TrimSpace(notes)
+	switch {
+	case source != "" && notes != "":
+		return source + ": " + notes
+	case source != "":
+		return source
+	default:
+		return notes
+	}
+}
+
+func appendVIPNotes(existing, note string) string {
+	note = strings.TrimSpace(note)
+	if note == "" {
+		return existing
+	}
+	if existing == "" {
+		return note
+	}
+	return existing + "\n" + note
+}
+
+func derefVIPString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
 func (s *VIPService) GetLevel(ctx context.Context, id int64) (*dbent.VIPLevel, error) {

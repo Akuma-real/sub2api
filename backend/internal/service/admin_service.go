@@ -408,6 +408,8 @@ type GenerateRedeemCodesInput struct {
 	Value        float64
 	GroupID      *int64 // 订阅类型专用：关联的分组ID
 	ValidityDays int    // 订阅类型专用：有效天数
+	VIPLevelID   *int64 // VIP 类型专用：关联的 VIP 等级 ID
+	VIPDays      int    // VIP 类型专用：有效天数
 	ExpiresAt    *time.Time
 }
 
@@ -3104,6 +3106,24 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 			return nil, errors.New("group must be subscription type")
 		}
 	}
+	if input.Type == RedeemTypeVIP {
+		if input.VIPLevelID == nil {
+			return nil, errors.New("vip_level_id is required for vip type")
+		}
+		if input.VIPDays <= 0 {
+			return nil, errors.New("vip_days must be greater than zero for vip type")
+		}
+		if s.entClient == nil {
+			return nil, errors.New("ent client is required for vip redeem codes")
+		}
+		if _, err := s.entClient.VIPLevel.Get(ctx, *input.VIPLevelID); err != nil {
+			return nil, fmt.Errorf("vip level not found: %w", err)
+		}
+		input.Value = 0
+	}
+	if input.Type == RedeemTypeInvitation {
+		input.Value = 0
+	}
 
 	codes := make([]RedeemCode, 0, input.Count)
 	for i := 0; i < input.Count; i++ {
@@ -3125,6 +3145,10 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 			if code.ValidityDays <= 0 {
 				code.ValidityDays = 30 // 默认30天
 			}
+		}
+		if input.Type == RedeemTypeVIP {
+			code.VIPLevelID = input.VIPLevelID
+			code.VIPDays = input.VIPDays
 		}
 		if err := s.redeemCodeRepo.Create(ctx, &code); err != nil {
 			return nil, err

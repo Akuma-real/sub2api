@@ -55,9 +55,15 @@
       <section class="space-y-4">
         <div class="flex items-center justify-between gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ t("payment.admin.vipUsers") }}</h2>
-          <button class="btn btn-secondary" :disabled="usersLoading" @click="loadUsers">
-            <Icon name="refresh" size="md" :class="usersLoading ? 'animate-spin' : ''" />
-          </button>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-secondary" :disabled="usersLoading" @click="loadUsers">
+              <Icon name="refresh" size="md" :class="usersLoading ? 'animate-spin' : ''" />
+            </button>
+            <button class="btn btn-primary" @click="openAssignDialog">
+              <Icon name="plus" size="md" class="mr-2" />
+              {{ t("payment.admin.assignVIP") }}
+            </button>
+          </div>
         </div>
         <DataTable :columns="userColumns" :data="users" :loading="usersLoading">
           <template #cell-user="{ row }">
@@ -68,7 +74,9 @@
           </template>
           <template #cell-current="{ row }">
             <div v-if="row.current" class="text-sm">
-              <span class="font-medium text-primary-700">{{ row.current.level?.name || row.current.vip_level_id }}</span>
+              <span class="font-medium text-primary-700">
+                {{ row.current.level ? vipLevelDisplayName(row.current.level) : `VIP #${row.current.vip_level_id}` }}
+              </span>
               <div class="text-xs text-muted">{{ formatDate(row.current.expires_at) }}</div>
             </div>
             <span v-else class="text-sm text-muted">{{ t("payment.vip.none") }}</span>
@@ -125,7 +133,78 @@
       <template #footer>
         <div class="flex justify-end gap-3">
           <button type="button" class="btn btn-secondary" @click="showLevelDialog = false">{{ t("common.cancel") }}</button>
-          <button type="submit" form="vip-level-form" class="btn btn-primary" :disabled="saving">{{ saving ? t("common.saving") : t("common.save") }}</button>
+              <button type="submit" form="vip-level-form" class="btn btn-primary" :disabled="saving">{{ saving ? t("common.saving") : t("common.save") }}</button>
+        </div>
+      </template>
+    </BaseDialog>
+
+    <BaseDialog :show="showAssignDialog" :title="t('payment.admin.assignVIPTitle')" width="normal" @close="closeAssignDialog">
+      <form id="assign-vip-form" class="space-y-5" @submit.prevent="assignVIP">
+        <div>
+          <label class="input-label">{{ t("payment.admin.selectUser") }}</label>
+          <div class="relative" data-assign-vip-user-search>
+            <input
+              v-model="userSearchKeyword"
+              type="text"
+              class="input pr-8"
+              :placeholder="t('admin.usage.searchUserPlaceholder')"
+              @input="debounceSearchUsers"
+              @focus="showUserDropdown = true"
+            />
+            <button
+              v-if="selectedUser"
+              type="button"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-soft hover:text-body"
+              @click="clearUserSelection"
+            >
+              <Icon name="x" size="sm" />
+            </button>
+            <div
+              v-if="showUserDropdown && (userSearchResults.length > 0 || userSearchKeyword)"
+              class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-hairline bg-canvas shadow-lg"
+            >
+              <div v-if="userSearchLoading" class="px-4 py-3 text-sm text-muted">
+                {{ t("common.loading") }}
+              </div>
+              <div v-else-if="userSearchResults.length === 0 && userSearchKeyword" class="px-4 py-3 text-sm text-muted">
+                {{ t("common.noOptionsFound") }}
+              </div>
+              <button
+                v-for="user in userSearchResults"
+                :key="user.id"
+                type="button"
+                class="w-full px-4 py-2 text-left text-sm hover:bg-surface-card"
+                @click="selectUser(user)"
+              >
+                <span class="font-medium text-ink">{{ user.email }}</span>
+                <span class="ml-2 text-muted">#{{ user.id }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="input-label">{{ t("payment.admin.selectVIPLevel") }}</label>
+          <Select
+            v-model="assignForm.vip_level_id"
+            :options="vipLevelOptions"
+            :placeholder="t('payment.admin.selectVIPLevel')"
+          />
+        </div>
+        <div>
+          <label class="input-label">{{ t("payment.admin.vipDays") }}</label>
+          <input v-model.number="assignForm.days" type="number" min="1" max="36500" required class="input" />
+        </div>
+        <div>
+          <label class="input-label">{{ t("payment.admin.assignNotes") }}</label>
+          <textarea v-model="assignForm.notes" class="input" rows="3" />
+        </div>
+      </form>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button type="button" class="btn btn-secondary" @click="closeAssignDialog">{{ t("common.cancel") }}</button>
+          <button type="submit" form="assign-vip-form" class="btn btn-primary" :disabled="assigning">
+            {{ assigning ? t("payment.admin.assigningVIP") : t("payment.admin.assignVIP") }}
+          </button>
         </div>
       </template>
     </BaseDialog>
@@ -145,15 +224,18 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { adminAPI } from "@/api/admin";
 import { adminPaymentAPI } from "@/api/admin/payment";
 import { useAppStore } from "@/stores/app";
 import { extractI18nErrorMessage } from "@/utils/apiError";
 import type { VIPLevel, VIPUserSummary } from "@/types/payment";
+import type { SimpleUser } from "@/api/admin/usage";
 import type { Column } from "@/components/common/types";
 import AppLayout from "@/components/layout/AppLayout.vue";
 import BaseDialog from "@/components/common/BaseDialog.vue";
 import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import DataTable from "@/components/common/DataTable.vue";
+import Select from "@/components/common/Select.vue";
 import Icon from "@/components/icons/Icon.vue";
 
 const { t } = useI18n();
@@ -164,10 +246,18 @@ const users = ref<VIPUserSummary[]>([]);
 const levelsLoading = ref(false);
 const usersLoading = ref(false);
 const showLevelDialog = ref(false);
+const showAssignDialog = ref(false);
 const showDeleteDialog = ref(false);
 const saving = ref(false);
+const assigning = ref(false);
 const editingLevel = ref<VIPLevel | null>(null);
 const deletingLevel = ref<VIPLevel | null>(null);
+const selectedUser = ref<SimpleUser | null>(null);
+const userSearchKeyword = ref("");
+const userSearchResults = ref<SimpleUser[]>([]);
+const userSearchLoading = ref(false);
+const showUserDropdown = ref(false);
+let userSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const levelForm = reactive({
   name: "",
@@ -179,6 +269,13 @@ const levelForm = reactive({
   features: "",
   for_sale: true,
   sort_order: 0,
+});
+
+const assignForm = reactive({
+  user_id: null as number | null,
+  vip_level_id: null as number | null,
+  days: 30,
+  notes: "",
 });
 
 const levelColumns = computed((): Column[] => [
@@ -198,6 +295,20 @@ const userColumns = computed((): Column[] => [
   { key: "total_savings_usd", label: t("payment.vip.totalSavings") },
 ]);
 
+const vipLevelOptions = computed(() =>
+  levels.value.map((level) => ({
+    value: level.id,
+    label: `${vipLevelDisplayName(level)} · ${level.validity_days}${t("payment.admin.days")}`,
+  })),
+);
+
+function vipLevelDisplayName(level: VIPLevel): string {
+  const name = String(level.name || "").trim();
+  if (!name) return `VIP #${level.id}`;
+  if (/^\d+$/.test(name)) return `VIP ${name}`;
+  return name;
+}
+
 function resetForm(level: VIPLevel | null) {
   editingLevel.value = level;
   levelForm.name = level?.name || "";
@@ -214,6 +325,21 @@ function resetForm(level: VIPLevel | null) {
 function openLevelDialog(level: VIPLevel | null) {
   resetForm(level);
   showLevelDialog.value = true;
+}
+
+function openAssignDialog() {
+  assignForm.days = 30;
+  assignForm.vip_level_id = levels.value[0]?.id ?? null;
+  showAssignDialog.value = true;
+}
+
+function closeAssignDialog() {
+  showAssignDialog.value = false;
+  assignForm.user_id = null;
+  assignForm.vip_level_id = null;
+  assignForm.days = 30;
+  assignForm.notes = "";
+  clearUserSelection();
 }
 
 function buildPayload(): Record<string, unknown> {
@@ -249,11 +375,86 @@ async function loadUsers() {
   usersLoading.value = true;
   try {
     const res = await adminPaymentAPI.getVIPUsers({ page: 1, page_size: 100 });
-    users.value = res.data.items || [];
+    users.value = (res.data.items || []).filter((item) => !!item.current);
   } catch (err: unknown) {
     appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("common.error")));
   } finally {
     usersLoading.value = false;
+  }
+}
+
+function debounceSearchUsers() {
+  if (userSearchTimeout) {
+    clearTimeout(userSearchTimeout);
+  }
+  userSearchTimeout = setTimeout(searchUsers, 300);
+}
+
+async function searchUsers() {
+  const keyword = userSearchKeyword.value.trim();
+  if (selectedUser.value && keyword !== selectedUser.value.email) {
+    selectedUser.value = null;
+    assignForm.user_id = null;
+  }
+  if (!keyword) {
+    userSearchResults.value = [];
+    return;
+  }
+  userSearchLoading.value = true;
+  try {
+    userSearchResults.value = await adminAPI.usage.searchUsers(keyword);
+  } catch (err: unknown) {
+    console.error("Failed to search users:", err);
+    userSearchResults.value = [];
+  } finally {
+    userSearchLoading.value = false;
+  }
+}
+
+function selectUser(user: SimpleUser) {
+  selectedUser.value = user;
+  userSearchKeyword.value = user.email;
+  userSearchResults.value = [];
+  showUserDropdown.value = false;
+  assignForm.user_id = user.id;
+}
+
+function clearUserSelection() {
+  selectedUser.value = null;
+  userSearchKeyword.value = "";
+  userSearchResults.value = [];
+  showUserDropdown.value = false;
+  assignForm.user_id = null;
+}
+
+async function assignVIP() {
+  if (!assignForm.user_id) {
+    appStore.showError(t("payment.admin.pleaseSelectUser"));
+    return;
+  }
+  if (!assignForm.vip_level_id) {
+    appStore.showError(t("payment.admin.pleaseSelectVIPLevel"));
+    return;
+  }
+  if (!assignForm.days || assignForm.days < 1) {
+    appStore.showError(t("payment.admin.vipDaysRequired"));
+    return;
+  }
+  assigning.value = true;
+  try {
+    await adminPaymentAPI.assignVIP({
+      user_id: assignForm.user_id,
+      vip_level_id: assignForm.vip_level_id,
+      days: assignForm.days,
+      notes: assignForm.notes || undefined,
+    });
+    appStore.showSuccess(t("payment.admin.vipAssigned"));
+    closeAssignDialog();
+    await loadUsers();
+  } catch (err: unknown) {
+    appStore.showError(extractI18nErrorMessage(err, t, "payment.errors", t("payment.admin.failedToAssignVIP")));
+  } finally {
+    assigning.value = false;
   }
 }
 

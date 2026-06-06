@@ -181,6 +181,11 @@ export const adminPaymentAPI = {
     return apiClient.get<BasePaginationResponse<VIPUserSummary>>('/admin/payment/vip-users', { params })
   },
 
+  /** Assign or extend VIP membership for a user */
+  assignVIP(data: { user_id: number; vip_level_id: number; days: number; notes?: string }) {
+    return apiClient.post('/admin/payment/vip-memberships/assign', data)
+  },
+
   // ==================== Provider Instances ====================
 
   /** Get all provider instances */

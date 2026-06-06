@@ -4,7 +4,8 @@
  */
 
 import { apiClient } from './client'
-import type { RedeemCodeRequest } from '@/types'
+import type { RedeemCode, RedeemCodeRequest } from '@/types'
+import type { VIPLevel } from '@/types/payment'
 
 export interface RedeemHistoryItem {
   id: number
@@ -23,29 +24,20 @@ export interface RedeemHistoryItem {
     id: number
     name: string
   }
+  vip_level_id?: number
+  vip_days?: number
+  vip_level?: VIPLevel
 }
 
 /**
  * Redeem a code
  * @param code - Redeem code string
- * @returns Redemption result with updated balance or concurrency
+ * @returns Redeemed code snapshot
  */
-export async function redeem(code: string): Promise<{
-  message: string
-  type: string
-  value: number
-  new_balance?: number
-  new_concurrency?: number
-}> {
+export async function redeem(code: string): Promise<RedeemCode> {
   const payload: RedeemCodeRequest = { code }
 
-  const { data } = await apiClient.post<{
-    message: string
-    type: string
-    value: number
-    new_balance?: number
-    new_concurrency?: number
-  }>('/redeem', payload)
+  const { data } = await apiClient.post<RedeemCode>('/redeem', payload)
 
   return data
 }
