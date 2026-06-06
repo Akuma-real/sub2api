@@ -17,6 +17,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 )
 
 // UsageLogUpdate is the builder for updating UsageLog entities.
@@ -266,6 +267,26 @@ func (_u *UsageLogUpdate) SetNillableSubscriptionID(v *int64) *UsageLogUpdate {
 // ClearSubscriptionID clears the value of the "subscription_id" field.
 func (_u *UsageLogUpdate) ClearSubscriptionID() *UsageLogUpdate {
 	_u.mutation.ClearSubscriptionID()
+	return _u
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (_u *UsageLogUpdate) SetVipLevelID(v int64) *UsageLogUpdate {
+	_u.mutation.SetVipLevelID(v)
+	return _u
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableVipLevelID(v *int64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetVipLevelID(*v)
+	}
+	return _u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (_u *UsageLogUpdate) ClearVipLevelID() *UsageLogUpdate {
+	_u.mutation.ClearVipLevelID()
 	return _u
 }
 
@@ -539,6 +560,81 @@ func (_u *UsageLogUpdate) SetNillableRateMultiplier(v *float64) *UsageLogUpdate 
 // AddRateMultiplier adds value to the "rate_multiplier" field.
 func (_u *UsageLogUpdate) AddRateMultiplier(v float64) *UsageLogUpdate {
 	_u.mutation.AddRateMultiplier(v)
+	return _u
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (_u *UsageLogUpdate) SetVipDiscountMultiplier(v float64) *UsageLogUpdate {
+	_u.mutation.ResetVipDiscountMultiplier()
+	_u.mutation.SetVipDiscountMultiplier(v)
+	return _u
+}
+
+// SetNillableVipDiscountMultiplier sets the "vip_discount_multiplier" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableVipDiscountMultiplier(v *float64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetVipDiscountMultiplier(*v)
+	}
+	return _u
+}
+
+// AddVipDiscountMultiplier adds value to the "vip_discount_multiplier" field.
+func (_u *UsageLogUpdate) AddVipDiscountMultiplier(v float64) *UsageLogUpdate {
+	_u.mutation.AddVipDiscountMultiplier(v)
+	return _u
+}
+
+// ClearVipDiscountMultiplier clears the value of the "vip_discount_multiplier" field.
+func (_u *UsageLogUpdate) ClearVipDiscountMultiplier() *UsageLogUpdate {
+	_u.mutation.ClearVipDiscountMultiplier()
+	return _u
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (_u *UsageLogUpdate) SetVipPreDiscountCost(v float64) *UsageLogUpdate {
+	_u.mutation.ResetVipPreDiscountCost()
+	_u.mutation.SetVipPreDiscountCost(v)
+	return _u
+}
+
+// SetNillableVipPreDiscountCost sets the "vip_pre_discount_cost" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableVipPreDiscountCost(v *float64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetVipPreDiscountCost(*v)
+	}
+	return _u
+}
+
+// AddVipPreDiscountCost adds value to the "vip_pre_discount_cost" field.
+func (_u *UsageLogUpdate) AddVipPreDiscountCost(v float64) *UsageLogUpdate {
+	_u.mutation.AddVipPreDiscountCost(v)
+	return _u
+}
+
+// ClearVipPreDiscountCost clears the value of the "vip_pre_discount_cost" field.
+func (_u *UsageLogUpdate) ClearVipPreDiscountCost() *UsageLogUpdate {
+	_u.mutation.ClearVipPreDiscountCost()
+	return _u
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (_u *UsageLogUpdate) SetVipSavingsUsd(v float64) *UsageLogUpdate {
+	_u.mutation.ResetVipSavingsUsd()
+	_u.mutation.SetVipSavingsUsd(v)
+	return _u
+}
+
+// SetNillableVipSavingsUsd sets the "vip_savings_usd" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableVipSavingsUsd(v *float64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetVipSavingsUsd(*v)
+	}
+	return _u
+}
+
+// AddVipSavingsUsd adds value to the "vip_savings_usd" field.
+func (_u *UsageLogUpdate) AddVipSavingsUsd(v float64) *UsageLogUpdate {
+	_u.mutation.AddVipSavingsUsd(v)
 	return _u
 }
 
@@ -850,6 +946,11 @@ func (_u *UsageLogUpdate) SetSubscription(v *UserSubscription) *UsageLogUpdate {
 	return _u.SetSubscriptionID(v.ID)
 }
 
+// SetVipLevel sets the "vip_level" edge to the VIPLevel entity.
+func (_u *UsageLogUpdate) SetVipLevel(v *VIPLevel) *UsageLogUpdate {
+	return _u.SetVipLevelID(v.ID)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdate) Mutation() *UsageLogMutation {
 	return _u.mutation
@@ -882,6 +983,12 @@ func (_u *UsageLogUpdate) ClearGroup() *UsageLogUpdate {
 // ClearSubscription clears the "subscription" edge to the UserSubscription entity.
 func (_u *UsageLogUpdate) ClearSubscription() *UsageLogUpdate {
 	_u.mutation.ClearSubscription()
+	return _u
+}
+
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (_u *UsageLogUpdate) ClearVipLevel() *UsageLogUpdate {
+	_u.mutation.ClearVipLevel()
 	return _u
 }
 
@@ -1126,6 +1233,30 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.AddedRateMultiplier(); ok {
 		_spec.AddField(usagelog.FieldRateMultiplier, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.VipDiscountMultiplier(); ok {
+		_spec.SetField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedVipDiscountMultiplier(); ok {
+		_spec.AddField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64, value)
+	}
+	if _u.mutation.VipDiscountMultiplierCleared() {
+		_spec.ClearField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.VipPreDiscountCost(); ok {
+		_spec.SetField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedVipPreDiscountCost(); ok {
+		_spec.AddField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64, value)
+	}
+	if _u.mutation.VipPreDiscountCostCleared() {
+		_spec.ClearField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.VipSavingsUsd(); ok {
+		_spec.SetField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedVipSavingsUsd(); ok {
+		_spec.AddField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+	}
 	if value, ok := _u.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)
 	}
@@ -1351,6 +1482,35 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipLevelCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.VipLevelTable,
+			Columns: []string{usagelog.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipLevelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.VipLevelTable,
+			Columns: []string{usagelog.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1612,6 +1772,26 @@ func (_u *UsageLogUpdateOne) SetNillableSubscriptionID(v *int64) *UsageLogUpdate
 // ClearSubscriptionID clears the value of the "subscription_id" field.
 func (_u *UsageLogUpdateOne) ClearSubscriptionID() *UsageLogUpdateOne {
 	_u.mutation.ClearSubscriptionID()
+	return _u
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (_u *UsageLogUpdateOne) SetVipLevelID(v int64) *UsageLogUpdateOne {
+	_u.mutation.SetVipLevelID(v)
+	return _u
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableVipLevelID(v *int64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetVipLevelID(*v)
+	}
+	return _u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (_u *UsageLogUpdateOne) ClearVipLevelID() *UsageLogUpdateOne {
+	_u.mutation.ClearVipLevelID()
 	return _u
 }
 
@@ -1885,6 +2065,81 @@ func (_u *UsageLogUpdateOne) SetNillableRateMultiplier(v *float64) *UsageLogUpda
 // AddRateMultiplier adds value to the "rate_multiplier" field.
 func (_u *UsageLogUpdateOne) AddRateMultiplier(v float64) *UsageLogUpdateOne {
 	_u.mutation.AddRateMultiplier(v)
+	return _u
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (_u *UsageLogUpdateOne) SetVipDiscountMultiplier(v float64) *UsageLogUpdateOne {
+	_u.mutation.ResetVipDiscountMultiplier()
+	_u.mutation.SetVipDiscountMultiplier(v)
+	return _u
+}
+
+// SetNillableVipDiscountMultiplier sets the "vip_discount_multiplier" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableVipDiscountMultiplier(v *float64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetVipDiscountMultiplier(*v)
+	}
+	return _u
+}
+
+// AddVipDiscountMultiplier adds value to the "vip_discount_multiplier" field.
+func (_u *UsageLogUpdateOne) AddVipDiscountMultiplier(v float64) *UsageLogUpdateOne {
+	_u.mutation.AddVipDiscountMultiplier(v)
+	return _u
+}
+
+// ClearVipDiscountMultiplier clears the value of the "vip_discount_multiplier" field.
+func (_u *UsageLogUpdateOne) ClearVipDiscountMultiplier() *UsageLogUpdateOne {
+	_u.mutation.ClearVipDiscountMultiplier()
+	return _u
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (_u *UsageLogUpdateOne) SetVipPreDiscountCost(v float64) *UsageLogUpdateOne {
+	_u.mutation.ResetVipPreDiscountCost()
+	_u.mutation.SetVipPreDiscountCost(v)
+	return _u
+}
+
+// SetNillableVipPreDiscountCost sets the "vip_pre_discount_cost" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableVipPreDiscountCost(v *float64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetVipPreDiscountCost(*v)
+	}
+	return _u
+}
+
+// AddVipPreDiscountCost adds value to the "vip_pre_discount_cost" field.
+func (_u *UsageLogUpdateOne) AddVipPreDiscountCost(v float64) *UsageLogUpdateOne {
+	_u.mutation.AddVipPreDiscountCost(v)
+	return _u
+}
+
+// ClearVipPreDiscountCost clears the value of the "vip_pre_discount_cost" field.
+func (_u *UsageLogUpdateOne) ClearVipPreDiscountCost() *UsageLogUpdateOne {
+	_u.mutation.ClearVipPreDiscountCost()
+	return _u
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (_u *UsageLogUpdateOne) SetVipSavingsUsd(v float64) *UsageLogUpdateOne {
+	_u.mutation.ResetVipSavingsUsd()
+	_u.mutation.SetVipSavingsUsd(v)
+	return _u
+}
+
+// SetNillableVipSavingsUsd sets the "vip_savings_usd" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableVipSavingsUsd(v *float64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetVipSavingsUsd(*v)
+	}
+	return _u
+}
+
+// AddVipSavingsUsd adds value to the "vip_savings_usd" field.
+func (_u *UsageLogUpdateOne) AddVipSavingsUsd(v float64) *UsageLogUpdateOne {
+	_u.mutation.AddVipSavingsUsd(v)
 	return _u
 }
 
@@ -2196,6 +2451,11 @@ func (_u *UsageLogUpdateOne) SetSubscription(v *UserSubscription) *UsageLogUpdat
 	return _u.SetSubscriptionID(v.ID)
 }
 
+// SetVipLevel sets the "vip_level" edge to the VIPLevel entity.
+func (_u *UsageLogUpdateOne) SetVipLevel(v *VIPLevel) *UsageLogUpdateOne {
+	return _u.SetVipLevelID(v.ID)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_u *UsageLogUpdateOne) Mutation() *UsageLogMutation {
 	return _u.mutation
@@ -2228,6 +2488,12 @@ func (_u *UsageLogUpdateOne) ClearGroup() *UsageLogUpdateOne {
 // ClearSubscription clears the "subscription" edge to the UserSubscription entity.
 func (_u *UsageLogUpdateOne) ClearSubscription() *UsageLogUpdateOne {
 	_u.mutation.ClearSubscription()
+	return _u
+}
+
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (_u *UsageLogUpdateOne) ClearVipLevel() *UsageLogUpdateOne {
+	_u.mutation.ClearVipLevel()
 	return _u
 }
 
@@ -2502,6 +2768,30 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	if value, ok := _u.mutation.AddedRateMultiplier(); ok {
 		_spec.AddField(usagelog.FieldRateMultiplier, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.VipDiscountMultiplier(); ok {
+		_spec.SetField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedVipDiscountMultiplier(); ok {
+		_spec.AddField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64, value)
+	}
+	if _u.mutation.VipDiscountMultiplierCleared() {
+		_spec.ClearField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.VipPreDiscountCost(); ok {
+		_spec.SetField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedVipPreDiscountCost(); ok {
+		_spec.AddField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64, value)
+	}
+	if _u.mutation.VipPreDiscountCostCleared() {
+		_spec.ClearField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.VipSavingsUsd(); ok {
+		_spec.SetField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedVipSavingsUsd(); ok {
+		_spec.AddField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+	}
 	if value, ok := _u.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)
 	}
@@ -2727,6 +3017,35 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipLevelCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.VipLevelTable,
+			Columns: []string{usagelog.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipLevelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.VipLevelTable,
+			Columns: []string{usagelog.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

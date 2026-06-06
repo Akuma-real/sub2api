@@ -46,10 +46,14 @@ const (
 	FieldOrderType = "order_type"
 	// FieldPlanID holds the string denoting the plan_id field in the database.
 	FieldPlanID = "plan_id"
+	// FieldVipLevelID holds the string denoting the vip_level_id field in the database.
+	FieldVipLevelID = "vip_level_id"
 	// FieldSubscriptionGroupID holds the string denoting the subscription_group_id field in the database.
 	FieldSubscriptionGroupID = "subscription_group_id"
 	// FieldSubscriptionDays holds the string denoting the subscription_days field in the database.
 	FieldSubscriptionDays = "subscription_days"
+	// FieldVipDays holds the string denoting the vip_days field in the database.
+	FieldVipDays = "vip_days"
 	// FieldProviderInstanceID holds the string denoting the provider_instance_id field in the database.
 	FieldProviderInstanceID = "provider_instance_id"
 	// FieldProviderKey holds the string denoting the provider_key field in the database.
@@ -94,6 +98,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeVipMemberships holds the string denoting the vip_memberships edge name in mutations.
+	EdgeVipMemberships = "vip_memberships"
 	// Table holds the table name of the paymentorder in the database.
 	Table = "payment_orders"
 	// UserTable is the table that holds the user relation/edge.
@@ -103,6 +109,13 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_id"
+	// VipMembershipsTable is the table that holds the vip_memberships relation/edge.
+	VipMembershipsTable = "user_vip_memberships"
+	// VipMembershipsInverseTable is the table name for the UserVIPMembership entity.
+	// It exists in this package in order to avoid circular dependency with the "uservipmembership" package.
+	VipMembershipsInverseTable = "user_vip_memberships"
+	// VipMembershipsColumn is the table column denoting the vip_memberships relation/edge.
+	VipMembershipsColumn = "source_order_id"
 )
 
 // Columns holds all SQL columns for paymentorder fields.
@@ -124,8 +137,10 @@ var Columns = []string{
 	FieldQrCodeImg,
 	FieldOrderType,
 	FieldPlanID,
+	FieldVipLevelID,
 	FieldSubscriptionGroupID,
 	FieldSubscriptionDays,
+	FieldVipDays,
 	FieldProviderInstanceID,
 	FieldProviderKey,
 	FieldProviderSnapshot,
@@ -294,6 +309,11 @@ func ByPlanID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPlanID, opts...).ToFunc()
 }
 
+// ByVipLevelID orders the results by the vip_level_id field.
+func ByVipLevelID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipLevelID, opts...).ToFunc()
+}
+
 // BySubscriptionGroupID orders the results by the subscription_group_id field.
 func BySubscriptionGroupID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionGroupID, opts...).ToFunc()
@@ -302,6 +322,11 @@ func BySubscriptionGroupID(opts ...sql.OrderTermOption) OrderOption {
 // BySubscriptionDays orders the results by the subscription_days field.
 func BySubscriptionDays(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionDays, opts...).ToFunc()
+}
+
+// ByVipDays orders the results by the vip_days field.
+func ByVipDays(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipDays, opts...).ToFunc()
 }
 
 // ByProviderInstanceID orders the results by the provider_instance_id field.
@@ -410,10 +435,31 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByVipMembershipsCount orders the results by vip_memberships count.
+func ByVipMembershipsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVipMembershipsStep(), opts...)
+	}
+}
+
+// ByVipMemberships orders the results by vip_memberships terms.
+func ByVipMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVipMembershipsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+	)
+}
+func newVipMembershipsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VipMembershipsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VipMembershipsTable, VipMembershipsColumn),
 	)
 }

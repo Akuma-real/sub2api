@@ -1026,6 +1026,11 @@ const adminNavItems = computed((): NavItem[] => {
           label: t("nav.paymentPlans"),
           icon: CreditCardIcon,
         },
+        {
+          path: "/admin/orders/vip",
+          label: t("nav.paymentVIP"),
+          icon: CreditCardIcon,
+        },
       ],
     },
     { path: "/admin/usage", label: t("nav.usage"), icon: ChartIcon },

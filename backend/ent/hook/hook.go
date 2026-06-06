@@ -429,6 +429,30 @@ func (f UserSubscriptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserSubscriptionMutation", m)
 }
 
+// The UserVIPMembershipFunc type is an adapter to allow the use of ordinary
+// function as UserVIPMembership mutator.
+type UserVIPMembershipFunc func(context.Context, *ent.UserVIPMembershipMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserVIPMembershipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserVIPMembershipMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserVIPMembershipMutation", m)
+}
+
+// The VIPLevelFunc type is an adapter to allow the use of ordinary
+// function as VIPLevel mutator.
+type VIPLevelFunc func(context.Context, *ent.VIPLevelMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VIPLevelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VIPLevelMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VIPLevelMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

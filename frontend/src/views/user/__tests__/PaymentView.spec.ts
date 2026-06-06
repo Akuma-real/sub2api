@@ -14,6 +14,8 @@ const routerResolve = vi.hoisted(() => vi.fn(() => ({ href: '/payment/stripe?moc
 const createOrder = vi.hoisted(() => vi.fn())
 const refreshUser = vi.hoisted(() => vi.fn())
 const fetchActiveSubscriptions = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
+const fetchVIPLevels = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
+const fetchVIPOverview = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 const showError = vi.hoisted(() => vi.fn())
 const showInfo = vi.hoisted(() => vi.fn())
 const showWarning = vi.hoisted(() => vi.fn())
@@ -56,6 +58,10 @@ vi.mock('@/stores/auth', () => ({
 vi.mock('@/stores/payment', () => ({
   usePaymentStore: () => ({
     createOrder,
+    vipLevels: [],
+    vipOverview: null,
+    fetchVIPLevels,
+    fetchVIPOverview,
   }),
 }))
 
@@ -193,6 +199,8 @@ describe('PaymentView WeChat JSAPI flow', () => {
     createOrder.mockReset()
     refreshUser.mockReset()
     fetchActiveSubscriptions.mockReset().mockResolvedValue(undefined)
+    fetchVIPLevels.mockReset().mockResolvedValue(undefined)
+    fetchVIPOverview.mockReset().mockResolvedValue(undefined)
     showError.mockReset()
     showInfo.mockReset()
     showWarning.mockReset()

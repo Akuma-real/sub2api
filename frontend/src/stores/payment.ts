@@ -6,7 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { paymentAPI } from '@/api/payment'
-import type { PaymentConfig, PaymentOrder, SubscriptionPlan, CreateOrderRequest } from '@/types/payment'
+import type { PaymentConfig, PaymentOrder, SubscriptionPlan, CreateOrderRequest, VIPLevel, VIPOverview } from '@/types/payment'
 
 export const usePaymentStore = defineStore('payment', () => {
   // ==================== State ====================
@@ -17,6 +17,10 @@ export const usePaymentStore = defineStore('payment', () => {
   const currentOrder = ref<PaymentOrder | null>(null)
   /** Available subscription plans */
   const plans = ref<SubscriptionPlan[]>([])
+  /** Available VIP levels */
+  const vipLevels = ref<VIPLevel[]>([])
+  /** Current user's VIP membership and savings */
+  const vipOverview = ref<VIPOverview | null>(null)
 
   const configLoading = ref(false)
   const configLoaded = ref(false)
@@ -60,6 +64,30 @@ export const usePaymentStore = defineStore('payment', () => {
     }
   }
 
+  /** Fetch available VIP levels */
+  async function fetchVIPLevels(): Promise<VIPLevel[]> {
+    try {
+      const response = await paymentAPI.getVIPLevels()
+      vipLevels.value = response.data || []
+      return vipLevels.value
+    } catch (error: unknown) {
+      console.error('[payment] Failed to fetch VIP levels:', error)
+      return []
+    }
+  }
+
+  /** Fetch current user's VIP overview */
+  async function fetchVIPOverview(): Promise<VIPOverview | null> {
+    try {
+      const response = await paymentAPI.getVIPOverview()
+      vipOverview.value = response.data
+      return vipOverview.value
+    } catch (error: unknown) {
+      console.error('[payment] Failed to fetch VIP overview:', error)
+      return null
+    }
+  }
+
   /** Create a new order and set it as current */
   async function createOrder(params: CreateOrderRequest) {
     const response = await paymentAPI.createOrder(params)
@@ -90,10 +118,14 @@ export const usePaymentStore = defineStore('payment', () => {
     config,
     currentOrder,
     plans,
+    vipLevels,
+    vipOverview,
     configLoading,
     configLoaded,
     fetchConfig,
     fetchPlans,
+    fetchVIPLevels,
+    fetchVIPOverview,
     createOrder,
     pollOrderStatus,
     clearCurrentOrder

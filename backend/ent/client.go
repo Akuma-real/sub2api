@@ -50,6 +50,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 
 	stdsql "database/sql"
 )
@@ -129,6 +131,10 @@ type Client struct {
 	UserPlatformQuota *UserPlatformQuotaClient
 	// UserSubscription is the client for interacting with the UserSubscription builders.
 	UserSubscription *UserSubscriptionClient
+	// UserVIPMembership is the client for interacting with the UserVIPMembership builders.
+	UserVIPMembership *UserVIPMembershipClient
+	// VIPLevel is the client for interacting with the VIPLevel builders.
+	VIPLevel *VIPLevelClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -175,6 +181,8 @@ func (c *Client) init() {
 	c.UserAttributeValue = NewUserAttributeValueClient(c.config)
 	c.UserPlatformQuota = NewUserPlatformQuotaClient(c.config)
 	c.UserSubscription = NewUserSubscriptionClient(c.config)
+	c.UserVIPMembership = NewUserVIPMembershipClient(c.config)
+	c.VIPLevel = NewVIPLevelClient(c.config)
 }
 
 type (
@@ -302,6 +310,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		UserAttributeValue:            NewUserAttributeValueClient(cfg),
 		UserPlatformQuota:             NewUserPlatformQuotaClient(cfg),
 		UserSubscription:              NewUserSubscriptionClient(cfg),
+		UserVIPMembership:             NewUserVIPMembershipClient(cfg),
+		VIPLevel:                      NewVIPLevelClient(cfg),
 	}, nil
 }
 
@@ -356,6 +366,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		UserAttributeValue:            NewUserAttributeValueClient(cfg),
 		UserPlatformQuota:             NewUserPlatformQuotaClient(cfg),
 		UserSubscription:              NewUserSubscriptionClient(cfg),
+		UserVIPMembership:             NewUserVIPMembershipClient(cfg),
+		VIPLevel:                      NewVIPLevelClient(cfg),
 	}, nil
 }
 
@@ -394,7 +406,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SubscriptionPlan, c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog,
 		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserSubscription,
+		c.UserPlatformQuota, c.UserSubscription, c.UserVIPMembership, c.VIPLevel,
 	} {
 		n.Use(hooks...)
 	}
@@ -413,7 +425,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
 		c.SubscriptionPlan, c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog,
 		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserSubscription,
+		c.UserPlatformQuota, c.UserSubscription, c.UserVIPMembership, c.VIPLevel,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -492,6 +504,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserPlatformQuota.mutate(ctx, m)
 	case *UserSubscriptionMutation:
 		return c.UserSubscription.mutate(ctx, m)
+	case *UserVIPMembershipMutation:
+		return c.UserVIPMembership.mutate(ctx, m)
+	case *VIPLevelMutation:
+		return c.VIPLevel.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -3218,6 +3234,22 @@ func (c *PaymentOrderClient) QueryUser(_m *PaymentOrder) *UserQuery {
 	return query
 }
 
+// QueryVipMemberships queries the vip_memberships edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryVipMemberships(_m *PaymentOrder) *UserVIPMembershipQuery {
+	query := (&UserVIPMembershipClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(uservipmembership.Table, uservipmembership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.VipMembershipsTable, paymentorder.VipMembershipsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *PaymentOrderClient) Hooks() []Hook {
 	return c.hooks.PaymentOrder
@@ -5024,6 +5056,22 @@ func (c *UsageLogClient) QuerySubscription(_m *UsageLog) *UserSubscriptionQuery 
 	return query
 }
 
+// QueryVipLevel queries the vip_level edge of a UsageLog.
+func (c *UsageLogClient) QueryVipLevel(_m *UsageLog) *VIPLevelQuery {
+	query := (&VIPLevelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagelog.Table, usagelog.FieldID, id),
+			sqlgraph.To(viplevel.Table, viplevel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagelog.VipLevelTable, usagelog.VipLevelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UsageLogClient) Hooks() []Hook {
 	return c.hooks.UsageLog
@@ -5198,6 +5246,22 @@ func (c *UserClient) QuerySubscriptions(_m *User) *UserSubscriptionQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.SubscriptionsTable, user.SubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVipMemberships queries the vip_memberships edge of a User.
+func (c *UserClient) QueryVipMemberships(_m *User) *UserVIPMembershipQuery {
+	query := (&UserVIPMembershipClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(uservipmembership.Table, uservipmembership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.VipMembershipsTable, user.VipMembershipsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -6190,6 +6254,352 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 	}
 }
 
+// UserVIPMembershipClient is a client for the UserVIPMembership schema.
+type UserVIPMembershipClient struct {
+	config
+}
+
+// NewUserVIPMembershipClient returns a client for the UserVIPMembership from the given config.
+func NewUserVIPMembershipClient(c config) *UserVIPMembershipClient {
+	return &UserVIPMembershipClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `uservipmembership.Hooks(f(g(h())))`.
+func (c *UserVIPMembershipClient) Use(hooks ...Hook) {
+	c.hooks.UserVIPMembership = append(c.hooks.UserVIPMembership, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `uservipmembership.Intercept(f(g(h())))`.
+func (c *UserVIPMembershipClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserVIPMembership = append(c.inters.UserVIPMembership, interceptors...)
+}
+
+// Create returns a builder for creating a UserVIPMembership entity.
+func (c *UserVIPMembershipClient) Create() *UserVIPMembershipCreate {
+	mutation := newUserVIPMembershipMutation(c.config, OpCreate)
+	return &UserVIPMembershipCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserVIPMembership entities.
+func (c *UserVIPMembershipClient) CreateBulk(builders ...*UserVIPMembershipCreate) *UserVIPMembershipCreateBulk {
+	return &UserVIPMembershipCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserVIPMembershipClient) MapCreateBulk(slice any, setFunc func(*UserVIPMembershipCreate, int)) *UserVIPMembershipCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserVIPMembershipCreateBulk{err: fmt.Errorf("calling to UserVIPMembershipClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserVIPMembershipCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserVIPMembershipCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserVIPMembership.
+func (c *UserVIPMembershipClient) Update() *UserVIPMembershipUpdate {
+	mutation := newUserVIPMembershipMutation(c.config, OpUpdate)
+	return &UserVIPMembershipUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserVIPMembershipClient) UpdateOne(_m *UserVIPMembership) *UserVIPMembershipUpdateOne {
+	mutation := newUserVIPMembershipMutation(c.config, OpUpdateOne, withUserVIPMembership(_m))
+	return &UserVIPMembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserVIPMembershipClient) UpdateOneID(id int64) *UserVIPMembershipUpdateOne {
+	mutation := newUserVIPMembershipMutation(c.config, OpUpdateOne, withUserVIPMembershipID(id))
+	return &UserVIPMembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserVIPMembership.
+func (c *UserVIPMembershipClient) Delete() *UserVIPMembershipDelete {
+	mutation := newUserVIPMembershipMutation(c.config, OpDelete)
+	return &UserVIPMembershipDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserVIPMembershipClient) DeleteOne(_m *UserVIPMembership) *UserVIPMembershipDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserVIPMembershipClient) DeleteOneID(id int64) *UserVIPMembershipDeleteOne {
+	builder := c.Delete().Where(uservipmembership.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserVIPMembershipDeleteOne{builder}
+}
+
+// Query returns a query builder for UserVIPMembership.
+func (c *UserVIPMembershipClient) Query() *UserVIPMembershipQuery {
+	return &UserVIPMembershipQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserVIPMembership},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserVIPMembership entity by its id.
+func (c *UserVIPMembershipClient) Get(ctx context.Context, id int64) (*UserVIPMembership, error) {
+	return c.Query().Where(uservipmembership.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserVIPMembershipClient) GetX(ctx context.Context, id int64) *UserVIPMembership {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserVIPMembership.
+func (c *UserVIPMembershipClient) QueryUser(_m *UserVIPMembership) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(uservipmembership.Table, uservipmembership.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, uservipmembership.UserTable, uservipmembership.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVipLevel queries the vip_level edge of a UserVIPMembership.
+func (c *UserVIPMembershipClient) QueryVipLevel(_m *UserVIPMembership) *VIPLevelQuery {
+	query := (&VIPLevelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(uservipmembership.Table, uservipmembership.FieldID, id),
+			sqlgraph.To(viplevel.Table, viplevel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, uservipmembership.VipLevelTable, uservipmembership.VipLevelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySourceOrder queries the source_order edge of a UserVIPMembership.
+func (c *UserVIPMembershipClient) QuerySourceOrder(_m *UserVIPMembership) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(uservipmembership.Table, uservipmembership.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, uservipmembership.SourceOrderTable, uservipmembership.SourceOrderColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserVIPMembershipClient) Hooks() []Hook {
+	return c.hooks.UserVIPMembership
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserVIPMembershipClient) Interceptors() []Interceptor {
+	return c.inters.UserVIPMembership
+}
+
+func (c *UserVIPMembershipClient) mutate(ctx context.Context, m *UserVIPMembershipMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserVIPMembershipCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserVIPMembershipUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserVIPMembershipUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserVIPMembershipDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserVIPMembership mutation op: %q", m.Op())
+	}
+}
+
+// VIPLevelClient is a client for the VIPLevel schema.
+type VIPLevelClient struct {
+	config
+}
+
+// NewVIPLevelClient returns a client for the VIPLevel from the given config.
+func NewVIPLevelClient(c config) *VIPLevelClient {
+	return &VIPLevelClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `viplevel.Hooks(f(g(h())))`.
+func (c *VIPLevelClient) Use(hooks ...Hook) {
+	c.hooks.VIPLevel = append(c.hooks.VIPLevel, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `viplevel.Intercept(f(g(h())))`.
+func (c *VIPLevelClient) Intercept(interceptors ...Interceptor) {
+	c.inters.VIPLevel = append(c.inters.VIPLevel, interceptors...)
+}
+
+// Create returns a builder for creating a VIPLevel entity.
+func (c *VIPLevelClient) Create() *VIPLevelCreate {
+	mutation := newVIPLevelMutation(c.config, OpCreate)
+	return &VIPLevelCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of VIPLevel entities.
+func (c *VIPLevelClient) CreateBulk(builders ...*VIPLevelCreate) *VIPLevelCreateBulk {
+	return &VIPLevelCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *VIPLevelClient) MapCreateBulk(slice any, setFunc func(*VIPLevelCreate, int)) *VIPLevelCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &VIPLevelCreateBulk{err: fmt.Errorf("calling to VIPLevelClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*VIPLevelCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &VIPLevelCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for VIPLevel.
+func (c *VIPLevelClient) Update() *VIPLevelUpdate {
+	mutation := newVIPLevelMutation(c.config, OpUpdate)
+	return &VIPLevelUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VIPLevelClient) UpdateOne(_m *VIPLevel) *VIPLevelUpdateOne {
+	mutation := newVIPLevelMutation(c.config, OpUpdateOne, withVIPLevel(_m))
+	return &VIPLevelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VIPLevelClient) UpdateOneID(id int64) *VIPLevelUpdateOne {
+	mutation := newVIPLevelMutation(c.config, OpUpdateOne, withVIPLevelID(id))
+	return &VIPLevelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for VIPLevel.
+func (c *VIPLevelClient) Delete() *VIPLevelDelete {
+	mutation := newVIPLevelMutation(c.config, OpDelete)
+	return &VIPLevelDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VIPLevelClient) DeleteOne(_m *VIPLevel) *VIPLevelDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VIPLevelClient) DeleteOneID(id int64) *VIPLevelDeleteOne {
+	builder := c.Delete().Where(viplevel.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VIPLevelDeleteOne{builder}
+}
+
+// Query returns a query builder for VIPLevel.
+func (c *VIPLevelClient) Query() *VIPLevelQuery {
+	return &VIPLevelQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVIPLevel},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a VIPLevel entity by its id.
+func (c *VIPLevelClient) Get(ctx context.Context, id int64) (*VIPLevel, error) {
+	return c.Query().Where(viplevel.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VIPLevelClient) GetX(ctx context.Context, id int64) *VIPLevel {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMemberships queries the memberships edge of a VIPLevel.
+func (c *VIPLevelClient) QueryMemberships(_m *VIPLevel) *UserVIPMembershipQuery {
+	query := (&UserVIPMembershipClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(viplevel.Table, viplevel.FieldID, id),
+			sqlgraph.To(uservipmembership.Table, uservipmembership.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, viplevel.MembershipsTable, viplevel.MembershipsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageLogs queries the usage_logs edge of a VIPLevel.
+func (c *VIPLevelClient) QueryUsageLogs(_m *VIPLevel) *UsageLogQuery {
+	query := (&UsageLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(viplevel.Table, viplevel.FieldID, id),
+			sqlgraph.To(usagelog.Table, usagelog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, viplevel.UsageLogsTable, viplevel.UsageLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VIPLevelClient) Hooks() []Hook {
+	return c.hooks.VIPLevel
+}
+
+// Interceptors returns the client interceptors.
+func (c *VIPLevelClient) Interceptors() []Interceptor {
+	return c.inters.VIPLevel
+}
+
+func (c *VIPLevelClient) mutate(ctx context.Context, m *VIPLevelMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VIPLevelCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VIPLevelUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VIPLevelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VIPLevelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown VIPLevel mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
@@ -6201,7 +6611,7 @@ type (
 		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SubscriptionPlan,
 		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
 		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota,
-		UserSubscription []ent.Hook
+		UserSubscription, UserVIPMembership, VIPLevel []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
@@ -6212,7 +6622,7 @@ type (
 		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SubscriptionPlan,
 		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
 		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota,
-		UserSubscription []ent.Interceptor
+		UserSubscription, UserVIPMembership, VIPLevel []ent.Interceptor
 	}
 )
 

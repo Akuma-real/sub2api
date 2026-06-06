@@ -25,6 +25,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -456,6 +457,21 @@ func (_u *UserUpdate) AddSubscriptions(v ...*UserSubscription) *UserUpdate {
 	return _u.AddSubscriptionIDs(ids...)
 }
 
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (_u *UserUpdate) AddVipMembershipIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddVipMembershipIDs(ids...)
+	return _u
+}
+
+// AddVipMemberships adds the "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *UserUpdate) AddVipMemberships(v ...*UserVIPMembership) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddVipMembershipIDs(ids...)
+}
+
 // AddAssignedSubscriptionIDs adds the "assigned_subscriptions" edge to the UserSubscription entity by IDs.
 func (_u *UserUpdate) AddAssignedSubscriptionIDs(ids ...int64) *UserUpdate {
 	_u.mutation.AddAssignedSubscriptionIDs(ids...)
@@ -672,6 +688,27 @@ func (_u *UserUpdate) RemoveSubscriptions(v ...*UserSubscription) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveSubscriptionIDs(ids...)
+}
+
+// ClearVipMemberships clears all "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *UserUpdate) ClearVipMemberships() *UserUpdate {
+	_u.mutation.ClearVipMemberships()
+	return _u
+}
+
+// RemoveVipMembershipIDs removes the "vip_memberships" edge to UserVIPMembership entities by IDs.
+func (_u *UserUpdate) RemoveVipMembershipIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveVipMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveVipMemberships removes "vip_memberships" edges to UserVIPMembership entities.
+func (_u *UserUpdate) RemoveVipMemberships(v ...*UserVIPMembership) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVipMembershipIDs(ids...)
 }
 
 // ClearAssignedSubscriptions clears all "assigned_subscriptions" edges to the UserSubscription entity.
@@ -1200,6 +1237,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedVipMembershipsIDs(); len(nodes) > 0 && !_u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -2105,6 +2187,21 @@ func (_u *UserUpdateOne) AddSubscriptions(v ...*UserSubscription) *UserUpdateOne
 	return _u.AddSubscriptionIDs(ids...)
 }
 
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (_u *UserUpdateOne) AddVipMembershipIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddVipMembershipIDs(ids...)
+	return _u
+}
+
+// AddVipMemberships adds the "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *UserUpdateOne) AddVipMemberships(v ...*UserVIPMembership) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddVipMembershipIDs(ids...)
+}
+
 // AddAssignedSubscriptionIDs adds the "assigned_subscriptions" edge to the UserSubscription entity by IDs.
 func (_u *UserUpdateOne) AddAssignedSubscriptionIDs(ids ...int64) *UserUpdateOne {
 	_u.mutation.AddAssignedSubscriptionIDs(ids...)
@@ -2321,6 +2418,27 @@ func (_u *UserUpdateOne) RemoveSubscriptions(v ...*UserSubscription) *UserUpdate
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveSubscriptionIDs(ids...)
+}
+
+// ClearVipMemberships clears all "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *UserUpdateOne) ClearVipMemberships() *UserUpdateOne {
+	_u.mutation.ClearVipMemberships()
+	return _u
+}
+
+// RemoveVipMembershipIDs removes the "vip_memberships" edge to UserVIPMembership entities by IDs.
+func (_u *UserUpdateOne) RemoveVipMembershipIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveVipMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveVipMemberships removes "vip_memberships" edges to UserVIPMembership entities.
+func (_u *UserUpdateOne) RemoveVipMemberships(v ...*UserVIPMembership) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVipMembershipIDs(ids...)
 }
 
 // ClearAssignedSubscriptions clears all "assigned_subscriptions" edges to the UserSubscription entity.
@@ -2879,6 +2997,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedVipMembershipsIDs(); len(nodes) > 0 && !_u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

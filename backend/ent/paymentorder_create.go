@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/user"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 )
 
 // PaymentOrderCreate is the builder for creating a PaymentOrder entity.
@@ -183,6 +184,20 @@ func (_c *PaymentOrderCreate) SetNillablePlanID(v *int64) *PaymentOrderCreate {
 	return _c
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (_c *PaymentOrderCreate) SetVipLevelID(v int64) *PaymentOrderCreate {
+	_c.mutation.SetVipLevelID(v)
+	return _c
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableVipLevelID(v *int64) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetVipLevelID(*v)
+	}
+	return _c
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (_c *PaymentOrderCreate) SetSubscriptionGroupID(v int64) *PaymentOrderCreate {
 	_c.mutation.SetSubscriptionGroupID(v)
@@ -207,6 +222,20 @@ func (_c *PaymentOrderCreate) SetSubscriptionDays(v int) *PaymentOrderCreate {
 func (_c *PaymentOrderCreate) SetNillableSubscriptionDays(v *int) *PaymentOrderCreate {
 	if v != nil {
 		_c.SetSubscriptionDays(*v)
+	}
+	return _c
+}
+
+// SetVipDays sets the "vip_days" field.
+func (_c *PaymentOrderCreate) SetVipDays(v int) *PaymentOrderCreate {
+	_c.mutation.SetVipDays(v)
+	return _c
+}
+
+// SetNillableVipDays sets the "vip_days" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableVipDays(v *int) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetVipDays(*v)
 	}
 	return _c
 }
@@ -476,6 +505,21 @@ func (_c *PaymentOrderCreate) SetNillableUpdatedAt(v *time.Time) *PaymentOrderCr
 // SetUser sets the "user" edge to the User entity.
 func (_c *PaymentOrderCreate) SetUser(v *User) *PaymentOrderCreate {
 	return _c.SetUserID(v.ID)
+}
+
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (_c *PaymentOrderCreate) AddVipMembershipIDs(ids ...int64) *PaymentOrderCreate {
+	_c.mutation.AddVipMembershipIDs(ids...)
+	return _c
+}
+
+// AddVipMemberships adds the "vip_memberships" edges to the UserVIPMembership entity.
+func (_c *PaymentOrderCreate) AddVipMemberships(v ...*UserVIPMembership) *PaymentOrderCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddVipMembershipIDs(ids...)
 }
 
 // Mutation returns the PaymentOrderMutation object of the builder.
@@ -761,6 +805,10 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 		_spec.SetField(paymentorder.FieldPlanID, field.TypeInt64, value)
 		_node.PlanID = &value
 	}
+	if value, ok := _c.mutation.VipLevelID(); ok {
+		_spec.SetField(paymentorder.FieldVipLevelID, field.TypeInt64, value)
+		_node.VipLevelID = &value
+	}
 	if value, ok := _c.mutation.SubscriptionGroupID(); ok {
 		_spec.SetField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
 		_node.SubscriptionGroupID = &value
@@ -768,6 +816,10 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.SubscriptionDays(); ok {
 		_spec.SetField(paymentorder.FieldSubscriptionDays, field.TypeInt, value)
 		_node.SubscriptionDays = &value
+	}
+	if value, ok := _c.mutation.VipDays(); ok {
+		_spec.SetField(paymentorder.FieldVipDays, field.TypeInt, value)
+		_node.VipDays = &value
 	}
 	if value, ok := _c.mutation.ProviderInstanceID(); ok {
 		_spec.SetField(paymentorder.FieldProviderInstanceID, field.TypeString, value)
@@ -868,6 +920,22 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.VipMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -1168,6 +1236,30 @@ func (u *PaymentOrderUpsert) ClearPlanID() *PaymentOrderUpsert {
 	return u
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *PaymentOrderUpsert) SetVipLevelID(v int64) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldVipLevelID, v)
+	return u
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateVipLevelID() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldVipLevelID)
+	return u
+}
+
+// AddVipLevelID adds v to the "vip_level_id" field.
+func (u *PaymentOrderUpsert) AddVipLevelID(v int64) *PaymentOrderUpsert {
+	u.Add(paymentorder.FieldVipLevelID, v)
+	return u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *PaymentOrderUpsert) ClearVipLevelID() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldVipLevelID)
+	return u
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (u *PaymentOrderUpsert) SetSubscriptionGroupID(v int64) *PaymentOrderUpsert {
 	u.Set(paymentorder.FieldSubscriptionGroupID, v)
@@ -1213,6 +1305,30 @@ func (u *PaymentOrderUpsert) AddSubscriptionDays(v int) *PaymentOrderUpsert {
 // ClearSubscriptionDays clears the value of the "subscription_days" field.
 func (u *PaymentOrderUpsert) ClearSubscriptionDays() *PaymentOrderUpsert {
 	u.SetNull(paymentorder.FieldSubscriptionDays)
+	return u
+}
+
+// SetVipDays sets the "vip_days" field.
+func (u *PaymentOrderUpsert) SetVipDays(v int) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldVipDays, v)
+	return u
+}
+
+// UpdateVipDays sets the "vip_days" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateVipDays() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldVipDays)
+	return u
+}
+
+// AddVipDays adds v to the "vip_days" field.
+func (u *PaymentOrderUpsert) AddVipDays(v int) *PaymentOrderUpsert {
+	u.Add(paymentorder.FieldVipDays, v)
+	return u
+}
+
+// ClearVipDays clears the value of the "vip_days" field.
+func (u *PaymentOrderUpsert) ClearVipDays() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldVipDays)
 	return u
 }
 
@@ -1872,6 +1988,34 @@ func (u *PaymentOrderUpsertOne) ClearPlanID() *PaymentOrderUpsertOne {
 	})
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *PaymentOrderUpsertOne) SetVipLevelID(v int64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetVipLevelID(v)
+	})
+}
+
+// AddVipLevelID adds v to the "vip_level_id" field.
+func (u *PaymentOrderUpsertOne) AddVipLevelID(v int64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddVipLevelID(v)
+	})
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateVipLevelID() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateVipLevelID()
+	})
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *PaymentOrderUpsertOne) ClearVipLevelID() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearVipLevelID()
+	})
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (u *PaymentOrderUpsertOne) SetSubscriptionGroupID(v int64) *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
@@ -1925,6 +2069,34 @@ func (u *PaymentOrderUpsertOne) UpdateSubscriptionDays() *PaymentOrderUpsertOne 
 func (u *PaymentOrderUpsertOne) ClearSubscriptionDays() *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearSubscriptionDays()
+	})
+}
+
+// SetVipDays sets the "vip_days" field.
+func (u *PaymentOrderUpsertOne) SetVipDays(v int) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetVipDays(v)
+	})
+}
+
+// AddVipDays adds v to the "vip_days" field.
+func (u *PaymentOrderUpsertOne) AddVipDays(v int) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddVipDays(v)
+	})
+}
+
+// UpdateVipDays sets the "vip_days" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateVipDays() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateVipDays()
+	})
+}
+
+// ClearVipDays clears the value of the "vip_days" field.
+func (u *PaymentOrderUpsertOne) ClearVipDays() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearVipDays()
 	})
 }
 
@@ -2804,6 +2976,34 @@ func (u *PaymentOrderUpsertBulk) ClearPlanID() *PaymentOrderUpsertBulk {
 	})
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *PaymentOrderUpsertBulk) SetVipLevelID(v int64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetVipLevelID(v)
+	})
+}
+
+// AddVipLevelID adds v to the "vip_level_id" field.
+func (u *PaymentOrderUpsertBulk) AddVipLevelID(v int64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddVipLevelID(v)
+	})
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateVipLevelID() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateVipLevelID()
+	})
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *PaymentOrderUpsertBulk) ClearVipLevelID() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearVipLevelID()
+	})
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (u *PaymentOrderUpsertBulk) SetSubscriptionGroupID(v int64) *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
@@ -2857,6 +3057,34 @@ func (u *PaymentOrderUpsertBulk) UpdateSubscriptionDays() *PaymentOrderUpsertBul
 func (u *PaymentOrderUpsertBulk) ClearSubscriptionDays() *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearSubscriptionDays()
+	})
+}
+
+// SetVipDays sets the "vip_days" field.
+func (u *PaymentOrderUpsertBulk) SetVipDays(v int) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetVipDays(v)
+	})
+}
+
+// AddVipDays adds v to the "vip_days" field.
+func (u *PaymentOrderUpsertBulk) AddVipDays(v int) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddVipDays(v)
+	})
+}
+
+// UpdateVipDays sets the "vip_days" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateVipDays() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateVipDays()
+	})
+}
+
+// ClearVipDays clears the value of the "vip_days" field.
+func (u *PaymentOrderUpsertBulk) ClearVipDays() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearVipDays()
 	})
 }
 

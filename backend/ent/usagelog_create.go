@@ -17,6 +17,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 )
 
 // UsageLogCreate is the builder for creating a UsageLog entity.
@@ -165,6 +166,20 @@ func (_c *UsageLogCreate) SetSubscriptionID(v int64) *UsageLogCreate {
 func (_c *UsageLogCreate) SetNillableSubscriptionID(v *int64) *UsageLogCreate {
 	if v != nil {
 		_c.SetSubscriptionID(*v)
+	}
+	return _c
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (_c *UsageLogCreate) SetVipLevelID(v int64) *UsageLogCreate {
+	_c.mutation.SetVipLevelID(v)
+	return _c
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableVipLevelID(v *int64) *UsageLogCreate {
+	if v != nil {
+		_c.SetVipLevelID(*v)
 	}
 	return _c
 }
@@ -347,6 +362,48 @@ func (_c *UsageLogCreate) SetRateMultiplier(v float64) *UsageLogCreate {
 func (_c *UsageLogCreate) SetNillableRateMultiplier(v *float64) *UsageLogCreate {
 	if v != nil {
 		_c.SetRateMultiplier(*v)
+	}
+	return _c
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (_c *UsageLogCreate) SetVipDiscountMultiplier(v float64) *UsageLogCreate {
+	_c.mutation.SetVipDiscountMultiplier(v)
+	return _c
+}
+
+// SetNillableVipDiscountMultiplier sets the "vip_discount_multiplier" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableVipDiscountMultiplier(v *float64) *UsageLogCreate {
+	if v != nil {
+		_c.SetVipDiscountMultiplier(*v)
+	}
+	return _c
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (_c *UsageLogCreate) SetVipPreDiscountCost(v float64) *UsageLogCreate {
+	_c.mutation.SetVipPreDiscountCost(v)
+	return _c
+}
+
+// SetNillableVipPreDiscountCost sets the "vip_pre_discount_cost" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableVipPreDiscountCost(v *float64) *UsageLogCreate {
+	if v != nil {
+		_c.SetVipPreDiscountCost(*v)
+	}
+	return _c
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (_c *UsageLogCreate) SetVipSavingsUsd(v float64) *UsageLogCreate {
+	_c.mutation.SetVipSavingsUsd(v)
+	return _c
+}
+
+// SetNillableVipSavingsUsd sets the "vip_savings_usd" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableVipSavingsUsd(v *float64) *UsageLogCreate {
+	if v != nil {
+		_c.SetVipSavingsUsd(*v)
 	}
 	return _c
 }
@@ -578,6 +635,11 @@ func (_c *UsageLogCreate) SetSubscription(v *UserSubscription) *UsageLogCreate {
 	return _c.SetSubscriptionID(v.ID)
 }
 
+// SetVipLevel sets the "vip_level" edge to the VIPLevel entity.
+func (_c *UsageLogCreate) SetVipLevel(v *VIPLevel) *UsageLogCreate {
+	return _c.SetVipLevelID(v.ID)
+}
+
 // Mutation returns the UsageLogMutation object of the builder.
 func (_c *UsageLogCreate) Mutation() *UsageLogMutation {
 	return _c.mutation
@@ -664,6 +726,10 @@ func (_c *UsageLogCreate) defaults() {
 	if _, ok := _c.mutation.RateMultiplier(); !ok {
 		v := usagelog.DefaultRateMultiplier
 		_c.mutation.SetRateMultiplier(v)
+	}
+	if _, ok := _c.mutation.VipSavingsUsd(); !ok {
+		v := usagelog.DefaultVipSavingsUsd
+		_c.mutation.SetVipSavingsUsd(v)
 	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		v := usagelog.DefaultBillingType
@@ -777,6 +843,9 @@ func (_c *UsageLogCreate) check() error {
 	}
 	if _, ok := _c.mutation.RateMultiplier(); !ok {
 		return &ValidationError{Name: "rate_multiplier", err: errors.New(`ent: missing required field "UsageLog.rate_multiplier"`)}
+	}
+	if _, ok := _c.mutation.VipSavingsUsd(); !ok {
+		return &ValidationError{Name: "vip_savings_usd", err: errors.New(`ent: missing required field "UsageLog.vip_savings_usd"`)}
 	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		return &ValidationError{Name: "billing_type", err: errors.New(`ent: missing required field "UsageLog.billing_type"`)}
@@ -943,6 +1012,18 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 		_spec.SetField(usagelog.FieldRateMultiplier, field.TypeFloat64, value)
 		_node.RateMultiplier = value
 	}
+	if value, ok := _c.mutation.VipDiscountMultiplier(); ok {
+		_spec.SetField(usagelog.FieldVipDiscountMultiplier, field.TypeFloat64, value)
+		_node.VipDiscountMultiplier = &value
+	}
+	if value, ok := _c.mutation.VipPreDiscountCost(); ok {
+		_spec.SetField(usagelog.FieldVipPreDiscountCost, field.TypeFloat64, value)
+		_node.VipPreDiscountCost = &value
+	}
+	if value, ok := _c.mutation.VipSavingsUsd(); ok {
+		_spec.SetField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+		_node.VipSavingsUsd = value
+	}
 	if value, ok := _c.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)
 		_node.AccountRateMultiplier = &value
@@ -1086,6 +1167,23 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.SubscriptionID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.VipLevelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagelog.VipLevelTable,
+			Columns: []string{usagelog.VipLevelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(viplevel.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.VipLevelID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -1350,6 +1448,24 @@ func (u *UsageLogUpsert) ClearSubscriptionID() *UsageLogUpsert {
 	return u
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *UsageLogUpsert) SetVipLevelID(v int64) *UsageLogUpsert {
+	u.Set(usagelog.FieldVipLevelID, v)
+	return u
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateVipLevelID() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldVipLevelID)
+	return u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *UsageLogUpsert) ClearVipLevelID() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldVipLevelID)
+	return u
+}
+
 // SetInputTokens sets the "input_tokens" field.
 func (u *UsageLogUpsert) SetInputTokens(v int) *UsageLogUpsert {
 	u.Set(usagelog.FieldInputTokens, v)
@@ -1581,6 +1697,72 @@ func (u *UsageLogUpsert) UpdateRateMultiplier() *UsageLogUpsert {
 // AddRateMultiplier adds v to the "rate_multiplier" field.
 func (u *UsageLogUpsert) AddRateMultiplier(v float64) *UsageLogUpsert {
 	u.Add(usagelog.FieldRateMultiplier, v)
+	return u
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (u *UsageLogUpsert) SetVipDiscountMultiplier(v float64) *UsageLogUpsert {
+	u.Set(usagelog.FieldVipDiscountMultiplier, v)
+	return u
+}
+
+// UpdateVipDiscountMultiplier sets the "vip_discount_multiplier" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateVipDiscountMultiplier() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldVipDiscountMultiplier)
+	return u
+}
+
+// AddVipDiscountMultiplier adds v to the "vip_discount_multiplier" field.
+func (u *UsageLogUpsert) AddVipDiscountMultiplier(v float64) *UsageLogUpsert {
+	u.Add(usagelog.FieldVipDiscountMultiplier, v)
+	return u
+}
+
+// ClearVipDiscountMultiplier clears the value of the "vip_discount_multiplier" field.
+func (u *UsageLogUpsert) ClearVipDiscountMultiplier() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldVipDiscountMultiplier)
+	return u
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsert) SetVipPreDiscountCost(v float64) *UsageLogUpsert {
+	u.Set(usagelog.FieldVipPreDiscountCost, v)
+	return u
+}
+
+// UpdateVipPreDiscountCost sets the "vip_pre_discount_cost" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateVipPreDiscountCost() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldVipPreDiscountCost)
+	return u
+}
+
+// AddVipPreDiscountCost adds v to the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsert) AddVipPreDiscountCost(v float64) *UsageLogUpsert {
+	u.Add(usagelog.FieldVipPreDiscountCost, v)
+	return u
+}
+
+// ClearVipPreDiscountCost clears the value of the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsert) ClearVipPreDiscountCost() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldVipPreDiscountCost)
+	return u
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (u *UsageLogUpsert) SetVipSavingsUsd(v float64) *UsageLogUpsert {
+	u.Set(usagelog.FieldVipSavingsUsd, v)
+	return u
+}
+
+// UpdateVipSavingsUsd sets the "vip_savings_usd" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateVipSavingsUsd() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldVipSavingsUsd)
+	return u
+}
+
+// AddVipSavingsUsd adds v to the "vip_savings_usd" field.
+func (u *UsageLogUpsert) AddVipSavingsUsd(v float64) *UsageLogUpsert {
+	u.Add(usagelog.FieldVipSavingsUsd, v)
 	return u
 }
 
@@ -2132,6 +2314,27 @@ func (u *UsageLogUpsertOne) ClearSubscriptionID() *UsageLogUpsertOne {
 	})
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *UsageLogUpsertOne) SetVipLevelID(v int64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipLevelID(v)
+	})
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateVipLevelID() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipLevelID()
+	})
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *UsageLogUpsertOne) ClearVipLevelID() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearVipLevelID()
+	})
+}
+
 // SetInputTokens sets the "input_tokens" field.
 func (u *UsageLogUpsertOne) SetInputTokens(v int) *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
@@ -2402,6 +2605,83 @@ func (u *UsageLogUpsertOne) AddRateMultiplier(v float64) *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) UpdateRateMultiplier() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateRateMultiplier()
+	})
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (u *UsageLogUpsertOne) SetVipDiscountMultiplier(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipDiscountMultiplier(v)
+	})
+}
+
+// AddVipDiscountMultiplier adds v to the "vip_discount_multiplier" field.
+func (u *UsageLogUpsertOne) AddVipDiscountMultiplier(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddVipDiscountMultiplier(v)
+	})
+}
+
+// UpdateVipDiscountMultiplier sets the "vip_discount_multiplier" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateVipDiscountMultiplier() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipDiscountMultiplier()
+	})
+}
+
+// ClearVipDiscountMultiplier clears the value of the "vip_discount_multiplier" field.
+func (u *UsageLogUpsertOne) ClearVipDiscountMultiplier() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearVipDiscountMultiplier()
+	})
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsertOne) SetVipPreDiscountCost(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipPreDiscountCost(v)
+	})
+}
+
+// AddVipPreDiscountCost adds v to the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsertOne) AddVipPreDiscountCost(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddVipPreDiscountCost(v)
+	})
+}
+
+// UpdateVipPreDiscountCost sets the "vip_pre_discount_cost" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateVipPreDiscountCost() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipPreDiscountCost()
+	})
+}
+
+// ClearVipPreDiscountCost clears the value of the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsertOne) ClearVipPreDiscountCost() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearVipPreDiscountCost()
+	})
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (u *UsageLogUpsertOne) SetVipSavingsUsd(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipSavingsUsd(v)
+	})
+}
+
+// AddVipSavingsUsd adds v to the "vip_savings_usd" field.
+func (u *UsageLogUpsertOne) AddVipSavingsUsd(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddVipSavingsUsd(v)
+	})
+}
+
+// UpdateVipSavingsUsd sets the "vip_savings_usd" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateVipSavingsUsd() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipSavingsUsd()
 	})
 }
 
@@ -3162,6 +3442,27 @@ func (u *UsageLogUpsertBulk) ClearSubscriptionID() *UsageLogUpsertBulk {
 	})
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (u *UsageLogUpsertBulk) SetVipLevelID(v int64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipLevelID(v)
+	})
+}
+
+// UpdateVipLevelID sets the "vip_level_id" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateVipLevelID() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipLevelID()
+	})
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (u *UsageLogUpsertBulk) ClearVipLevelID() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearVipLevelID()
+	})
+}
+
 // SetInputTokens sets the "input_tokens" field.
 func (u *UsageLogUpsertBulk) SetInputTokens(v int) *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
@@ -3432,6 +3733,83 @@ func (u *UsageLogUpsertBulk) AddRateMultiplier(v float64) *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) UpdateRateMultiplier() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateRateMultiplier()
+	})
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (u *UsageLogUpsertBulk) SetVipDiscountMultiplier(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipDiscountMultiplier(v)
+	})
+}
+
+// AddVipDiscountMultiplier adds v to the "vip_discount_multiplier" field.
+func (u *UsageLogUpsertBulk) AddVipDiscountMultiplier(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddVipDiscountMultiplier(v)
+	})
+}
+
+// UpdateVipDiscountMultiplier sets the "vip_discount_multiplier" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateVipDiscountMultiplier() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipDiscountMultiplier()
+	})
+}
+
+// ClearVipDiscountMultiplier clears the value of the "vip_discount_multiplier" field.
+func (u *UsageLogUpsertBulk) ClearVipDiscountMultiplier() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearVipDiscountMultiplier()
+	})
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsertBulk) SetVipPreDiscountCost(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipPreDiscountCost(v)
+	})
+}
+
+// AddVipPreDiscountCost adds v to the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsertBulk) AddVipPreDiscountCost(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddVipPreDiscountCost(v)
+	})
+}
+
+// UpdateVipPreDiscountCost sets the "vip_pre_discount_cost" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateVipPreDiscountCost() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipPreDiscountCost()
+	})
+}
+
+// ClearVipPreDiscountCost clears the value of the "vip_pre_discount_cost" field.
+func (u *UsageLogUpsertBulk) ClearVipPreDiscountCost() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearVipPreDiscountCost()
+	})
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (u *UsageLogUpsertBulk) SetVipSavingsUsd(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetVipSavingsUsd(v)
+	})
+}
+
+// AddVipSavingsUsd adds v to the "vip_savings_usd" field.
+func (u *UsageLogUpsertBulk) AddVipSavingsUsd(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddVipSavingsUsd(v)
+	})
+}
+
+// UpdateVipSavingsUsd sets the "vip_savings_usd" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateVipSavingsUsd() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateVipSavingsUsd()
 	})
 }
 

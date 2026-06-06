@@ -1,12 +1,13 @@
 import type { LocationQuery, LocationQueryRaw } from 'vue-router'
-import type { SubscriptionPlan } from '@/types/payment'
+import type { OrderType, SubscriptionPlan, VIPLevel } from '@/types/payment'
 import { normalizeVisibleMethod } from '@/components/payment/paymentFlow'
 
 export interface ParsedWechatResumeRoute {
   orderAmount: number
-  orderType: 'balance' | 'subscription'
+  orderType: OrderType
   paymentType: string
   planId?: number
+  vipLevelId?: number
   openid?: string
   wechatResumeToken?: string
 }
@@ -30,6 +31,7 @@ export function hasWechatResumeQuery(query: LocationQuery): boolean {
 export function parseWechatResumeRoute(
   query: LocationQuery,
   plans: SubscriptionPlan[],
+  vipLevels: VIPLevel[] = [],
   fallbackBalanceAmount: number,
 ): ParsedWechatResumeRoute | null {
   if (!hasWechatResumeQuery(query)) {
@@ -40,9 +42,12 @@ export function parseWechatResumeRoute(
   const paymentType = normalizeVisibleMethod(readQueryString(query, 'payment_type')) || 'wxpay'
   const planId = Number.parseInt(readQueryString(query, 'plan_id'), 10)
   const hasPlanId = Number.isFinite(planId) && planId > 0
-  const orderType = readQueryString(query, 'order_type') === 'subscription' || hasPlanId
-    ? 'subscription'
-    : 'balance'
+  const vipLevelId = Number.parseInt(readQueryString(query, 'vip_level_id'), 10)
+  const hasVIPLevelId = Number.isFinite(vipLevelId) && vipLevelId > 0
+  const rawOrderType = readQueryString(query, 'order_type')
+  const orderType: OrderType = rawOrderType === 'vip' || hasVIPLevelId
+    ? 'vip'
+    : (rawOrderType === 'subscription' || hasPlanId ? 'subscription' : 'balance')
 
   if (wechatResumeToken) {
     return {
@@ -51,6 +56,7 @@ export function parseWechatResumeRoute(
       orderType,
       orderAmount: 0,
       planId: hasPlanId ? planId : undefined,
+      vipLevelId: hasVIPLevelId ? vipLevelId : undefined,
     }
   }
 
@@ -64,6 +70,8 @@ export function parseWechatResumeRoute(
     ? rawAmount
     : (orderType === 'subscription'
       ? (plans.find(plan => plan.id === planId)?.price ?? 0)
+      : orderType === 'vip'
+        ? (vipLevels.find(level => level.id === vipLevelId)?.price ?? 0)
       : fallbackBalanceAmount)
 
   return {
@@ -72,6 +80,7 @@ export function parseWechatResumeRoute(
     orderType,
     orderAmount,
     planId: hasPlanId ? planId : undefined,
+    vipLevelId: hasVIPLevelId ? vipLevelId : undefined,
   }
 }
 
@@ -86,5 +95,6 @@ export function stripWechatResumeQuery(query: LocationQuery): LocationQueryRaw {
   delete nextQuery.amount
   delete nextQuery.order_type
   delete nextQuery.plan_id
+  delete nextQuery.vip_level_id
   return nextQuery
 }

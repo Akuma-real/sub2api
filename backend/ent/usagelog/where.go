@@ -120,6 +120,11 @@ func SubscriptionID(v int64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldSubscriptionID, v))
 }
 
+// VipLevelID applies equality check predicate on the "vip_level_id" field. It's identical to VipLevelIDEQ.
+func VipLevelID(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipLevelID, v))
+}
+
 // InputTokens applies equality check predicate on the "input_tokens" field. It's identical to InputTokensEQ.
 func InputTokens(v int) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldInputTokens, v))
@@ -183,6 +188,21 @@ func ActualCost(v float64) predicate.UsageLog {
 // RateMultiplier applies equality check predicate on the "rate_multiplier" field. It's identical to RateMultiplierEQ.
 func RateMultiplier(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldRateMultiplier, v))
+}
+
+// VipDiscountMultiplier applies equality check predicate on the "vip_discount_multiplier" field. It's identical to VipDiscountMultiplierEQ.
+func VipDiscountMultiplier(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipDiscountMultiplier, v))
+}
+
+// VipPreDiscountCost applies equality check predicate on the "vip_pre_discount_cost" field. It's identical to VipPreDiscountCostEQ.
+func VipPreDiscountCost(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipPreDiscountCost, v))
+}
+
+// VipSavingsUsd applies equality check predicate on the "vip_savings_usd" field. It's identical to VipSavingsUsdEQ.
+func VipSavingsUsd(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipSavingsUsd, v))
 }
 
 // AccountRateMultiplier applies equality check predicate on the "account_rate_multiplier" field. It's identical to AccountRateMultiplierEQ.
@@ -930,6 +950,36 @@ func SubscriptionIDNotNil() predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldNotNull(FieldSubscriptionID))
 }
 
+// VipLevelIDEQ applies the EQ predicate on the "vip_level_id" field.
+func VipLevelIDEQ(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipLevelID, v))
+}
+
+// VipLevelIDNEQ applies the NEQ predicate on the "vip_level_id" field.
+func VipLevelIDNEQ(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldVipLevelID, v))
+}
+
+// VipLevelIDIn applies the In predicate on the "vip_level_id" field.
+func VipLevelIDIn(vs ...int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldVipLevelID, vs...))
+}
+
+// VipLevelIDNotIn applies the NotIn predicate on the "vip_level_id" field.
+func VipLevelIDNotIn(vs ...int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldVipLevelID, vs...))
+}
+
+// VipLevelIDIsNil applies the IsNil predicate on the "vip_level_id" field.
+func VipLevelIDIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldVipLevelID))
+}
+
+// VipLevelIDNotNil applies the NotNil predicate on the "vip_level_id" field.
+func VipLevelIDNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldVipLevelID))
+}
+
 // InputTokensEQ applies the EQ predicate on the "input_tokens" field.
 func InputTokensEQ(v int) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldInputTokens, v))
@@ -1448,6 +1498,146 @@ func RateMultiplierLT(v float64) predicate.UsageLog {
 // RateMultiplierLTE applies the LTE predicate on the "rate_multiplier" field.
 func RateMultiplierLTE(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldLTE(FieldRateMultiplier, v))
+}
+
+// VipDiscountMultiplierEQ applies the EQ predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipDiscountMultiplier, v))
+}
+
+// VipDiscountMultiplierNEQ applies the NEQ predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierNEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldVipDiscountMultiplier, v))
+}
+
+// VipDiscountMultiplierIn applies the In predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldVipDiscountMultiplier, vs...))
+}
+
+// VipDiscountMultiplierNotIn applies the NotIn predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierNotIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldVipDiscountMultiplier, vs...))
+}
+
+// VipDiscountMultiplierGT applies the GT predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierGT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldVipDiscountMultiplier, v))
+}
+
+// VipDiscountMultiplierGTE applies the GTE predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierGTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldVipDiscountMultiplier, v))
+}
+
+// VipDiscountMultiplierLT applies the LT predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierLT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldVipDiscountMultiplier, v))
+}
+
+// VipDiscountMultiplierLTE applies the LTE predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierLTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldVipDiscountMultiplier, v))
+}
+
+// VipDiscountMultiplierIsNil applies the IsNil predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldVipDiscountMultiplier))
+}
+
+// VipDiscountMultiplierNotNil applies the NotNil predicate on the "vip_discount_multiplier" field.
+func VipDiscountMultiplierNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldVipDiscountMultiplier))
+}
+
+// VipPreDiscountCostEQ applies the EQ predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipPreDiscountCost, v))
+}
+
+// VipPreDiscountCostNEQ applies the NEQ predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostNEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldVipPreDiscountCost, v))
+}
+
+// VipPreDiscountCostIn applies the In predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldVipPreDiscountCost, vs...))
+}
+
+// VipPreDiscountCostNotIn applies the NotIn predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostNotIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldVipPreDiscountCost, vs...))
+}
+
+// VipPreDiscountCostGT applies the GT predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostGT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldVipPreDiscountCost, v))
+}
+
+// VipPreDiscountCostGTE applies the GTE predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostGTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldVipPreDiscountCost, v))
+}
+
+// VipPreDiscountCostLT applies the LT predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostLT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldVipPreDiscountCost, v))
+}
+
+// VipPreDiscountCostLTE applies the LTE predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostLTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldVipPreDiscountCost, v))
+}
+
+// VipPreDiscountCostIsNil applies the IsNil predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldVipPreDiscountCost))
+}
+
+// VipPreDiscountCostNotNil applies the NotNil predicate on the "vip_pre_discount_cost" field.
+func VipPreDiscountCostNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldVipPreDiscountCost))
+}
+
+// VipSavingsUsdEQ applies the EQ predicate on the "vip_savings_usd" field.
+func VipSavingsUsdEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldVipSavingsUsd, v))
+}
+
+// VipSavingsUsdNEQ applies the NEQ predicate on the "vip_savings_usd" field.
+func VipSavingsUsdNEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldVipSavingsUsd, v))
+}
+
+// VipSavingsUsdIn applies the In predicate on the "vip_savings_usd" field.
+func VipSavingsUsdIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldVipSavingsUsd, vs...))
+}
+
+// VipSavingsUsdNotIn applies the NotIn predicate on the "vip_savings_usd" field.
+func VipSavingsUsdNotIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldVipSavingsUsd, vs...))
+}
+
+// VipSavingsUsdGT applies the GT predicate on the "vip_savings_usd" field.
+func VipSavingsUsdGT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldVipSavingsUsd, v))
+}
+
+// VipSavingsUsdGTE applies the GTE predicate on the "vip_savings_usd" field.
+func VipSavingsUsdGTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldVipSavingsUsd, v))
+}
+
+// VipSavingsUsdLT applies the LT predicate on the "vip_savings_usd" field.
+func VipSavingsUsdLT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldVipSavingsUsd, v))
+}
+
+// VipSavingsUsdLTE applies the LTE predicate on the "vip_savings_usd" field.
+func VipSavingsUsdLTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldVipSavingsUsd, v))
 }
 
 // AccountRateMultiplierEQ applies the EQ predicate on the "account_rate_multiplier" field.
@@ -2307,6 +2497,29 @@ func HasSubscription() predicate.UsageLog {
 func HasSubscriptionWith(preds ...predicate.UserSubscription) predicate.UsageLog {
 	return predicate.UsageLog(func(s *sql.Selector) {
 		step := newSubscriptionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasVipLevel applies the HasEdge predicate on the "vip_level" edge.
+func HasVipLevel() predicate.UsageLog {
+	return predicate.UsageLog(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, VipLevelTable, VipLevelColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVipLevelWith applies the HasEdge predicate on the "vip_level" edge with a given conditions (other predicates).
+func HasVipLevelWith(preds ...predicate.VIPLevel) predicate.UsageLog {
+	return predicate.UsageLog(func(s *sql.Selector) {
+		step := newVipLevelStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

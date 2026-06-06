@@ -14,13 +14,15 @@ import (
 type PaymentHandler struct {
 	paymentService *service.PaymentService
 	configService  *service.PaymentConfigService
+	vipService     *service.VIPService
 }
 
 // NewPaymentHandler creates a new admin PaymentHandler.
-func NewPaymentHandler(paymentService *service.PaymentService, configService *service.PaymentConfigService) *PaymentHandler {
+func NewPaymentHandler(paymentService *service.PaymentService, configService *service.PaymentConfigService, vipService *service.VIPService) *PaymentHandler {
 	return &PaymentHandler{
 		paymentService: paymentService,
 		configService:  configService,
+		vipService:     vipService,
 	}
 }
 
@@ -236,6 +238,81 @@ func (h *PaymentHandler) DeletePlan(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{"message": "deleted"})
+}
+
+// --- VIP Levels ---
+
+// ListVIPLevels returns all VIP levels.
+// GET /api/v1/admin/payment/vip-levels
+func (h *PaymentHandler) ListVIPLevels(c *gin.Context) {
+	levels, err := h.vipService.ListLevels(c.Request.Context(), false)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, levels)
+}
+
+// CreateVIPLevel creates a VIP level.
+// POST /api/v1/admin/payment/vip-levels
+func (h *PaymentHandler) CreateVIPLevel(c *gin.Context) {
+	var req service.CreateVIPLevelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	level, err := h.vipService.CreateLevel(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Created(c, level)
+}
+
+// UpdateVIPLevel updates a VIP level.
+// PUT /api/v1/admin/payment/vip-levels/:id
+func (h *PaymentHandler) UpdateVIPLevel(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	var req service.UpdateVIPLevelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	level, err := h.vipService.UpdateLevel(c.Request.Context(), id, req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, level)
+}
+
+// DeleteVIPLevel deletes a VIP level.
+// DELETE /api/v1/admin/payment/vip-levels/:id
+func (h *PaymentHandler) DeleteVIPLevel(c *gin.Context) {
+	id, ok := parseIDParam(c, "id")
+	if !ok {
+		return
+	}
+	if err := h.vipService.DeleteLevel(c.Request.Context(), id); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{"message": "deleted"})
+}
+
+// ListVIPUsers returns user VIP and savings summaries.
+// GET /api/v1/admin/payment/vip-users
+func (h *PaymentHandler) ListVIPUsers(c *gin.Context) {
+	page, pageSize := response.ParsePagination(c)
+	users, total, err := h.vipService.ListUserSummaries(c.Request.Context(), page, pageSize)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Paginated(c, users, int64(total), page, pageSize)
 }
 
 // --- Provider Instances ---

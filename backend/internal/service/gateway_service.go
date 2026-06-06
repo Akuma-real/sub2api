@@ -8650,6 +8650,8 @@ func applyUsageBilling(ctx context.Context, requestID string, usageLog *UsageLog
 		return false, nil
 	}
 
+	applyVIPUsageBillingResult(usageLog, p.Cost, result)
+
 	if result.APIKeyQuotaExhausted {
 		if invalidator, ok := p.APIKeyService.(apiKeyAuthCacheInvalidator); ok && p.APIKey != nil && p.APIKey.Key != "" {
 			invalidator.InvalidateAuthCacheByKey(billingCtx, p.APIKey.Key)
@@ -8658,6 +8660,26 @@ func applyUsageBilling(ctx context.Context, requestID string, usageLog *UsageLog
 
 	finalizePostUsageBilling(billingCtx, p, deps, result)
 	return true, nil
+}
+
+func applyVIPUsageBillingResult(usageLog *UsageLog, cost *CostBreakdown, result *UsageBillingApplyResult) {
+	if result == nil || result.VIPLevelID == nil || result.VIPDiscountMultiplier == nil || result.VIPPreDiscountCost == nil {
+		return
+	}
+	discounted := *result.VIPPreDiscountCost - result.VIPSavingsUSD
+	if discounted < 0 {
+		discounted = 0
+	}
+	if usageLog != nil {
+		usageLog.VIPLevelID = result.VIPLevelID
+		usageLog.VIPDiscountMultiplier = result.VIPDiscountMultiplier
+		usageLog.VIPPreDiscountCost = result.VIPPreDiscountCost
+		usageLog.VIPSavingsUSD = result.VIPSavingsUSD
+		usageLog.ActualCost = discounted
+	}
+	if cost != nil {
+		cost.ActualCost = discounted
+	}
 }
 
 func finalizePostUsageBilling(ctx context.Context, p *postUsageBillingParams, deps *billingDeps, result *UsageBillingApplyResult) {

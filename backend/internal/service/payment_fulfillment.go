@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 
+	entsql "entgo.io/ent/dialect/sql"
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/ent/paymentauditlog"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 	"github.com/Wei-Shaw/sub2api/internal/payment"
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
@@ -214,6 +216,9 @@ func (s *PaymentService) executeFulfillment(ctx context.Context, oid int64) erro
 	}
 	if o.OrderType == payment.OrderTypeSubscription {
 		return s.ExecuteSubscriptionFulfillment(ctx, oid)
+	}
+	if o.OrderType == payment.OrderTypeVIP {
+		return s.ExecuteVIPFulfillment(ctx, oid)
 	}
 	return s.ExecuteBalanceFulfillment(ctx, oid)
 }
@@ -444,6 +449,123 @@ func (s *PaymentService) doSub(ctx context.Context, o *dbent.PaymentOrder) error
 		return err
 	}
 	return s.markCompleted(ctx, o, "SUBSCRIPTION_SUCCESS")
+}
+
+func (s *PaymentService) ExecuteVIPFulfillment(ctx context.Context, oid int64) error {
+	o, err := s.entClient.PaymentOrder.Get(ctx, oid)
+	if err != nil {
+		return infraerrors.NotFound("NOT_FOUND", "order not found")
+	}
+	if o.Status == OrderStatusCompleted {
+		return nil
+	}
+	if psIsRefundStatus(o.Status) {
+		return infraerrors.BadRequest("INVALID_STATUS", "refund-related order cannot fulfill")
+	}
+	if o.Status != OrderStatusPaid && o.Status != OrderStatusFailed {
+		return infraerrors.BadRequest("INVALID_STATUS", "order cannot fulfill in status "+o.Status)
+	}
+	if o.VipLevelID == nil || o.VipDays == nil || *o.VipDays <= 0 {
+		return infraerrors.BadRequest("INVALID_STATUS", "missing vip info")
+	}
+	c, err := s.entClient.PaymentOrder.Update().
+		Where(paymentorder.IDEQ(oid), paymentorder.StatusIn(OrderStatusPaid, OrderStatusFailed)).
+		SetStatus(OrderStatusRecharging).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("lock: %w", err)
+	}
+	if c == 0 {
+		return nil
+	}
+	if err := s.doVIP(ctx, o); err != nil {
+		s.markFailed(ctx, oid, err)
+		return err
+	}
+	return nil
+}
+
+func (s *PaymentService) doVIP(ctx context.Context, o *dbent.PaymentOrder) error {
+	levelID := *o.VipLevelID
+	days := *o.VipDays
+	if s.hasAuditLog(ctx, o.ID, "VIP_SUCCESS") {
+		slog.Info("vip membership already assigned for order, skipping", "orderID", o.ID, "vipLevelID", levelID)
+		return s.markCompleted(ctx, o, "VIP_SUCCESS")
+	}
+
+	tx, err := s.entClient.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin vip fulfillment tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	client := tx.Client()
+
+	now := time.Now()
+	active, err := client.UserVIPMembership.Query().
+		Where(
+			uservipmembership.UserIDEQ(o.UserID),
+			uservipmembership.VipLevelIDEQ(levelID),
+			uservipmembership.StatusEQ(VIPMembershipStatusActive),
+			uservipmembership.ExpiresAtGT(now),
+		).
+		Order(uservipmembership.ByExpiresAt(entsql.OrderDesc())).
+		First(ctx)
+	if err != nil && !dbent.IsNotFound(err) {
+		return fmt.Errorf("query vip membership: %w", err)
+	}
+
+	orderNote := fmt.Sprintf("payment order %d", o.ID)
+	if active != nil {
+		if _, err := client.UserVIPMembership.UpdateOneID(active.ID).
+			SetExpiresAt(active.ExpiresAt.AddDate(0, 0, days)).
+			SetSourceOrderID(o.ID).
+			SetNotes(orderNote).
+			Save(ctx); err != nil {
+			return fmt.Errorf("extend vip membership: %w", err)
+		}
+	} else {
+		if _, err := client.UserVIPMembership.Create().
+			SetUserID(o.UserID).
+			SetVipLevelID(levelID).
+			SetStartsAt(now).
+			SetExpiresAt(now.AddDate(0, 0, days)).
+			SetStatus(VIPMembershipStatusActive).
+			SetSourceOrderID(o.ID).
+			SetNotes(orderNote).
+			Save(ctx); err != nil {
+			return fmt.Errorf("create vip membership: %w", err)
+		}
+	}
+
+	c, err := client.PaymentOrder.Update().
+		Where(paymentorder.IDEQ(o.ID), paymentorder.StatusEQ(OrderStatusRecharging)).
+		SetStatus(OrderStatusCompleted).
+		SetCompletedAt(now).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("mark completed: %w", err)
+	}
+	if c == 0 {
+		return infraerrors.Conflict("CONFLICT", "order status changed")
+	}
+	detail, _ := json.Marshal(map[string]any{
+		"rechargeCode":   o.RechargeCode,
+		"creditedAmount": o.Amount,
+		"payAmount":      o.PayAmount,
+	})
+	if _, err := client.PaymentAuditLog.Create().
+		SetOrderID(strconv.FormatInt(o.ID, 10)).
+		SetAction("VIP_SUCCESS").
+		SetDetail(string(detail)).
+		SetOperator("system").
+		Save(ctx); err != nil {
+		return fmt.Errorf("write vip success audit: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit vip fulfillment tx: %w", err)
+	}
+	s.dispatchPaymentFulfillmentNotification(o, "VIP_SUCCESS")
+	return nil
 }
 
 func (s *PaymentService) hasAuditLog(ctx context.Context, orderID int64, action string) bool {

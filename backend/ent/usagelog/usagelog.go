@@ -40,6 +40,8 @@ const (
 	FieldGroupID = "group_id"
 	// FieldSubscriptionID holds the string denoting the subscription_id field in the database.
 	FieldSubscriptionID = "subscription_id"
+	// FieldVipLevelID holds the string denoting the vip_level_id field in the database.
+	FieldVipLevelID = "vip_level_id"
 	// FieldInputTokens holds the string denoting the input_tokens field in the database.
 	FieldInputTokens = "input_tokens"
 	// FieldOutputTokens holds the string denoting the output_tokens field in the database.
@@ -66,6 +68,12 @@ const (
 	FieldActualCost = "actual_cost"
 	// FieldRateMultiplier holds the string denoting the rate_multiplier field in the database.
 	FieldRateMultiplier = "rate_multiplier"
+	// FieldVipDiscountMultiplier holds the string denoting the vip_discount_multiplier field in the database.
+	FieldVipDiscountMultiplier = "vip_discount_multiplier"
+	// FieldVipPreDiscountCost holds the string denoting the vip_pre_discount_cost field in the database.
+	FieldVipPreDiscountCost = "vip_pre_discount_cost"
+	// FieldVipSavingsUsd holds the string denoting the vip_savings_usd field in the database.
+	FieldVipSavingsUsd = "vip_savings_usd"
 	// FieldAccountRateMultiplier holds the string denoting the account_rate_multiplier field in the database.
 	FieldAccountRateMultiplier = "account_rate_multiplier"
 	// FieldBillingType holds the string denoting the billing_type field in the database.
@@ -106,6 +114,8 @@ const (
 	EdgeGroup = "group"
 	// EdgeSubscription holds the string denoting the subscription edge name in mutations.
 	EdgeSubscription = "subscription"
+	// EdgeVipLevel holds the string denoting the vip_level edge name in mutations.
+	EdgeVipLevel = "vip_level"
 	// Table holds the table name of the usagelog in the database.
 	Table = "usage_logs"
 	// UserTable is the table that holds the user relation/edge.
@@ -143,6 +153,13 @@ const (
 	SubscriptionInverseTable = "user_subscriptions"
 	// SubscriptionColumn is the table column denoting the subscription relation/edge.
 	SubscriptionColumn = "subscription_id"
+	// VipLevelTable is the table that holds the vip_level relation/edge.
+	VipLevelTable = "usage_logs"
+	// VipLevelInverseTable is the table name for the VIPLevel entity.
+	// It exists in this package in order to avoid circular dependency with the "viplevel" package.
+	VipLevelInverseTable = "vip_levels"
+	// VipLevelColumn is the table column denoting the vip_level relation/edge.
+	VipLevelColumn = "vip_level_id"
 )
 
 // Columns holds all SQL columns for usagelog fields.
@@ -161,6 +178,7 @@ var Columns = []string{
 	FieldBillingMode,
 	FieldGroupID,
 	FieldSubscriptionID,
+	FieldVipLevelID,
 	FieldInputTokens,
 	FieldOutputTokens,
 	FieldCacheCreationTokens,
@@ -174,6 +192,9 @@ var Columns = []string{
 	FieldTotalCost,
 	FieldActualCost,
 	FieldRateMultiplier,
+	FieldVipDiscountMultiplier,
+	FieldVipPreDiscountCost,
+	FieldVipSavingsUsd,
 	FieldAccountRateMultiplier,
 	FieldBillingType,
 	FieldStream,
@@ -242,6 +263,8 @@ var (
 	DefaultActualCost float64
 	// DefaultRateMultiplier holds the default value on creation for the "rate_multiplier" field.
 	DefaultRateMultiplier float64
+	// DefaultVipSavingsUsd holds the default value on creation for the "vip_savings_usd" field.
+	DefaultVipSavingsUsd float64
 	// DefaultBillingType holds the default value on creation for the "billing_type" field.
 	DefaultBillingType int8
 	// DefaultStream holds the default value on creation for the "stream" field.
@@ -339,6 +362,11 @@ func BySubscriptionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionID, opts...).ToFunc()
 }
 
+// ByVipLevelID orders the results by the vip_level_id field.
+func ByVipLevelID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipLevelID, opts...).ToFunc()
+}
+
 // ByInputTokens orders the results by the input_tokens field.
 func ByInputTokens(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInputTokens, opts...).ToFunc()
@@ -402,6 +430,21 @@ func ByActualCost(opts ...sql.OrderTermOption) OrderOption {
 // ByRateMultiplier orders the results by the rate_multiplier field.
 func ByRateMultiplier(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRateMultiplier, opts...).ToFunc()
+}
+
+// ByVipDiscountMultiplier orders the results by the vip_discount_multiplier field.
+func ByVipDiscountMultiplier(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipDiscountMultiplier, opts...).ToFunc()
+}
+
+// ByVipPreDiscountCost orders the results by the vip_pre_discount_cost field.
+func ByVipPreDiscountCost(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipPreDiscountCost, opts...).ToFunc()
+}
+
+// ByVipSavingsUsd orders the results by the vip_savings_usd field.
+func ByVipSavingsUsd(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVipSavingsUsd, opts...).ToFunc()
 }
 
 // ByAccountRateMultiplier orders the results by the account_rate_multiplier field.
@@ -508,6 +551,13 @@ func BySubscriptionField(field string, opts ...sql.OrderTermOption) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newSubscriptionStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByVipLevelField orders the results by vip_level field.
+func ByVipLevelField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVipLevelStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -541,5 +591,12 @@ func newSubscriptionStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubscriptionInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, SubscriptionTable, SubscriptionColumn),
+	)
+}
+func newVipLevelStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VipLevelInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, VipLevelTable, VipLevelColumn),
 	)
 }

@@ -51,10 +51,14 @@ type PaymentOrder struct {
 	OrderType string `json:"order_type,omitempty"`
 	// PlanID holds the value of the "plan_id" field.
 	PlanID *int64 `json:"plan_id,omitempty"`
+	// VipLevelID holds the value of the "vip_level_id" field.
+	VipLevelID *int64 `json:"vip_level_id,omitempty"`
 	// SubscriptionGroupID holds the value of the "subscription_group_id" field.
 	SubscriptionGroupID *int64 `json:"subscription_group_id,omitempty"`
 	// SubscriptionDays holds the value of the "subscription_days" field.
 	SubscriptionDays *int `json:"subscription_days,omitempty"`
+	// VipDays holds the value of the "vip_days" field.
+	VipDays *int `json:"vip_days,omitempty"`
 	// ProviderInstanceID holds the value of the "provider_instance_id" field.
 	ProviderInstanceID *string `json:"provider_instance_id,omitempty"`
 	// ProviderKey holds the value of the "provider_key" field.
@@ -107,9 +111,11 @@ type PaymentOrder struct {
 type PaymentOrderEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
+	// VipMemberships holds the value of the vip_memberships edge.
+	VipMemberships []*UserVIPMembership `json:"vip_memberships,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -123,6 +129,15 @@ func (e PaymentOrderEdges) UserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
+// VipMembershipsOrErr returns the VipMemberships value or an error if the edge
+// was not loaded in eager-loading.
+func (e PaymentOrderEdges) VipMembershipsOrErr() ([]*UserVIPMembership, error) {
+	if e.loadedTypes[1] {
+		return e.VipMemberships, nil
+	}
+	return nil, &NotLoadedError{edge: "vip_memberships"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -134,7 +149,7 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case paymentorder.FieldAmount, paymentorder.FieldPayAmount, paymentorder.FieldFeeRate, paymentorder.FieldRefundAmount:
 			values[i] = new(sql.NullFloat64)
-		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldPlanID, paymentorder.FieldSubscriptionGroupID, paymentorder.FieldSubscriptionDays:
+		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldPlanID, paymentorder.FieldVipLevelID, paymentorder.FieldSubscriptionGroupID, paymentorder.FieldSubscriptionDays, paymentorder.FieldVipDays:
 			values[i] = new(sql.NullInt64)
 		case paymentorder.FieldUserEmail, paymentorder.FieldUserName, paymentorder.FieldUserNotes, paymentorder.FieldRechargeCode, paymentorder.FieldOutTradeNo, paymentorder.FieldPaymentType, paymentorder.FieldPaymentTradeNo, paymentorder.FieldPayURL, paymentorder.FieldQrCode, paymentorder.FieldQrCodeImg, paymentorder.FieldOrderType, paymentorder.FieldProviderInstanceID, paymentorder.FieldProviderKey, paymentorder.FieldStatus, paymentorder.FieldRefundReason, paymentorder.FieldRefundRequestReason, paymentorder.FieldRefundRequestedBy, paymentorder.FieldFailedReason, paymentorder.FieldClientIP, paymentorder.FieldSrcHost, paymentorder.FieldSrcURL:
 			values[i] = new(sql.NullString)
@@ -262,6 +277,13 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 				_m.PlanID = new(int64)
 				*_m.PlanID = value.Int64
 			}
+		case paymentorder.FieldVipLevelID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field vip_level_id", values[i])
+			} else if value.Valid {
+				_m.VipLevelID = new(int64)
+				*_m.VipLevelID = value.Int64
+			}
 		case paymentorder.FieldSubscriptionGroupID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field subscription_group_id", values[i])
@@ -275,6 +297,13 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.SubscriptionDays = new(int)
 				*_m.SubscriptionDays = int(value.Int64)
+			}
+		case paymentorder.FieldVipDays:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field vip_days", values[i])
+			} else if value.Valid {
+				_m.VipDays = new(int)
+				*_m.VipDays = int(value.Int64)
 			}
 		case paymentorder.FieldProviderInstanceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -434,6 +463,11 @@ func (_m *PaymentOrder) QueryUser() *UserQuery {
 	return NewPaymentOrderClient(_m.config).QueryUser(_m)
 }
 
+// QueryVipMemberships queries the "vip_memberships" edge of the PaymentOrder entity.
+func (_m *PaymentOrder) QueryVipMemberships() *UserVIPMembershipQuery {
+	return NewPaymentOrderClient(_m.config).QueryVipMemberships(_m)
+}
+
 // Update returns a builder for updating this PaymentOrder.
 // Note that you need to call PaymentOrder.Unwrap() before calling this method if this PaymentOrder
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -515,6 +549,11 @@ func (_m *PaymentOrder) String() string {
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
+	if v := _m.VipLevelID; v != nil {
+		builder.WriteString("vip_level_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
 	if v := _m.SubscriptionGroupID; v != nil {
 		builder.WriteString("subscription_group_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
@@ -522,6 +561,11 @@ func (_m *PaymentOrder) String() string {
 	builder.WriteString(", ")
 	if v := _m.SubscriptionDays; v != nil {
 		builder.WriteString("subscription_days=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.VipDays; v != nil {
+		builder.WriteString("vip_days=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

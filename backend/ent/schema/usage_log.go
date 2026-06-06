@@ -63,6 +63,9 @@ func (UsageLog) Fields() []ent.Field {
 		field.Int64("subscription_id").
 			Optional().
 			Nillable(),
+		field.Int64("vip_level_id").
+			Optional().
+			Nillable(),
 
 		// Token 计数字段
 		field.Int("input_tokens").
@@ -100,6 +103,17 @@ func (UsageLog) Fields() []ent.Field {
 		field.Float("rate_multiplier").
 			Default(1).
 			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}),
+		field.Float("vip_discount_multiplier").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}),
+		field.Float("vip_pre_discount_cost").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,10)"}),
+		field.Float("vip_savings_usd").
+			Default(0).
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,10)"}),
 
 		// account_rate_multiplier: 账号计费倍率快照（NULL 表示按 1.0 处理）
 		field.Float("account_rate_multiplier").
@@ -187,6 +201,10 @@ func (UsageLog) Edges() []ent.Edge {
 			Ref("usage_logs").
 			Field("subscription_id").
 			Unique(),
+		edge.From("vip_level", VIPLevel.Type).
+			Ref("usage_logs").
+			Field("vip_level_id").
+			Unique(),
 	}
 }
 
@@ -198,6 +216,7 @@ func (UsageLog) Indexes() []ent.Index {
 		index.Fields("account_id"),
 		index.Fields("group_id"),
 		index.Fields("subscription_id"),
+		index.Fields("vip_level_id"),
 		index.Fields("created_at"),
 		index.Fields("model"),
 		index.Fields("requested_model"),

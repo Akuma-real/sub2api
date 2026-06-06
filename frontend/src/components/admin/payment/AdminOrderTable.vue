@@ -241,10 +241,11 @@ const orderTypeFilterOptions = computed(() => [
   { value: "", label: t("payment.admin.allOrderTypes") },
   { value: "balance", label: t("payment.admin.balanceOrder") },
   { value: "subscription", label: t("payment.admin.subscriptionOrder") },
+  { value: "vip", label: t("payment.admin.vipOrder") },
 ]);
 
 function canRefundRow(order: PaymentOrder): boolean {
-  return canRefund(order.status);
+  return order.order_type !== "vip" && canRefund(order.status);
 }
 
 function formatDateTime(dateStr: string): string {

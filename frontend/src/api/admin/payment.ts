@@ -9,7 +9,9 @@ import type {
   PaymentOrder,
   PaymentChannel,
   SubscriptionPlan,
-  ProviderInstance
+  ProviderInstance,
+  VIPLevel,
+  VIPUserSummary
 } from '@/types/payment'
 import type { BasePaginationResponse } from '@/types'
 
@@ -150,6 +152,33 @@ export const adminPaymentAPI = {
   /** Delete a subscription plan */
   deletePlan(id: number) {
     return apiClient.delete(`/admin/payment/plans/${id}`)
+  },
+
+  // ==================== VIP Levels ====================
+
+  /** Get all VIP levels */
+  getVIPLevels() {
+    return apiClient.get<VIPLevel[]>('/admin/payment/vip-levels')
+  },
+
+  /** Create a VIP level */
+  createVIPLevel(data: Record<string, unknown>) {
+    return apiClient.post<VIPLevel>('/admin/payment/vip-levels', data)
+  },
+
+  /** Update a VIP level */
+  updateVIPLevel(id: number, data: Record<string, unknown>) {
+    return apiClient.put<VIPLevel>(`/admin/payment/vip-levels/${id}`, data)
+  },
+
+  /** Delete a VIP level */
+  deleteVIPLevel(id: number) {
+    return apiClient.delete(`/admin/payment/vip-levels/${id}`)
+  },
+
+  /** Get user VIP and savings summaries */
+  getVIPUsers(params?: { page?: number; page_size?: number }) {
+    return apiClient.get<BasePaginationResponse<VIPUserSummary>>('/admin/payment/vip-users', { params })
   },
 
   // ==================== Provider Instances ====================

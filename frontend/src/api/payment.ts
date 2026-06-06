@@ -12,7 +12,9 @@ import type {
   CheckoutInfoResponse,
   CreateOrderRequest,
   CreateOrderResult,
-  PaymentOrder
+  PaymentOrder,
+  VIPLevel,
+  VIPOverview
 } from '@/types/payment'
 import type { BasePaginationResponse } from '@/types'
 
@@ -25,6 +27,16 @@ export const paymentAPI = {
   /** Get available subscription plans */
   getPlans() {
     return apiClient.get<SubscriptionPlan[]>('/payment/plans')
+  },
+
+  /** Get VIP levels available for purchase */
+  getVIPLevels() {
+    return apiClient.get<VIPLevel[]>('/payment/vip/levels')
+  },
+
+  /** Get current user's VIP membership and savings summary */
+  getVIPOverview() {
+    return apiClient.get<VIPOverview>('/payment/vip/overview')
   },
 
   /** Get available payment channels */

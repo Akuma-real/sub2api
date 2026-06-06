@@ -189,7 +189,7 @@ const emit = defineEmits<{
 }>();
 
 function canRefund(order: PaymentOrder): boolean {
-  return canRefundStatus(order.status);
+  return order.order_type !== "vip" && canRefundStatus(order.status);
 }
 
 function formatDateTime(dateStr: string): string {

@@ -81,6 +81,7 @@ func TestCreateOrderInTx_WritesProviderSnapshot(t *testing.T) {
 			Username: user.Username,
 		},
 		nil,
+		nil,
 		&PaymentConfig{
 			MaxPendingOrders: 3,
 			OrderTimeoutMin:  30,

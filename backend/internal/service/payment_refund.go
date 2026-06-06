@@ -207,6 +207,9 @@ func (s *PaymentService) PrepareRefund(ctx context.Context, oid int64, amt float
 	if !psSliceContains(ok, o.Status) {
 		return nil, nil, infraerrors.BadRequest("INVALID_STATUS", "order status does not allow refund")
 	}
+	if o.OrderType == payment.OrderTypeVIP {
+		return nil, nil, infraerrors.BadRequest("UNSUPPORTED_ORDER_TYPE", "vip order refund is not supported until membership clawback is implemented")
+	}
 	// Check provider instance allows admin refund
 	inst, instErr := s.getRefundOrderProviderInstance(ctx, o)
 	if instErr != nil {

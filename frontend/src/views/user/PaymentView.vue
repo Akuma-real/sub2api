@@ -6,7 +6,7 @@
       </div>
       <template v-else>
         <!-- Tab Switcher (hide during payment and subscription confirm) -->
-        <div v-if="tabs.length > 1 && paymentPhase === 'select' && !selectedPlan" class="tabs">
+        <div v-if="tabs.length > 1 && paymentPhase === 'select' && !selectedPlan && !selectedVIPLevel" class="tabs">
           <button v-for="tab in tabs" :key="tab.key"
             class="tab flex-1"
             :class="activeTab === tab.key ? 'tab-active' : ''"
@@ -203,8 +203,124 @@
               </div>
             </template>
           </template>
+          <!-- VIP Tab -->
+          <template v-else-if="activeTab === 'vip'">
+            <template v-if="selectedVIPLevel">
+              <div class="card p-8">
+                <div class="mb-4 flex flex-wrap items-center gap-2">
+                  <span class="rounded-full border border-primary-200 bg-primary-50 px-2.5 py-0.5 text-[11px] font-medium text-primary-700">
+                    VIP
+                  </span>
+                  <h3 class="text-[22px] leading-tight text-ink">{{ selectedVIPLevel.name }}</h3>
+                </div>
+                <div class="flex flex-wrap items-baseline gap-2">
+                  <span v-if="selectedVIPLevel.original_price" class="text-sm text-muted line-through">
+                    {{ formatSelectedPaymentAmount(selectedVIPLevel.original_price) }}
+                  </span>
+                  <span class="font-display text-[28px] leading-none text-primary-700">{{ formatSelectedPaymentAmount(selectedVIPLevel.price) }}</span>
+                  <span class="text-sm text-muted">/ {{ selectedVIPLevel.validity_days }}{{ t('payment.days') }}</span>
+                </div>
+                <p v-if="selectedVIPLevel.description" class="mt-3 max-w-2xl text-sm leading-relaxed text-body">
+                  {{ selectedVIPLevel.description }}
+                </p>
+                <div class="mt-6 grid gap-4 border-t border-hairline pt-5 sm:grid-cols-2">
+                  <div class="space-y-1">
+                    <span class="text-xs font-medium uppercase tracking-wide text-muted">{{ t('payment.vip.discount') }}</span>
+                    <div class="text-lg font-medium text-primary-700">{{ formatVIPDiscount(selectedVIPLevel.discount_multiplier) }}</div>
+                  </div>
+                  <div class="space-y-1">
+                    <span class="text-xs font-medium uppercase tracking-wide text-muted">{{ t('payment.vip.validity') }}</span>
+                    <div class="text-lg font-medium text-ink">{{ selectedVIPLevel.validity_days }}{{ t('payment.days') }}</div>
+                  </div>
+                </div>
+                <ul v-if="vipFeatures(selectedVIPLevel).length" class="mt-5 grid gap-2 text-sm text-body sm:grid-cols-2">
+                  <li v-for="feature in vipFeatures(selectedVIPLevel)" :key="feature" class="rounded border border-hairline bg-surface-soft px-3 py-2">
+                    {{ feature }}
+                  </li>
+                </ul>
+              </div>
+              <div v-if="enabledMethods.length >= 1" class="card p-6">
+                <PaymentMethodSelector
+                  :methods="vipMethodOptions"
+                  :selected="selectedMethod"
+                  @select="selectedMethod = $event"
+                />
+              </div>
+              <div v-if="feeRate > 0 && selectedVIPLevel.price > 0" class="card p-6">
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-muted">{{ t('payment.amountLabel') }}</span>
+                    <span class="text-ink">{{ formatSelectedPaymentAmount(selectedVIPLevel.price) }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-muted">{{ t('payment.fee') }} ({{ feeRate }}%)</span>
+                    <span class="text-ink">{{ formatSelectedPaymentAmount(vipFeeAmount) }}</span>
+                  </div>
+                  <div class="flex justify-between border-t border-hairline pt-2">
+                    <span class="font-medium text-body">{{ t('payment.actualPay') }}</span>
+                    <span class="text-lg font-bold text-primary-600">{{ formatSelectedPaymentAmount(vipTotalAmount) }}</span>
+                  </div>
+                </div>
+              </div>
+              <button :class="['btn w-full py-3 text-base font-medium', paymentButtonClass]" :disabled="!canSubmitVIP || submitting" @click="confirmVIP">
+                <span v-if="submitting" class="flex items-center justify-center gap-2">
+                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  {{ t('common.processing') }}
+                </span>
+                <span v-else>{{ t('payment.createOrder') }} {{ formatSelectedPaymentAmount(feeRate > 0 ? vipTotalAmount : selectedVIPLevel.price) }}</span>
+              </button>
+              <button class="btn btn-secondary w-full" @click="selectedVIPLevel = null">{{ t('common.cancel') }}</button>
+            </template>
+            <template v-else>
+              <div class="card p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-medium text-muted-soft">{{ t('payment.vip.current') }}</p>
+                    <p class="mt-1 text-base font-semibold text-ink">
+                      {{ vipOverview?.current?.level?.name || t('payment.vip.none') }}
+                    </p>
+                    <p v-if="vipOverview?.current?.expires_at" class="mt-0.5 text-sm text-muted">
+                      {{ t('payment.vip.expiresAt') }}: {{ formatDate(vipOverview.current.expires_at) }}
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs font-medium text-muted-soft">{{ t('payment.vip.totalSavings') }}</p>
+                    <p class="mt-1 text-lg font-semibold text-success">${{ (vipOverview?.total_savings_usd || 0).toFixed(4) }}</p>
+                  </div>
+                </div>
+              </div>
+              <div v-if="vipLevels.length === 0" class="card py-16 text-center">
+                <Icon name="gift" size="xl" class="mx-auto mb-3 text-muted-soft" />
+                <p class="text-muted">{{ t('payment.vip.noLevels') }}</p>
+              </div>
+              <div v-else class="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <button
+                  v-for="level in vipLevels"
+                  :key="level.id"
+                  type="button"
+                  class="card p-5 text-left transition hover:border-primary-300 hover:shadow-sm"
+                  @click="selectVIPLevel(level)"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 class="text-base font-semibold text-ink">{{ level.name }}</h3>
+                      <p v-if="level.description" class="mt-1 line-clamp-2 text-sm text-muted">{{ level.description }}</p>
+                    </div>
+                    <span class="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                      {{ formatVIPDiscount(level.discount_multiplier) }}
+                    </span>
+                  </div>
+                  <div class="mt-5 flex items-baseline gap-2">
+                    <span class="text-2xl font-semibold text-primary-700">{{ formatSelectedPaymentAmount(level.price) }}</span>
+                    <span v-if="level.original_price" class="text-sm text-muted line-through">{{ formatSelectedPaymentAmount(level.original_price) }}</span>
+                  </div>
+                  <p class="mt-2 text-xs text-muted">{{ level.validity_days }}{{ t('payment.days') }}</p>
+                </button>
+              </div>
+            </template>
+          </template>
         </template>
-        <div v-if="(checkout.help_text || checkout.help_image_url) && paymentPhase === 'select' && !selectedPlan" class="card p-4">
+        <div v-if="(checkout.help_text || checkout.help_image_url) && paymentPhase === 'select' && !selectedPlan && !selectedVIPLevel" class="card p-4">
           <div class="flex flex-col items-center gap-3">
             <img v-if="checkout.help_image_url" :src="checkout.help_image_url" alt=""
               class="h-40 max-w-full cursor-pointer rounded-lg object-contain transition-opacity hover:opacity-80"
@@ -257,7 +373,7 @@ import { useAppStore } from '@/stores'
 import { paymentAPI } from '@/api/payment'
 import { extractApiErrorMessage, extractI18nErrorMessage } from '@/utils/apiError'
 import { isMobileDevice } from '@/utils/device'
-import type { SubscriptionPlan, CheckoutInfoResponse, CreateOrderResult, OrderType } from '@/types/payment'
+import type { SubscriptionPlan, CheckoutInfoResponse, CreateOrderResult, OrderType, VIPLevel } from '@/types/payment'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import AmountInput from '@/components/payment/AmountInput.vue'
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector.vue'
@@ -305,10 +421,11 @@ const loading = ref(true)
 const submitting = ref(false)
 const errorMessage = ref('')
 const errorHintMessage = ref('')
-const activeTab = ref<'recharge' | 'subscription'>('recharge')
+const activeTab = ref<'recharge' | 'subscription' | 'vip'>('recharge')
 const amount = ref<number | null>(null)
 const selectedMethod = ref('')
 const selectedPlan = ref<SubscriptionPlan | null>(null)
+const selectedVIPLevel = ref<VIPLevel | null>(null)
 const previewImage = ref('')
 
 const paymentPhase = ref<'select' | 'paying'>('select')
@@ -434,7 +551,7 @@ async function redirectToPaymentResult(state: PaymentRecoverySnapshot): Promise<
 
 function buildWechatOAuthAuthorizeUrl(
   authorizeUrl: string,
-  context: { paymentType: string; orderType: OrderType; planId?: number; orderAmount: number },
+  context: { paymentType: string; orderType: OrderType; planId?: number; vipLevelId?: number; orderAmount: number },
 ): string {
   const normalizedUrl = authorizeUrl.trim()
   if (!normalizedUrl || typeof window === 'undefined') {
@@ -456,6 +573,12 @@ function buildWechatOAuthAuthorizeUrl(
       redirectUrl.searchParams.delete('plan_id')
     }
 
+    if (context.vipLevelId) {
+      redirectUrl.searchParams.set('vip_level_id', String(context.vipLevelId))
+    } else {
+      redirectUrl.searchParams.delete('vip_level_id')
+    }
+
     if (context.orderAmount > 0) {
       redirectUrl.searchParams.set('amount', String(context.orderAmount))
     } else {
@@ -471,10 +594,15 @@ function buildWechatOAuthAuthorizeUrl(
 
 function onPaymentDone() {
   const wasSubscription = paymentState.value.orderType === 'subscription'
+  const wasVIP = paymentState.value.orderType === 'vip'
   resetPayment()
   selectedPlan.value = null
+  selectedVIPLevel.value = null
   if (wasSubscription) {
     subscriptionStore.fetchActiveSubscriptions(true).catch(() => {})
+  }
+  if (wasVIP) {
+    paymentStore.fetchVIPOverview().catch(() => {})
   }
 }
 
@@ -483,6 +611,9 @@ function onPaymentSuccess() {
   authStore.refreshUser()
   if (paymentState.value.orderType === 'subscription') {
     subscriptionStore.fetchActiveSubscriptions(true).catch(() => {})
+  }
+  if (paymentState.value.orderType === 'vip') {
+    paymentStore.fetchVIPOverview().catch(() => {})
   }
 }
 
@@ -497,11 +628,15 @@ const checkout = ref<CheckoutInfoResponse>({
 })
 
 const tabs = computed(() => {
-  const result: { key: 'recharge' | 'subscription'; label: string }[] = []
+  const result: { key: 'recharge' | 'subscription' | 'vip'; label: string }[] = []
   if (!checkout.value.balance_disabled) result.push({ key: 'recharge', label: t('payment.tabTopUp') })
   result.push({ key: 'subscription', label: t('payment.tabSubscribe') })
+  result.push({ key: 'vip', label: t('payment.vip.tab') })
   return result
 })
+
+const vipLevels = computed(() => paymentStore.vipLevels)
+const vipOverview = computed(() => paymentStore.vipOverview)
 
 const visibleMethods = computed(() => getVisibleMethods(checkout.value.methods))
 const enabledMethods = computed(() => Object.keys(visibleMethods.value))
@@ -628,6 +763,36 @@ const subTotalAmount = computed(() => {
   return Math.round((price + subFeeAmount.value) * 100) / 100
 })
 
+const vipMethodOptions = computed<PaymentMethodOption[]>(() => {
+  const price = selectedVIPLevel.value?.price ?? 0
+  return enabledMethods.value.map((type) => {
+    const ml = visibleMethods.value[type]
+    return {
+      type,
+      fee_rate: ml?.fee_rate ?? 0,
+      available: ml?.available !== false && amountFitsMethod(price, type),
+    }
+  })
+})
+
+const vipFeeAmount = computed(() => {
+  const price = selectedVIPLevel.value?.price ?? 0
+  if (feeRate.value <= 0 || price <= 0) return 0
+  return Math.ceil(((price * feeRate.value) / 100) * 100) / 100
+})
+
+const vipTotalAmount = computed(() => {
+  const price = selectedVIPLevel.value?.price ?? 0
+  if (feeRate.value <= 0 || price <= 0) return price
+  return Math.round((price + vipFeeAmount.value) * 100) / 100
+})
+
+const canSubmitVIP = computed(() =>
+  selectedVIPLevel.value !== null
+    && amountFitsMethod(selectedVIPLevel.value.price, selectedMethod.value)
+    && selectedLimit.value?.available !== false
+)
+
 const canSubmitSubscription = computed(() =>
   selectedPlan.value !== null
     && amountFitsMethod(selectedPlan.value.price, selectedMethod.value)
@@ -689,6 +854,28 @@ function closeRenewalModal() {
   renewGroupId.value = null
 }
 
+function selectVIPLevel(level: VIPLevel) {
+  selectedVIPLevel.value = level
+  errorMessage.value = ''
+}
+
+function vipFeatures(level: VIPLevel): string[] {
+  return String(level.features || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
+function formatVIPDiscount(multiplier: number): string {
+  if (!Number.isFinite(multiplier) || multiplier <= 0) return '-'
+  return t('payment.vip.discountValue', { percent: Math.round(multiplier * 100) })
+}
+
+function formatDate(value: string): string {
+  if (!value) return '-'
+  return new Date(value).toLocaleString()
+}
+
 async function handleSubmitRecharge() {
   if (!canSubmit.value || submitting.value) return
   await createOrder(validAmount.value, 'balance')
@@ -699,7 +886,12 @@ async function confirmSubscribe() {
   await createOrder(selectedPlan.value.price, 'subscription', selectedPlan.value.id)
 }
 
-async function createOrder(orderAmount: number, orderType: OrderType, planId?: number, options: CreateOrderOptions = {}) {
+async function confirmVIP() {
+  if (!selectedVIPLevel.value || submitting.value) return
+  await createOrder(selectedVIPLevel.value.price, 'vip', undefined, selectedVIPLevel.value.id)
+}
+
+async function createOrder(orderAmount: number, orderType: OrderType, planId?: number, vipLevelId?: number, options: CreateOrderOptions = {}) {
   submitting.value = true
   errorMessage.value = ''
   errorHintMessage.value = ''
@@ -710,6 +902,7 @@ async function createOrder(orderAmount: number, orderType: OrderType, planId?: n
       paymentType: requestType,
       orderType,
       planId,
+      vipLevelId,
       origin: typeof window !== 'undefined' ? window.location.origin : '',
       isMobile: isMobileDevice(),
       isWechatBrowser: typeof window !== 'undefined' && /MicroMessenger/i.test(window.navigator.userAgent),
@@ -772,6 +965,7 @@ async function createOrder(orderAmount: number, orderType: OrderType, planId?: n
         paymentType: visibleMethod,
         orderType,
         planId,
+        vipLevelId,
         orderAmount,
       })
       return
@@ -813,6 +1007,7 @@ async function createOrder(orderAmount: number, orderType: OrderType, planId?: n
               orderAmount,
               orderType,
               planId,
+              vipLevelId,
               paymentType: visibleMethod,
               attempted: options.mobileQrFallbackAttempted === true,
             },
@@ -831,6 +1026,7 @@ async function createOrder(orderAmount: number, orderType: OrderType, planId?: n
           orderAmount,
           orderType,
           planId,
+          vipLevelId,
           paymentType: visibleMethod,
           attempted: options.mobileQrFallbackAttempted === true,
         })
@@ -860,6 +1056,7 @@ async function createOrder(orderAmount: number, orderType: OrderType, planId?: n
       orderAmount,
       orderType,
       planId,
+      vipLevelId,
       paymentType: requestType,
       attempted: options.mobileQrFallbackAttempted === true,
     })) {
@@ -887,6 +1084,7 @@ interface MobileQrFallbackContext {
   orderAmount: number
   orderType: OrderType
   planId?: number
+  vipLevelId?: number
   paymentType: string
   attempted: boolean
 }
@@ -936,6 +1134,7 @@ async function attemptMobileQrFallback(err: unknown, context: MobileQrFallbackCo
       paymentType: visibleMethod,
       orderType: context.orderType,
       planId: context.planId,
+      vipLevelId: context.vipLevelId,
       origin: typeof window !== 'undefined' ? window.location.origin : '',
       isMobile: false,
       isWechatBrowser: false,
@@ -996,7 +1195,7 @@ function applyScenarioError(err: unknown, paymentMethod: string): boolean {
 }
 
 async function resumeWechatPaymentFromQuery() {
-  const resume = parseWechatResumeRoute(route.query, checkout.value.plans, validAmount.value)
+  const resume = parseWechatResumeRoute(route.query, checkout.value.plans, vipLevels.value, validAmount.value)
   if (!resume) {
     return
   }
@@ -1008,11 +1207,14 @@ async function resumeWechatPaymentFromQuery() {
   if (resume.orderType === 'subscription' && resume.planId) {
     selectedPlan.value = checkout.value.plans.find(plan => plan.id === resume.planId) ?? null
   }
+  if (resume.orderType === 'vip' && resume.vipLevelId) {
+    selectedVIPLevel.value = vipLevels.value.find(level => level.id === resume.vipLevelId) ?? null
+  }
 
   await router.replace({ path: route.path, query: stripWechatResumeQuery(route.query) })
 
   if (resume.wechatResumeToken) {
-    await createOrder(0, resume.orderType, resume.planId, {
+    await createOrder(0, resume.orderType, resume.planId, resume.vipLevelId, {
       wechatResumeToken: resume.wechatResumeToken,
       paymentType: resume.paymentType,
       isResume: true,
@@ -1021,7 +1223,7 @@ async function resumeWechatPaymentFromQuery() {
   }
 
   if (resume.orderAmount > 0 && resume.openid) {
-    await createOrder(resume.orderAmount, resume.orderType, resume.planId, {
+    await createOrder(resume.orderAmount, resume.orderType, resume.planId, resume.vipLevelId, {
       openid: resume.openid,
       paymentType: resume.paymentType,
       isResume: true,
@@ -1033,6 +1235,10 @@ onMounted(async () => {
   try {
     const res = await paymentAPI.getCheckoutInfo()
     checkout.value = res.data
+    await Promise.all([
+      paymentStore.fetchVIPLevels(),
+      paymentStore.fetchVIPOverview(),
+    ])
     if (enabledMethods.value.length) {
       const order: readonly string[] = METHOD_ORDER
       const sorted = [...enabledMethods.value].sort((a, b) => {

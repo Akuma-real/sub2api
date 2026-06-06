@@ -16,6 +16,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 )
 
 // UsageLog is the model entity for the UsageLog schema.
@@ -49,6 +50,8 @@ type UsageLog struct {
 	GroupID *int64 `json:"group_id,omitempty"`
 	// SubscriptionID holds the value of the "subscription_id" field.
 	SubscriptionID *int64 `json:"subscription_id,omitempty"`
+	// VipLevelID holds the value of the "vip_level_id" field.
+	VipLevelID *int64 `json:"vip_level_id,omitempty"`
 	// InputTokens holds the value of the "input_tokens" field.
 	InputTokens int `json:"input_tokens,omitempty"`
 	// OutputTokens holds the value of the "output_tokens" field.
@@ -75,6 +78,12 @@ type UsageLog struct {
 	ActualCost float64 `json:"actual_cost,omitempty"`
 	// RateMultiplier holds the value of the "rate_multiplier" field.
 	RateMultiplier float64 `json:"rate_multiplier,omitempty"`
+	// VipDiscountMultiplier holds the value of the "vip_discount_multiplier" field.
+	VipDiscountMultiplier *float64 `json:"vip_discount_multiplier,omitempty"`
+	// VipPreDiscountCost holds the value of the "vip_pre_discount_cost" field.
+	VipPreDiscountCost *float64 `json:"vip_pre_discount_cost,omitempty"`
+	// VipSavingsUsd holds the value of the "vip_savings_usd" field.
+	VipSavingsUsd float64 `json:"vip_savings_usd,omitempty"`
 	// AccountRateMultiplier holds the value of the "account_rate_multiplier" field.
 	AccountRateMultiplier *float64 `json:"account_rate_multiplier,omitempty"`
 	// BillingType holds the value of the "billing_type" field.
@@ -123,9 +132,11 @@ type UsageLogEdges struct {
 	Group *Group `json:"group,omitempty"`
 	// Subscription holds the value of the subscription edge.
 	Subscription *UserSubscription `json:"subscription,omitempty"`
+	// VipLevel holds the value of the vip_level edge.
+	VipLevel *VIPLevel `json:"vip_level,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -183,6 +194,17 @@ func (e UsageLogEdges) SubscriptionOrErr() (*UserSubscription, error) {
 	return nil, &NotLoadedError{edge: "subscription"}
 }
 
+// VipLevelOrErr returns the VipLevel value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UsageLogEdges) VipLevelOrErr() (*VIPLevel, error) {
+	if e.VipLevel != nil {
+		return e.VipLevel, nil
+	} else if e.loadedTypes[5] {
+		return nil, &NotFoundError{label: viplevel.Label}
+	}
+	return nil, &NotLoadedError{edge: "vip_level"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*UsageLog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -192,9 +214,9 @@ func (*UsageLog) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case usagelog.FieldStream, usagelog.FieldCacheTTLOverridden:
 			values[i] = new(sql.NullBool)
-		case usagelog.FieldInputCost, usagelog.FieldOutputCost, usagelog.FieldCacheCreationCost, usagelog.FieldCacheReadCost, usagelog.FieldTotalCost, usagelog.FieldActualCost, usagelog.FieldRateMultiplier, usagelog.FieldAccountRateMultiplier:
+		case usagelog.FieldInputCost, usagelog.FieldOutputCost, usagelog.FieldCacheCreationCost, usagelog.FieldCacheReadCost, usagelog.FieldTotalCost, usagelog.FieldActualCost, usagelog.FieldRateMultiplier, usagelog.FieldVipDiscountMultiplier, usagelog.FieldVipPreDiscountCost, usagelog.FieldVipSavingsUsd, usagelog.FieldAccountRateMultiplier:
 			values[i] = new(sql.NullFloat64)
-		case usagelog.FieldID, usagelog.FieldUserID, usagelog.FieldAPIKeyID, usagelog.FieldAccountID, usagelog.FieldChannelID, usagelog.FieldGroupID, usagelog.FieldSubscriptionID, usagelog.FieldInputTokens, usagelog.FieldOutputTokens, usagelog.FieldCacheCreationTokens, usagelog.FieldCacheReadTokens, usagelog.FieldCacheCreation5mTokens, usagelog.FieldCacheCreation1hTokens, usagelog.FieldBillingType, usagelog.FieldDurationMs, usagelog.FieldFirstTokenMs, usagelog.FieldImageCount:
+		case usagelog.FieldID, usagelog.FieldUserID, usagelog.FieldAPIKeyID, usagelog.FieldAccountID, usagelog.FieldChannelID, usagelog.FieldGroupID, usagelog.FieldSubscriptionID, usagelog.FieldVipLevelID, usagelog.FieldInputTokens, usagelog.FieldOutputTokens, usagelog.FieldCacheCreationTokens, usagelog.FieldCacheReadTokens, usagelog.FieldCacheCreation5mTokens, usagelog.FieldCacheCreation1hTokens, usagelog.FieldBillingType, usagelog.FieldDurationMs, usagelog.FieldFirstTokenMs, usagelog.FieldImageCount:
 			values[i] = new(sql.NullInt64)
 		case usagelog.FieldRequestID, usagelog.FieldModel, usagelog.FieldRequestedModel, usagelog.FieldUpstreamModel, usagelog.FieldModelMappingChain, usagelog.FieldBillingTier, usagelog.FieldBillingMode, usagelog.FieldUserAgent, usagelog.FieldIPAddress, usagelog.FieldImageSize, usagelog.FieldImageInputSize, usagelog.FieldImageOutputSize, usagelog.FieldImageSizeSource:
 			values[i] = new(sql.NullString)
@@ -307,6 +329,13 @@ func (_m *UsageLog) assignValues(columns []string, values []any) error {
 				_m.SubscriptionID = new(int64)
 				*_m.SubscriptionID = value.Int64
 			}
+		case usagelog.FieldVipLevelID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field vip_level_id", values[i])
+			} else if value.Valid {
+				_m.VipLevelID = new(int64)
+				*_m.VipLevelID = value.Int64
+			}
 		case usagelog.FieldInputTokens:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field input_tokens", values[i])
@@ -384,6 +413,26 @@ func (_m *UsageLog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field rate_multiplier", values[i])
 			} else if value.Valid {
 				_m.RateMultiplier = value.Float64
+			}
+		case usagelog.FieldVipDiscountMultiplier:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field vip_discount_multiplier", values[i])
+			} else if value.Valid {
+				_m.VipDiscountMultiplier = new(float64)
+				*_m.VipDiscountMultiplier = value.Float64
+			}
+		case usagelog.FieldVipPreDiscountCost:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field vip_pre_discount_cost", values[i])
+			} else if value.Valid {
+				_m.VipPreDiscountCost = new(float64)
+				*_m.VipPreDiscountCost = value.Float64
+			}
+		case usagelog.FieldVipSavingsUsd:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field vip_savings_usd", values[i])
+			} else if value.Valid {
+				_m.VipSavingsUsd = value.Float64
 			}
 		case usagelog.FieldAccountRateMultiplier:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -524,6 +573,11 @@ func (_m *UsageLog) QuerySubscription() *UserSubscriptionQuery {
 	return NewUsageLogClient(_m.config).QuerySubscription(_m)
 }
 
+// QueryVipLevel queries the "vip_level" edge of the UsageLog entity.
+func (_m *UsageLog) QueryVipLevel() *VIPLevelQuery {
+	return NewUsageLogClient(_m.config).QueryVipLevel(_m)
+}
+
 // Update returns a builder for updating this UsageLog.
 // Note that you need to call UsageLog.Unwrap() before calling this method if this UsageLog
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -602,6 +656,11 @@ func (_m *UsageLog) String() string {
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
+	if v := _m.VipLevelID; v != nil {
+		builder.WriteString("vip_level_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("input_tokens=")
 	builder.WriteString(fmt.Sprintf("%v", _m.InputTokens))
 	builder.WriteString(", ")
@@ -640,6 +699,19 @@ func (_m *UsageLog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("rate_multiplier=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RateMultiplier))
+	builder.WriteString(", ")
+	if v := _m.VipDiscountMultiplier; v != nil {
+		builder.WriteString("vip_discount_multiplier=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.VipPreDiscountCost; v != nil {
+		builder.WriteString("vip_pre_discount_cost=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("vip_savings_usd=")
+	builder.WriteString(fmt.Sprintf("%v", _m.VipSavingsUsd))
 	builder.WriteString(", ")
 	if v := _m.AccountRateMultiplier; v != nil {
 		builder.WriteString("account_rate_multiplier=")

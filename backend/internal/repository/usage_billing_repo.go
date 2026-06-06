@@ -51,6 +51,9 @@ func (r *usageBillingRepository) Apply(ctx context.Context, cmd *service.UsageBi
 	}
 
 	result := &service.UsageBillingApplyResult{Applied: true}
+	if err := r.applyUsageBillingVIPDiscount(ctx, tx, cmd, result); err != nil {
+		return nil, err
+	}
 	if err := r.applyUsageBillingEffects(ctx, tx, cmd, result); err != nil {
 		return nil, err
 	}
@@ -60,6 +63,56 @@ func (r *usageBillingRepository) Apply(ctx context.Context, cmd *service.UsageBi
 	}
 	tx = nil
 	return result, nil
+}
+
+func (r *usageBillingRepository) applyUsageBillingVIPDiscount(ctx context.Context, tx *sql.Tx, cmd *service.UsageBillingCommand, result *service.UsageBillingApplyResult) error {
+	if cmd == nil || result == nil || cmd.BalanceCost <= 0 {
+		return nil
+	}
+	var levelID int64
+	var multiplier float64
+	err := tx.QueryRowContext(ctx, `
+		SELECT vl.id, vl.discount_multiplier
+		FROM user_vip_memberships uvm
+		JOIN vip_levels vl ON vl.id = uvm.vip_level_id
+		WHERE uvm.user_id = $1
+			AND uvm.status = $2
+			AND uvm.expires_at > NOW()
+			AND vl.discount_multiplier > 0
+			AND vl.discount_multiplier <= 1
+		ORDER BY vl.discount_multiplier ASC, uvm.expires_at DESC, uvm.id DESC
+		LIMIT 1
+	`, cmd.UserID, service.VIPMembershipStatusActive).Scan(&levelID, &multiplier)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if multiplier >= 1 {
+		return nil
+	}
+	preDiscount := cmd.BalanceCost
+	discounted := preDiscount * multiplier
+	if discounted < 0 {
+		discounted = 0
+	}
+	savings := preDiscount - discounted
+	if savings < 0 {
+		savings = 0
+	}
+	cmd.BalanceCost = discounted
+	if cmd.APIKeyQuotaCost > 0 {
+		cmd.APIKeyQuotaCost = discounted
+	}
+	if cmd.APIKeyRateLimitCost > 0 {
+		cmd.APIKeyRateLimitCost = discounted
+	}
+	result.VIPLevelID = &levelID
+	result.VIPDiscountMultiplier = &multiplier
+	result.VIPPreDiscountCost = &preDiscount
+	result.VIPSavingsUSD = savings
+	return nil
 }
 
 func (r *usageBillingRepository) claimUsageBillingKey(ctx context.Context, tx *sql.Tx, cmd *service.UsageBillingCommand) (bool, error) {

@@ -22,14 +22,16 @@ type PaymentHandler struct {
 	channelService *service.ChannelService
 	paymentService *service.PaymentService
 	configService  *service.PaymentConfigService
+	vipService     *service.VIPService
 }
 
 // NewPaymentHandler creates a new PaymentHandler.
-func NewPaymentHandler(paymentService *service.PaymentService, configService *service.PaymentConfigService, channelService *service.ChannelService) *PaymentHandler {
+func NewPaymentHandler(paymentService *service.PaymentService, configService *service.PaymentConfigService, channelService *service.ChannelService, vipService *service.VIPService) *PaymentHandler {
 	return &PaymentHandler{
 		channelService: channelService,
 		paymentService: paymentService,
 		configService:  configService,
+		vipService:     vipService,
 	}
 }
 
@@ -217,6 +219,7 @@ type CreateOrderRequest struct {
 	PaymentSource     string  `json:"payment_source"`
 	OrderType         string  `json:"order_type"`
 	PlanID            int64   `json:"plan_id"`
+	VIPLevelID        int64   `json:"vip_level_id"`
 	// IsMobile lets the frontend declare its mobile status directly. When
 	// nil we fall back to User-Agent heuristics (which miss iPadOS / some
 	// embedded browsers that strip the "Mobile" keyword).
@@ -266,6 +269,7 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 		PaymentSource:   req.PaymentSource,
 		OrderType:       req.OrderType,
 		PlanID:          req.PlanID,
+		VIPLevelID:      req.VIPLevelID,
 		Locale:          c.GetHeader("Accept-Language"),
 	})
 	if err != nil {
@@ -310,7 +314,36 @@ func applyWeChatPaymentResumeClaims(req *CreateOrderRequest, claims *service.WeC
 	if claims.PlanID > 0 {
 		req.PlanID = claims.PlanID
 	}
+	if claims.VIPLevelID > 0 {
+		req.VIPLevelID = claims.VIPLevelID
+	}
 	return nil
+}
+
+// GetVIPLevels returns VIP levels available for purchase.
+// GET /api/v1/payment/vip/levels
+func (h *PaymentHandler) GetVIPLevels(c *gin.Context) {
+	levels, err := h.vipService.ListLevels(c.Request.Context(), true)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, levels)
+}
+
+// GetVIPOverview returns the current user's VIP membership and savings summary.
+// GET /api/v1/payment/vip/overview
+func (h *PaymentHandler) GetVIPOverview(c *gin.Context) {
+	subject, ok := requireAuth(c)
+	if !ok {
+		return
+	}
+	overview, err := h.vipService.GetOverview(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, overview)
 }
 
 // GetMyOrders returns the authenticated user's orders.

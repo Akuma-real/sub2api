@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/user"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 )
 
 // PaymentOrderUpdate is the builder for updating PaymentOrder entities.
@@ -311,6 +312,33 @@ func (_u *PaymentOrderUpdate) ClearPlanID() *PaymentOrderUpdate {
 	return _u
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (_u *PaymentOrderUpdate) SetVipLevelID(v int64) *PaymentOrderUpdate {
+	_u.mutation.ResetVipLevelID()
+	_u.mutation.SetVipLevelID(v)
+	return _u
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableVipLevelID(v *int64) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetVipLevelID(*v)
+	}
+	return _u
+}
+
+// AddVipLevelID adds value to the "vip_level_id" field.
+func (_u *PaymentOrderUpdate) AddVipLevelID(v int64) *PaymentOrderUpdate {
+	_u.mutation.AddVipLevelID(v)
+	return _u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (_u *PaymentOrderUpdate) ClearVipLevelID() *PaymentOrderUpdate {
+	_u.mutation.ClearVipLevelID()
+	return _u
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (_u *PaymentOrderUpdate) SetSubscriptionGroupID(v int64) *PaymentOrderUpdate {
 	_u.mutation.ResetSubscriptionGroupID()
@@ -362,6 +390,33 @@ func (_u *PaymentOrderUpdate) AddSubscriptionDays(v int) *PaymentOrderUpdate {
 // ClearSubscriptionDays clears the value of the "subscription_days" field.
 func (_u *PaymentOrderUpdate) ClearSubscriptionDays() *PaymentOrderUpdate {
 	_u.mutation.ClearSubscriptionDays()
+	return _u
+}
+
+// SetVipDays sets the "vip_days" field.
+func (_u *PaymentOrderUpdate) SetVipDays(v int) *PaymentOrderUpdate {
+	_u.mutation.ResetVipDays()
+	_u.mutation.SetVipDays(v)
+	return _u
+}
+
+// SetNillableVipDays sets the "vip_days" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableVipDays(v *int) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetVipDays(*v)
+	}
+	return _u
+}
+
+// AddVipDays adds value to the "vip_days" field.
+func (_u *PaymentOrderUpdate) AddVipDays(v int) *PaymentOrderUpdate {
+	_u.mutation.AddVipDays(v)
+	return _u
+}
+
+// ClearVipDays clears the value of the "vip_days" field.
+func (_u *PaymentOrderUpdate) ClearVipDays() *PaymentOrderUpdate {
+	_u.mutation.ClearVipDays()
 	return _u
 }
 
@@ -719,6 +774,21 @@ func (_u *PaymentOrderUpdate) SetUser(v *User) *PaymentOrderUpdate {
 	return _u.SetUserID(v.ID)
 }
 
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (_u *PaymentOrderUpdate) AddVipMembershipIDs(ids ...int64) *PaymentOrderUpdate {
+	_u.mutation.AddVipMembershipIDs(ids...)
+	return _u
+}
+
+// AddVipMemberships adds the "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *PaymentOrderUpdate) AddVipMemberships(v ...*UserVIPMembership) *PaymentOrderUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddVipMembershipIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -728,6 +798,27 @@ func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdate) ClearUser() *PaymentOrderUpdate {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearVipMemberships clears all "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *PaymentOrderUpdate) ClearVipMemberships() *PaymentOrderUpdate {
+	_u.mutation.ClearVipMemberships()
+	return _u
+}
+
+// RemoveVipMembershipIDs removes the "vip_memberships" edge to UserVIPMembership entities by IDs.
+func (_u *PaymentOrderUpdate) RemoveVipMembershipIDs(ids ...int64) *PaymentOrderUpdate {
+	_u.mutation.RemoveVipMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveVipMemberships removes "vip_memberships" edges to UserVIPMembership entities.
+func (_u *PaymentOrderUpdate) RemoveVipMemberships(v ...*UserVIPMembership) *PaymentOrderUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVipMembershipIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -923,6 +1014,15 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if _u.mutation.PlanIDCleared() {
 		_spec.ClearField(paymentorder.FieldPlanID, field.TypeInt64)
 	}
+	if value, ok := _u.mutation.VipLevelID(); ok {
+		_spec.SetField(paymentorder.FieldVipLevelID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedVipLevelID(); ok {
+		_spec.AddField(paymentorder.FieldVipLevelID, field.TypeInt64, value)
+	}
+	if _u.mutation.VipLevelIDCleared() {
+		_spec.ClearField(paymentorder.FieldVipLevelID, field.TypeInt64)
+	}
 	if value, ok := _u.mutation.SubscriptionGroupID(); ok {
 		_spec.SetField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
 	}
@@ -940,6 +1040,15 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if _u.mutation.SubscriptionDaysCleared() {
 		_spec.ClearField(paymentorder.FieldSubscriptionDays, field.TypeInt)
+	}
+	if value, ok := _u.mutation.VipDays(); ok {
+		_spec.SetField(paymentorder.FieldVipDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVipDays(); ok {
+		_spec.AddField(paymentorder.FieldVipDays, field.TypeInt, value)
+	}
+	if _u.mutation.VipDaysCleared() {
+		_spec.ClearField(paymentorder.FieldVipDays, field.TypeInt)
 	}
 	if value, ok := _u.mutation.ProviderInstanceID(); ok {
 		_spec.SetField(paymentorder.FieldProviderInstanceID, field.TypeString, value)
@@ -1065,6 +1174,51 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedVipMembershipsIDs(); len(nodes) > 0 && !_u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1374,6 +1528,33 @@ func (_u *PaymentOrderUpdateOne) ClearPlanID() *PaymentOrderUpdateOne {
 	return _u
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (_u *PaymentOrderUpdateOne) SetVipLevelID(v int64) *PaymentOrderUpdateOne {
+	_u.mutation.ResetVipLevelID()
+	_u.mutation.SetVipLevelID(v)
+	return _u
+}
+
+// SetNillableVipLevelID sets the "vip_level_id" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableVipLevelID(v *int64) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetVipLevelID(*v)
+	}
+	return _u
+}
+
+// AddVipLevelID adds value to the "vip_level_id" field.
+func (_u *PaymentOrderUpdateOne) AddVipLevelID(v int64) *PaymentOrderUpdateOne {
+	_u.mutation.AddVipLevelID(v)
+	return _u
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (_u *PaymentOrderUpdateOne) ClearVipLevelID() *PaymentOrderUpdateOne {
+	_u.mutation.ClearVipLevelID()
+	return _u
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (_u *PaymentOrderUpdateOne) SetSubscriptionGroupID(v int64) *PaymentOrderUpdateOne {
 	_u.mutation.ResetSubscriptionGroupID()
@@ -1425,6 +1606,33 @@ func (_u *PaymentOrderUpdateOne) AddSubscriptionDays(v int) *PaymentOrderUpdateO
 // ClearSubscriptionDays clears the value of the "subscription_days" field.
 func (_u *PaymentOrderUpdateOne) ClearSubscriptionDays() *PaymentOrderUpdateOne {
 	_u.mutation.ClearSubscriptionDays()
+	return _u
+}
+
+// SetVipDays sets the "vip_days" field.
+func (_u *PaymentOrderUpdateOne) SetVipDays(v int) *PaymentOrderUpdateOne {
+	_u.mutation.ResetVipDays()
+	_u.mutation.SetVipDays(v)
+	return _u
+}
+
+// SetNillableVipDays sets the "vip_days" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableVipDays(v *int) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetVipDays(*v)
+	}
+	return _u
+}
+
+// AddVipDays adds value to the "vip_days" field.
+func (_u *PaymentOrderUpdateOne) AddVipDays(v int) *PaymentOrderUpdateOne {
+	_u.mutation.AddVipDays(v)
+	return _u
+}
+
+// ClearVipDays clears the value of the "vip_days" field.
+func (_u *PaymentOrderUpdateOne) ClearVipDays() *PaymentOrderUpdateOne {
+	_u.mutation.ClearVipDays()
 	return _u
 }
 
@@ -1782,6 +1990,21 @@ func (_u *PaymentOrderUpdateOne) SetUser(v *User) *PaymentOrderUpdateOne {
 	return _u.SetUserID(v.ID)
 }
 
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (_u *PaymentOrderUpdateOne) AddVipMembershipIDs(ids ...int64) *PaymentOrderUpdateOne {
+	_u.mutation.AddVipMembershipIDs(ids...)
+	return _u
+}
+
+// AddVipMemberships adds the "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *PaymentOrderUpdateOne) AddVipMemberships(v ...*UserVIPMembership) *PaymentOrderUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddVipMembershipIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -1791,6 +2014,27 @@ func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdateOne) ClearUser() *PaymentOrderUpdateOne {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearVipMemberships clears all "vip_memberships" edges to the UserVIPMembership entity.
+func (_u *PaymentOrderUpdateOne) ClearVipMemberships() *PaymentOrderUpdateOne {
+	_u.mutation.ClearVipMemberships()
+	return _u
+}
+
+// RemoveVipMembershipIDs removes the "vip_memberships" edge to UserVIPMembership entities by IDs.
+func (_u *PaymentOrderUpdateOne) RemoveVipMembershipIDs(ids ...int64) *PaymentOrderUpdateOne {
+	_u.mutation.RemoveVipMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveVipMemberships removes "vip_memberships" edges to UserVIPMembership entities.
+func (_u *PaymentOrderUpdateOne) RemoveVipMemberships(v ...*UserVIPMembership) *PaymentOrderUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveVipMembershipIDs(ids...)
 }
 
 // Where appends a list predicates to the PaymentOrderUpdate builder.
@@ -2016,6 +2260,15 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	if _u.mutation.PlanIDCleared() {
 		_spec.ClearField(paymentorder.FieldPlanID, field.TypeInt64)
 	}
+	if value, ok := _u.mutation.VipLevelID(); ok {
+		_spec.SetField(paymentorder.FieldVipLevelID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedVipLevelID(); ok {
+		_spec.AddField(paymentorder.FieldVipLevelID, field.TypeInt64, value)
+	}
+	if _u.mutation.VipLevelIDCleared() {
+		_spec.ClearField(paymentorder.FieldVipLevelID, field.TypeInt64)
+	}
 	if value, ok := _u.mutation.SubscriptionGroupID(); ok {
 		_spec.SetField(paymentorder.FieldSubscriptionGroupID, field.TypeInt64, value)
 	}
@@ -2033,6 +2286,15 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	}
 	if _u.mutation.SubscriptionDaysCleared() {
 		_spec.ClearField(paymentorder.FieldSubscriptionDays, field.TypeInt)
+	}
+	if value, ok := _u.mutation.VipDays(); ok {
+		_spec.SetField(paymentorder.FieldVipDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVipDays(); ok {
+		_spec.AddField(paymentorder.FieldVipDays, field.TypeInt, value)
+	}
+	if _u.mutation.VipDaysCleared() {
+		_spec.ClearField(paymentorder.FieldVipDays, field.TypeInt)
 	}
 	if value, ok := _u.mutation.ProviderInstanceID(); ok {
 		_spec.SetField(paymentorder.FieldProviderInstanceID, field.TypeString, value)
@@ -2158,6 +2420,51 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedVipMembershipsIDs(); len(nodes) > 0 && !_u.mutation.VipMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.VipMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.VipMembershipsTable,
+			Columns: []string{paymentorder.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

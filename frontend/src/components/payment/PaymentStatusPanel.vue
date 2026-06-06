@@ -9,7 +9,9 @@
           <div class="flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
             <Icon name="check" size="lg" class="text-success" />
           </div>
-          <p class="text-[22px] leading-tight text-ink">{{ props.orderType === 'subscription' ? t('payment.result.subscriptionSuccess') : t('payment.result.success') }}</p>
+          <p class="text-[22px] leading-tight text-ink">
+            {{ props.orderType === 'subscription' ? t('payment.result.subscriptionSuccess') : props.orderType === 'vip' ? t('payment.result.vipSuccess') : t('payment.result.success') }}
+          </p>
           <div v-if="paidOrder" class="w-full rounded-xl bg-cream p-4">
             <div class="space-y-2 text-sm">
               <div class="flex justify-between">

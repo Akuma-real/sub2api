@@ -24,6 +24,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -383,6 +384,21 @@ func (_c *UserCreate) AddSubscriptions(v ...*UserSubscription) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddSubscriptionIDs(ids...)
+}
+
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (_c *UserCreate) AddVipMembershipIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddVipMembershipIDs(ids...)
+	return _c
+}
+
+// AddVipMemberships adds the "vip_memberships" edges to the UserVIPMembership entity.
+func (_c *UserCreate) AddVipMemberships(v ...*UserVIPMembership) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddVipMembershipIDs(ids...)
 }
 
 // AddAssignedSubscriptionIDs adds the "assigned_subscriptions" edge to the UserSubscription entity by IDs.
@@ -884,6 +900,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.VipMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VipMembershipsTable,
+			Columns: []string{user.VipMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(uservipmembership.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

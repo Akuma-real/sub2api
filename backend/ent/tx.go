@@ -84,6 +84,10 @@ type Tx struct {
 	UserPlatformQuota *UserPlatformQuotaClient
 	// UserSubscription is the client for interacting with the UserSubscription builders.
 	UserSubscription *UserSubscriptionClient
+	// UserVIPMembership is the client for interacting with the UserVIPMembership builders.
+	UserVIPMembership *UserVIPMembershipClient
+	// VIPLevel is the client for interacting with the VIPLevel builders.
+	VIPLevel *VIPLevelClient
 
 	// lazily loaded.
 	client     *Client
@@ -250,6 +254,8 @@ func (tx *Tx) init() {
 	tx.UserAttributeValue = NewUserAttributeValueClient(tx.config)
 	tx.UserPlatformQuota = NewUserPlatformQuotaClient(tx.config)
 	tx.UserSubscription = NewUserSubscriptionClient(tx.config)
+	tx.UserVIPMembership = NewUserVIPMembershipClient(tx.config)
+	tx.VIPLevel = NewVIPLevelClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

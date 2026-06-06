@@ -135,6 +135,11 @@ func PlanID(v int64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldPlanID, v))
 }
 
+// VipLevelID applies equality check predicate on the "vip_level_id" field. It's identical to VipLevelIDEQ.
+func VipLevelID(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldVipLevelID, v))
+}
+
 // SubscriptionGroupID applies equality check predicate on the "subscription_group_id" field. It's identical to SubscriptionGroupIDEQ.
 func SubscriptionGroupID(v int64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldSubscriptionGroupID, v))
@@ -143,6 +148,11 @@ func SubscriptionGroupID(v int64) predicate.PaymentOrder {
 // SubscriptionDays applies equality check predicate on the "subscription_days" field. It's identical to SubscriptionDaysEQ.
 func SubscriptionDays(v int) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldSubscriptionDays, v))
+}
+
+// VipDays applies equality check predicate on the "vip_days" field. It's identical to VipDaysEQ.
+func VipDays(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldVipDays, v))
 }
 
 // ProviderInstanceID applies equality check predicate on the "provider_instance_id" field. It's identical to ProviderInstanceIDEQ.
@@ -1190,6 +1200,56 @@ func PlanIDNotNil() predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldNotNull(FieldPlanID))
 }
 
+// VipLevelIDEQ applies the EQ predicate on the "vip_level_id" field.
+func VipLevelIDEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldVipLevelID, v))
+}
+
+// VipLevelIDNEQ applies the NEQ predicate on the "vip_level_id" field.
+func VipLevelIDNEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldVipLevelID, v))
+}
+
+// VipLevelIDIn applies the In predicate on the "vip_level_id" field.
+func VipLevelIDIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldVipLevelID, vs...))
+}
+
+// VipLevelIDNotIn applies the NotIn predicate on the "vip_level_id" field.
+func VipLevelIDNotIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldVipLevelID, vs...))
+}
+
+// VipLevelIDGT applies the GT predicate on the "vip_level_id" field.
+func VipLevelIDGT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldVipLevelID, v))
+}
+
+// VipLevelIDGTE applies the GTE predicate on the "vip_level_id" field.
+func VipLevelIDGTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldVipLevelID, v))
+}
+
+// VipLevelIDLT applies the LT predicate on the "vip_level_id" field.
+func VipLevelIDLT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldVipLevelID, v))
+}
+
+// VipLevelIDLTE applies the LTE predicate on the "vip_level_id" field.
+func VipLevelIDLTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldVipLevelID, v))
+}
+
+// VipLevelIDIsNil applies the IsNil predicate on the "vip_level_id" field.
+func VipLevelIDIsNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIsNull(FieldVipLevelID))
+}
+
+// VipLevelIDNotNil applies the NotNil predicate on the "vip_level_id" field.
+func VipLevelIDNotNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotNull(FieldVipLevelID))
+}
+
 // SubscriptionGroupIDEQ applies the EQ predicate on the "subscription_group_id" field.
 func SubscriptionGroupIDEQ(v int64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldSubscriptionGroupID, v))
@@ -1288,6 +1348,56 @@ func SubscriptionDaysIsNil() predicate.PaymentOrder {
 // SubscriptionDaysNotNil applies the NotNil predicate on the "subscription_days" field.
 func SubscriptionDaysNotNil() predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldNotNull(FieldSubscriptionDays))
+}
+
+// VipDaysEQ applies the EQ predicate on the "vip_days" field.
+func VipDaysEQ(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldVipDays, v))
+}
+
+// VipDaysNEQ applies the NEQ predicate on the "vip_days" field.
+func VipDaysNEQ(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldVipDays, v))
+}
+
+// VipDaysIn applies the In predicate on the "vip_days" field.
+func VipDaysIn(vs ...int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldVipDays, vs...))
+}
+
+// VipDaysNotIn applies the NotIn predicate on the "vip_days" field.
+func VipDaysNotIn(vs ...int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldVipDays, vs...))
+}
+
+// VipDaysGT applies the GT predicate on the "vip_days" field.
+func VipDaysGT(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldVipDays, v))
+}
+
+// VipDaysGTE applies the GTE predicate on the "vip_days" field.
+func VipDaysGTE(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldVipDays, v))
+}
+
+// VipDaysLT applies the LT predicate on the "vip_days" field.
+func VipDaysLT(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldVipDays, v))
+}
+
+// VipDaysLTE applies the LTE predicate on the "vip_days" field.
+func VipDaysLTE(v int) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldVipDays, v))
+}
+
+// VipDaysIsNil applies the IsNil predicate on the "vip_days" field.
+func VipDaysIsNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIsNull(FieldVipDays))
+}
+
+// VipDaysNotNil applies the NotNil predicate on the "vip_days" field.
+func VipDaysNotNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotNull(FieldVipDays))
 }
 
 // ProviderInstanceIDEQ applies the EQ predicate on the "provider_instance_id" field.
@@ -2455,6 +2565,29 @@ func HasUser() predicate.PaymentOrder {
 func HasUserWith(preds ...predicate.User) predicate.PaymentOrder {
 	return predicate.PaymentOrder(func(s *sql.Selector) {
 		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasVipMemberships applies the HasEdge predicate on the "vip_memberships" edge.
+func HasVipMemberships() predicate.PaymentOrder {
+	return predicate.PaymentOrder(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, VipMembershipsTable, VipMembershipsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVipMembershipsWith applies the HasEdge predicate on the "vip_memberships" edge with a given conditions (other predicates).
+func HasVipMembershipsWith(preds ...predicate.UserVIPMembership) predicate.PaymentOrder {
+	return predicate.PaymentOrder(func(s *sql.Selector) {
+		step := newVipMembershipsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

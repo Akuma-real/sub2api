@@ -67,6 +67,8 @@ const (
 	EdgeRedeemCodes = "redeem_codes"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
 	EdgeSubscriptions = "subscriptions"
+	// EdgeVipMemberships holds the string denoting the vip_memberships edge name in mutations.
+	EdgeVipMemberships = "vip_memberships"
 	// EdgeAssignedSubscriptions holds the string denoting the assigned_subscriptions edge name in mutations.
 	EdgeAssignedSubscriptions = "assigned_subscriptions"
 	// EdgeAnnouncementReads holds the string denoting the announcement_reads edge name in mutations.
@@ -112,6 +114,13 @@ const (
 	SubscriptionsInverseTable = "user_subscriptions"
 	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
 	SubscriptionsColumn = "user_id"
+	// VipMembershipsTable is the table that holds the vip_memberships relation/edge.
+	VipMembershipsTable = "user_vip_memberships"
+	// VipMembershipsInverseTable is the table name for the UserVIPMembership entity.
+	// It exists in this package in order to avoid circular dependency with the "uservipmembership" package.
+	VipMembershipsInverseTable = "user_vip_memberships"
+	// VipMembershipsColumn is the table column denoting the vip_memberships relation/edge.
+	VipMembershipsColumn = "user_id"
 	// AssignedSubscriptionsTable is the table that holds the assigned_subscriptions relation/edge.
 	AssignedSubscriptionsTable = "user_subscriptions"
 	// AssignedSubscriptionsInverseTable is the table name for the UserSubscription entity.
@@ -452,6 +461,20 @@ func BySubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByVipMembershipsCount orders the results by vip_memberships count.
+func ByVipMembershipsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVipMembershipsStep(), opts...)
+	}
+}
+
+// ByVipMemberships orders the results by vip_memberships terms.
+func ByVipMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVipMembershipsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAssignedSubscriptionsCount orders the results by assigned_subscriptions count.
 func ByAssignedSubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -624,6 +647,13 @@ func newSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
+	)
+}
+func newVipMembershipsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VipMembershipsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VipMembershipsTable, VipMembershipsColumn),
 	)
 }
 func newAssignedSubscriptionsStep() *sqlgraph.Step {

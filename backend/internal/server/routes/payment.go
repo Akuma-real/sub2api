@@ -28,6 +28,8 @@ func RegisterPaymentRoutes(
 		authenticated.GET("/config", paymentHandler.GetPaymentConfig)
 		authenticated.GET("/checkout-info", paymentHandler.GetCheckoutInfo)
 		authenticated.GET("/plans", paymentHandler.GetPlans)
+		authenticated.GET("/vip/levels", paymentHandler.GetVIPLevels)
+		authenticated.GET("/vip/overview", paymentHandler.GetVIPOverview)
 		authenticated.GET("/channels", paymentHandler.GetChannels)
 		authenticated.GET("/limits", paymentHandler.GetLimits)
 
@@ -96,6 +98,16 @@ func RegisterPaymentRoutes(
 			plans.PUT("/:id", adminPaymentHandler.UpdatePlan)
 			plans.DELETE("/:id", adminPaymentHandler.DeletePlan)
 		}
+
+		// VIP Levels and user savings
+		vipLevels := adminGroup.Group("/vip-levels")
+		{
+			vipLevels.GET("", adminPaymentHandler.ListVIPLevels)
+			vipLevels.POST("", adminPaymentHandler.CreateVIPLevel)
+			vipLevels.PUT("/:id", adminPaymentHandler.UpdateVIPLevel)
+			vipLevels.DELETE("/:id", adminPaymentHandler.DeleteVIPLevel)
+		}
+		adminGroup.GET("/vip-users", adminPaymentHandler.ListVIPUsers)
 
 		// Provider Instances
 		providers := adminGroup.Group("/providers")

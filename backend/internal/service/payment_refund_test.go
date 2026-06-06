@@ -118,6 +118,46 @@ func TestPrepareRefundRejectsLegacyGuessedProviderInstance(t *testing.T) {
 	require.Equal(t, "REFUND_DISABLED", infraerrors.Reason(err))
 }
 
+func TestPrepareRefundRejectsVIPOrder(t *testing.T) {
+	ctx := context.Background()
+	client := newPaymentConfigServiceTestClient(t)
+
+	user, err := client.User.Create().
+		SetEmail("refund-vip@example.com").
+		SetPasswordHash("hash").
+		SetUsername("refund-vip-user").
+		Save(ctx)
+	require.NoError(t, err)
+
+	order, err := client.PaymentOrder.Create().
+		SetUserID(user.ID).
+		SetUserEmail(user.Email).
+		SetUserName(user.Username).
+		SetAmount(188).
+		SetPayAmount(188).
+		SetFeeRate(0).
+		SetRechargeCode("REFUND-VIP-ORDER").
+		SetOutTradeNo("sub2_refund_vip_order").
+		SetPaymentType(payment.TypeAlipay).
+		SetPaymentTradeNo("trade-refund-vip").
+		SetOrderType(payment.OrderTypeVIP).
+		SetStatus(OrderStatusCompleted).
+		SetExpiresAt(time.Now().Add(time.Hour)).
+		SetPaidAt(time.Now()).
+		SetClientIP("127.0.0.1").
+		SetSrcHost("api.example.com").
+		Save(ctx)
+	require.NoError(t, err)
+
+	svc := &PaymentService{entClient: client}
+
+	plan, result, err := svc.PrepareRefund(ctx, order.ID, 0, "", false, true)
+	require.Nil(t, plan)
+	require.Nil(t, result)
+	require.Error(t, err)
+	require.Equal(t, "UNSUPPORTED_ORDER_TYPE", infraerrors.Reason(err))
+}
+
 func TestGwRefundRejectsAlipayMerchantIdentitySnapshotMismatch(t *testing.T) {
 	ctx := context.Background()
 	client := newPaymentConfigServiceTestClient(t)

@@ -48,6 +48,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
 	"github.com/Wei-Shaw/sub2api/ent/userplatformquota"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
+	"github.com/Wei-Shaw/sub2api/ent/uservipmembership"
+	"github.com/Wei-Shaw/sub2api/ent/viplevel"
 	"github.com/Wei-Shaw/sub2api/internal/domain"
 )
 
@@ -95,6 +97,8 @@ const (
 	TypeUserAttributeValue            = "UserAttributeValue"
 	TypeUserPlatformQuota             = "UserPlatformQuota"
 	TypeUserSubscription              = "UserSubscription"
+	TypeUserVIPMembership             = "UserVIPMembership"
+	TypeVIPLevel                      = "VIPLevel"
 )
 
 // APIKeyMutation represents an operation that mutates the APIKey nodes in the graph.
@@ -20511,10 +20515,14 @@ type PaymentOrderMutation struct {
 	order_type               *string
 	plan_id                  *int64
 	addplan_id               *int64
+	vip_level_id             *int64
+	addvip_level_id          *int64
 	subscription_group_id    *int64
 	addsubscription_group_id *int64
 	subscription_days        *int
 	addsubscription_days     *int
+	vip_days                 *int
+	addvip_days              *int
 	provider_instance_id     *string
 	provider_key             *string
 	provider_snapshot        *map[string]interface{}
@@ -20540,6 +20548,9 @@ type PaymentOrderMutation struct {
 	clearedFields            map[string]struct{}
 	user                     *int64
 	cleareduser              bool
+	vip_memberships          map[int64]struct{}
+	removedvip_memberships   map[int64]struct{}
+	clearedvip_memberships   bool
 	done                     bool
 	oldValue                 func(context.Context) (*PaymentOrder, error)
 	predicates               []predicate.PaymentOrder
@@ -21365,6 +21376,76 @@ func (m *PaymentOrderMutation) ResetPlanID() {
 	delete(m.clearedFields, paymentorder.FieldPlanID)
 }
 
+// SetVipLevelID sets the "vip_level_id" field.
+func (m *PaymentOrderMutation) SetVipLevelID(i int64) {
+	m.vip_level_id = &i
+	m.addvip_level_id = nil
+}
+
+// VipLevelID returns the value of the "vip_level_id" field in the mutation.
+func (m *PaymentOrderMutation) VipLevelID() (r int64, exists bool) {
+	v := m.vip_level_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipLevelID returns the old "vip_level_id" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldVipLevelID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipLevelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipLevelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipLevelID: %w", err)
+	}
+	return oldValue.VipLevelID, nil
+}
+
+// AddVipLevelID adds i to the "vip_level_id" field.
+func (m *PaymentOrderMutation) AddVipLevelID(i int64) {
+	if m.addvip_level_id != nil {
+		*m.addvip_level_id += i
+	} else {
+		m.addvip_level_id = &i
+	}
+}
+
+// AddedVipLevelID returns the value that was added to the "vip_level_id" field in this mutation.
+func (m *PaymentOrderMutation) AddedVipLevelID() (r int64, exists bool) {
+	v := m.addvip_level_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (m *PaymentOrderMutation) ClearVipLevelID() {
+	m.vip_level_id = nil
+	m.addvip_level_id = nil
+	m.clearedFields[paymentorder.FieldVipLevelID] = struct{}{}
+}
+
+// VipLevelIDCleared returns if the "vip_level_id" field was cleared in this mutation.
+func (m *PaymentOrderMutation) VipLevelIDCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldVipLevelID]
+	return ok
+}
+
+// ResetVipLevelID resets all changes to the "vip_level_id" field.
+func (m *PaymentOrderMutation) ResetVipLevelID() {
+	m.vip_level_id = nil
+	m.addvip_level_id = nil
+	delete(m.clearedFields, paymentorder.FieldVipLevelID)
+}
+
 // SetSubscriptionGroupID sets the "subscription_group_id" field.
 func (m *PaymentOrderMutation) SetSubscriptionGroupID(i int64) {
 	m.subscription_group_id = &i
@@ -21503,6 +21584,76 @@ func (m *PaymentOrderMutation) ResetSubscriptionDays() {
 	m.subscription_days = nil
 	m.addsubscription_days = nil
 	delete(m.clearedFields, paymentorder.FieldSubscriptionDays)
+}
+
+// SetVipDays sets the "vip_days" field.
+func (m *PaymentOrderMutation) SetVipDays(i int) {
+	m.vip_days = &i
+	m.addvip_days = nil
+}
+
+// VipDays returns the value of the "vip_days" field in the mutation.
+func (m *PaymentOrderMutation) VipDays() (r int, exists bool) {
+	v := m.vip_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipDays returns the old "vip_days" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldVipDays(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipDays: %w", err)
+	}
+	return oldValue.VipDays, nil
+}
+
+// AddVipDays adds i to the "vip_days" field.
+func (m *PaymentOrderMutation) AddVipDays(i int) {
+	if m.addvip_days != nil {
+		*m.addvip_days += i
+	} else {
+		m.addvip_days = &i
+	}
+}
+
+// AddedVipDays returns the value that was added to the "vip_days" field in this mutation.
+func (m *PaymentOrderMutation) AddedVipDays() (r int, exists bool) {
+	v := m.addvip_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearVipDays clears the value of the "vip_days" field.
+func (m *PaymentOrderMutation) ClearVipDays() {
+	m.vip_days = nil
+	m.addvip_days = nil
+	m.clearedFields[paymentorder.FieldVipDays] = struct{}{}
+}
+
+// VipDaysCleared returns if the "vip_days" field was cleared in this mutation.
+func (m *PaymentOrderMutation) VipDaysCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldVipDays]
+	return ok
+}
+
+// ResetVipDays resets all changes to the "vip_days" field.
+func (m *PaymentOrderMutation) ResetVipDays() {
+	m.vip_days = nil
+	m.addvip_days = nil
+	delete(m.clearedFields, paymentorder.FieldVipDays)
 }
 
 // SetProviderInstanceID sets the "provider_instance_id" field.
@@ -22477,6 +22628,60 @@ func (m *PaymentOrderMutation) ResetUser() {
 	m.cleareduser = false
 }
 
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by ids.
+func (m *PaymentOrderMutation) AddVipMembershipIDs(ids ...int64) {
+	if m.vip_memberships == nil {
+		m.vip_memberships = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.vip_memberships[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVipMemberships clears the "vip_memberships" edge to the UserVIPMembership entity.
+func (m *PaymentOrderMutation) ClearVipMemberships() {
+	m.clearedvip_memberships = true
+}
+
+// VipMembershipsCleared reports if the "vip_memberships" edge to the UserVIPMembership entity was cleared.
+func (m *PaymentOrderMutation) VipMembershipsCleared() bool {
+	return m.clearedvip_memberships
+}
+
+// RemoveVipMembershipIDs removes the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (m *PaymentOrderMutation) RemoveVipMembershipIDs(ids ...int64) {
+	if m.removedvip_memberships == nil {
+		m.removedvip_memberships = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.vip_memberships, ids[i])
+		m.removedvip_memberships[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVipMemberships returns the removed IDs of the "vip_memberships" edge to the UserVIPMembership entity.
+func (m *PaymentOrderMutation) RemovedVipMembershipsIDs() (ids []int64) {
+	for id := range m.removedvip_memberships {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VipMembershipsIDs returns the "vip_memberships" edge IDs in the mutation.
+func (m *PaymentOrderMutation) VipMembershipsIDs() (ids []int64) {
+	for id := range m.vip_memberships {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVipMemberships resets all changes to the "vip_memberships" edge.
+func (m *PaymentOrderMutation) ResetVipMemberships() {
+	m.vip_memberships = nil
+	m.clearedvip_memberships = false
+	m.removedvip_memberships = nil
+}
+
 // Where appends a list predicates to the PaymentOrderMutation builder.
 func (m *PaymentOrderMutation) Where(ps ...predicate.PaymentOrder) {
 	m.predicates = append(m.predicates, ps...)
@@ -22511,7 +22716,7 @@ func (m *PaymentOrderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PaymentOrderMutation) Fields() []string {
-	fields := make([]string, 0, 39)
+	fields := make([]string, 0, 41)
 	if m.user != nil {
 		fields = append(fields, paymentorder.FieldUserID)
 	}
@@ -22560,11 +22765,17 @@ func (m *PaymentOrderMutation) Fields() []string {
 	if m.plan_id != nil {
 		fields = append(fields, paymentorder.FieldPlanID)
 	}
+	if m.vip_level_id != nil {
+		fields = append(fields, paymentorder.FieldVipLevelID)
+	}
 	if m.subscription_group_id != nil {
 		fields = append(fields, paymentorder.FieldSubscriptionGroupID)
 	}
 	if m.subscription_days != nil {
 		fields = append(fields, paymentorder.FieldSubscriptionDays)
+	}
+	if m.vip_days != nil {
+		fields = append(fields, paymentorder.FieldVipDays)
 	}
 	if m.provider_instance_id != nil {
 		fields = append(fields, paymentorder.FieldProviderInstanceID)
@@ -22669,10 +22880,14 @@ func (m *PaymentOrderMutation) Field(name string) (ent.Value, bool) {
 		return m.OrderType()
 	case paymentorder.FieldPlanID:
 		return m.PlanID()
+	case paymentorder.FieldVipLevelID:
+		return m.VipLevelID()
 	case paymentorder.FieldSubscriptionGroupID:
 		return m.SubscriptionGroupID()
 	case paymentorder.FieldSubscriptionDays:
 		return m.SubscriptionDays()
+	case paymentorder.FieldVipDays:
+		return m.VipDays()
 	case paymentorder.FieldProviderInstanceID:
 		return m.ProviderInstanceID()
 	case paymentorder.FieldProviderKey:
@@ -22756,10 +22971,14 @@ func (m *PaymentOrderMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldOrderType(ctx)
 	case paymentorder.FieldPlanID:
 		return m.OldPlanID(ctx)
+	case paymentorder.FieldVipLevelID:
+		return m.OldVipLevelID(ctx)
 	case paymentorder.FieldSubscriptionGroupID:
 		return m.OldSubscriptionGroupID(ctx)
 	case paymentorder.FieldSubscriptionDays:
 		return m.OldSubscriptionDays(ctx)
+	case paymentorder.FieldVipDays:
+		return m.OldVipDays(ctx)
 	case paymentorder.FieldProviderInstanceID:
 		return m.OldProviderInstanceID(ctx)
 	case paymentorder.FieldProviderKey:
@@ -22923,6 +23142,13 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetPlanID(v)
 		return nil
+	case paymentorder.FieldVipLevelID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipLevelID(v)
+		return nil
 	case paymentorder.FieldSubscriptionGroupID:
 		v, ok := value.(int64)
 		if !ok {
@@ -22936,6 +23162,13 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSubscriptionDays(v)
+		return nil
+	case paymentorder.FieldVipDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipDays(v)
 		return nil
 	case paymentorder.FieldProviderInstanceID:
 		v, ok := value.(string)
@@ -23104,11 +23337,17 @@ func (m *PaymentOrderMutation) AddedFields() []string {
 	if m.addplan_id != nil {
 		fields = append(fields, paymentorder.FieldPlanID)
 	}
+	if m.addvip_level_id != nil {
+		fields = append(fields, paymentorder.FieldVipLevelID)
+	}
 	if m.addsubscription_group_id != nil {
 		fields = append(fields, paymentorder.FieldSubscriptionGroupID)
 	}
 	if m.addsubscription_days != nil {
 		fields = append(fields, paymentorder.FieldSubscriptionDays)
+	}
+	if m.addvip_days != nil {
+		fields = append(fields, paymentorder.FieldVipDays)
 	}
 	if m.addrefund_amount != nil {
 		fields = append(fields, paymentorder.FieldRefundAmount)
@@ -23129,10 +23368,14 @@ func (m *PaymentOrderMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedFeeRate()
 	case paymentorder.FieldPlanID:
 		return m.AddedPlanID()
+	case paymentorder.FieldVipLevelID:
+		return m.AddedVipLevelID()
 	case paymentorder.FieldSubscriptionGroupID:
 		return m.AddedSubscriptionGroupID()
 	case paymentorder.FieldSubscriptionDays:
 		return m.AddedSubscriptionDays()
+	case paymentorder.FieldVipDays:
+		return m.AddedVipDays()
 	case paymentorder.FieldRefundAmount:
 		return m.AddedRefundAmount()
 	}
@@ -23172,6 +23415,13 @@ func (m *PaymentOrderMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddPlanID(v)
 		return nil
+	case paymentorder.FieldVipLevelID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVipLevelID(v)
+		return nil
 	case paymentorder.FieldSubscriptionGroupID:
 		v, ok := value.(int64)
 		if !ok {
@@ -23185,6 +23435,13 @@ func (m *PaymentOrderMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSubscriptionDays(v)
+		return nil
+	case paymentorder.FieldVipDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVipDays(v)
 		return nil
 	case paymentorder.FieldRefundAmount:
 		v, ok := value.(float64)
@@ -23216,11 +23473,17 @@ func (m *PaymentOrderMutation) ClearedFields() []string {
 	if m.FieldCleared(paymentorder.FieldPlanID) {
 		fields = append(fields, paymentorder.FieldPlanID)
 	}
+	if m.FieldCleared(paymentorder.FieldVipLevelID) {
+		fields = append(fields, paymentorder.FieldVipLevelID)
+	}
 	if m.FieldCleared(paymentorder.FieldSubscriptionGroupID) {
 		fields = append(fields, paymentorder.FieldSubscriptionGroupID)
 	}
 	if m.FieldCleared(paymentorder.FieldSubscriptionDays) {
 		fields = append(fields, paymentorder.FieldSubscriptionDays)
+	}
+	if m.FieldCleared(paymentorder.FieldVipDays) {
+		fields = append(fields, paymentorder.FieldVipDays)
 	}
 	if m.FieldCleared(paymentorder.FieldProviderInstanceID) {
 		fields = append(fields, paymentorder.FieldProviderInstanceID)
@@ -23290,11 +23553,17 @@ func (m *PaymentOrderMutation) ClearField(name string) error {
 	case paymentorder.FieldPlanID:
 		m.ClearPlanID()
 		return nil
+	case paymentorder.FieldVipLevelID:
+		m.ClearVipLevelID()
+		return nil
 	case paymentorder.FieldSubscriptionGroupID:
 		m.ClearSubscriptionGroupID()
 		return nil
 	case paymentorder.FieldSubscriptionDays:
 		m.ClearSubscriptionDays()
+		return nil
+	case paymentorder.FieldVipDays:
+		m.ClearVipDays()
 		return nil
 	case paymentorder.FieldProviderInstanceID:
 		m.ClearProviderInstanceID()
@@ -23391,11 +23660,17 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 	case paymentorder.FieldPlanID:
 		m.ResetPlanID()
 		return nil
+	case paymentorder.FieldVipLevelID:
+		m.ResetVipLevelID()
+		return nil
 	case paymentorder.FieldSubscriptionGroupID:
 		m.ResetSubscriptionGroupID()
 		return nil
 	case paymentorder.FieldSubscriptionDays:
 		m.ResetSubscriptionDays()
+		return nil
+	case paymentorder.FieldVipDays:
+		m.ResetVipDays()
 		return nil
 	case paymentorder.FieldProviderInstanceID:
 		m.ResetProviderInstanceID()
@@ -23466,9 +23741,12 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PaymentOrderMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.user != nil {
 		edges = append(edges, paymentorder.EdgeUser)
+	}
+	if m.vip_memberships != nil {
+		edges = append(edges, paymentorder.EdgeVipMemberships)
 	}
 	return edges
 }
@@ -23481,27 +23759,47 @@ func (m *PaymentOrderMutation) AddedIDs(name string) []ent.Value {
 		if id := m.user; id != nil {
 			return []ent.Value{*id}
 		}
+	case paymentorder.EdgeVipMemberships:
+		ids := make([]ent.Value, 0, len(m.vip_memberships))
+		for id := range m.vip_memberships {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PaymentOrderMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedvip_memberships != nil {
+		edges = append(edges, paymentorder.EdgeVipMemberships)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *PaymentOrderMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case paymentorder.EdgeVipMemberships:
+		ids := make([]ent.Value, 0, len(m.removedvip_memberships))
+		for id := range m.removedvip_memberships {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PaymentOrderMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.cleareduser {
 		edges = append(edges, paymentorder.EdgeUser)
+	}
+	if m.clearedvip_memberships {
+		edges = append(edges, paymentorder.EdgeVipMemberships)
 	}
 	return edges
 }
@@ -23512,6 +23810,8 @@ func (m *PaymentOrderMutation) EdgeCleared(name string) bool {
 	switch name {
 	case paymentorder.EdgeUser:
 		return m.cleareduser
+	case paymentorder.EdgeVipMemberships:
+		return m.clearedvip_memberships
 	}
 	return false
 }
@@ -23533,6 +23833,9 @@ func (m *PaymentOrderMutation) ResetEdge(name string) error {
 	switch name {
 	case paymentorder.EdgeUser:
 		m.ResetUser()
+		return nil
+	case paymentorder.EdgeVipMemberships:
+		m.ResetVipMemberships()
 		return nil
 	}
 	return fmt.Errorf("unknown PaymentOrder edge %s", name)
@@ -34483,6 +34786,12 @@ type UsageLogMutation struct {
 	addactual_cost              *float64
 	rate_multiplier             *float64
 	addrate_multiplier          *float64
+	vip_discount_multiplier     *float64
+	addvip_discount_multiplier  *float64
+	vip_pre_discount_cost       *float64
+	addvip_pre_discount_cost    *float64
+	vip_savings_usd             *float64
+	addvip_savings_usd          *float64
 	account_rate_multiplier     *float64
 	addaccount_rate_multiplier  *float64
 	billing_type                *int8
@@ -34514,6 +34823,8 @@ type UsageLogMutation struct {
 	clearedgroup                bool
 	subscription                *int64
 	clearedsubscription         bool
+	vip_level                   *int64
+	clearedvip_level            bool
 	done                        bool
 	oldValue                    func(context.Context) (*UsageLog, error)
 	predicates                  []predicate.UsageLog
@@ -35208,6 +35519,55 @@ func (m *UsageLogMutation) SubscriptionIDCleared() bool {
 func (m *UsageLogMutation) ResetSubscriptionID() {
 	m.subscription = nil
 	delete(m.clearedFields, usagelog.FieldSubscriptionID)
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (m *UsageLogMutation) SetVipLevelID(i int64) {
+	m.vip_level = &i
+}
+
+// VipLevelID returns the value of the "vip_level_id" field in the mutation.
+func (m *UsageLogMutation) VipLevelID() (r int64, exists bool) {
+	v := m.vip_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipLevelID returns the old "vip_level_id" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldVipLevelID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipLevelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipLevelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipLevelID: %w", err)
+	}
+	return oldValue.VipLevelID, nil
+}
+
+// ClearVipLevelID clears the value of the "vip_level_id" field.
+func (m *UsageLogMutation) ClearVipLevelID() {
+	m.vip_level = nil
+	m.clearedFields[usagelog.FieldVipLevelID] = struct{}{}
+}
+
+// VipLevelIDCleared returns if the "vip_level_id" field was cleared in this mutation.
+func (m *UsageLogMutation) VipLevelIDCleared() bool {
+	_, ok := m.clearedFields[usagelog.FieldVipLevelID]
+	return ok
+}
+
+// ResetVipLevelID resets all changes to the "vip_level_id" field.
+func (m *UsageLogMutation) ResetVipLevelID() {
+	m.vip_level = nil
+	delete(m.clearedFields, usagelog.FieldVipLevelID)
 }
 
 // SetInputTokens sets the "input_tokens" field.
@@ -35936,6 +36296,202 @@ func (m *UsageLogMutation) AddedRateMultiplier() (r float64, exists bool) {
 func (m *UsageLogMutation) ResetRateMultiplier() {
 	m.rate_multiplier = nil
 	m.addrate_multiplier = nil
+}
+
+// SetVipDiscountMultiplier sets the "vip_discount_multiplier" field.
+func (m *UsageLogMutation) SetVipDiscountMultiplier(f float64) {
+	m.vip_discount_multiplier = &f
+	m.addvip_discount_multiplier = nil
+}
+
+// VipDiscountMultiplier returns the value of the "vip_discount_multiplier" field in the mutation.
+func (m *UsageLogMutation) VipDiscountMultiplier() (r float64, exists bool) {
+	v := m.vip_discount_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipDiscountMultiplier returns the old "vip_discount_multiplier" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldVipDiscountMultiplier(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipDiscountMultiplier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipDiscountMultiplier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipDiscountMultiplier: %w", err)
+	}
+	return oldValue.VipDiscountMultiplier, nil
+}
+
+// AddVipDiscountMultiplier adds f to the "vip_discount_multiplier" field.
+func (m *UsageLogMutation) AddVipDiscountMultiplier(f float64) {
+	if m.addvip_discount_multiplier != nil {
+		*m.addvip_discount_multiplier += f
+	} else {
+		m.addvip_discount_multiplier = &f
+	}
+}
+
+// AddedVipDiscountMultiplier returns the value that was added to the "vip_discount_multiplier" field in this mutation.
+func (m *UsageLogMutation) AddedVipDiscountMultiplier() (r float64, exists bool) {
+	v := m.addvip_discount_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearVipDiscountMultiplier clears the value of the "vip_discount_multiplier" field.
+func (m *UsageLogMutation) ClearVipDiscountMultiplier() {
+	m.vip_discount_multiplier = nil
+	m.addvip_discount_multiplier = nil
+	m.clearedFields[usagelog.FieldVipDiscountMultiplier] = struct{}{}
+}
+
+// VipDiscountMultiplierCleared returns if the "vip_discount_multiplier" field was cleared in this mutation.
+func (m *UsageLogMutation) VipDiscountMultiplierCleared() bool {
+	_, ok := m.clearedFields[usagelog.FieldVipDiscountMultiplier]
+	return ok
+}
+
+// ResetVipDiscountMultiplier resets all changes to the "vip_discount_multiplier" field.
+func (m *UsageLogMutation) ResetVipDiscountMultiplier() {
+	m.vip_discount_multiplier = nil
+	m.addvip_discount_multiplier = nil
+	delete(m.clearedFields, usagelog.FieldVipDiscountMultiplier)
+}
+
+// SetVipPreDiscountCost sets the "vip_pre_discount_cost" field.
+func (m *UsageLogMutation) SetVipPreDiscountCost(f float64) {
+	m.vip_pre_discount_cost = &f
+	m.addvip_pre_discount_cost = nil
+}
+
+// VipPreDiscountCost returns the value of the "vip_pre_discount_cost" field in the mutation.
+func (m *UsageLogMutation) VipPreDiscountCost() (r float64, exists bool) {
+	v := m.vip_pre_discount_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipPreDiscountCost returns the old "vip_pre_discount_cost" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldVipPreDiscountCost(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipPreDiscountCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipPreDiscountCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipPreDiscountCost: %w", err)
+	}
+	return oldValue.VipPreDiscountCost, nil
+}
+
+// AddVipPreDiscountCost adds f to the "vip_pre_discount_cost" field.
+func (m *UsageLogMutation) AddVipPreDiscountCost(f float64) {
+	if m.addvip_pre_discount_cost != nil {
+		*m.addvip_pre_discount_cost += f
+	} else {
+		m.addvip_pre_discount_cost = &f
+	}
+}
+
+// AddedVipPreDiscountCost returns the value that was added to the "vip_pre_discount_cost" field in this mutation.
+func (m *UsageLogMutation) AddedVipPreDiscountCost() (r float64, exists bool) {
+	v := m.addvip_pre_discount_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearVipPreDiscountCost clears the value of the "vip_pre_discount_cost" field.
+func (m *UsageLogMutation) ClearVipPreDiscountCost() {
+	m.vip_pre_discount_cost = nil
+	m.addvip_pre_discount_cost = nil
+	m.clearedFields[usagelog.FieldVipPreDiscountCost] = struct{}{}
+}
+
+// VipPreDiscountCostCleared returns if the "vip_pre_discount_cost" field was cleared in this mutation.
+func (m *UsageLogMutation) VipPreDiscountCostCleared() bool {
+	_, ok := m.clearedFields[usagelog.FieldVipPreDiscountCost]
+	return ok
+}
+
+// ResetVipPreDiscountCost resets all changes to the "vip_pre_discount_cost" field.
+func (m *UsageLogMutation) ResetVipPreDiscountCost() {
+	m.vip_pre_discount_cost = nil
+	m.addvip_pre_discount_cost = nil
+	delete(m.clearedFields, usagelog.FieldVipPreDiscountCost)
+}
+
+// SetVipSavingsUsd sets the "vip_savings_usd" field.
+func (m *UsageLogMutation) SetVipSavingsUsd(f float64) {
+	m.vip_savings_usd = &f
+	m.addvip_savings_usd = nil
+}
+
+// VipSavingsUsd returns the value of the "vip_savings_usd" field in the mutation.
+func (m *UsageLogMutation) VipSavingsUsd() (r float64, exists bool) {
+	v := m.vip_savings_usd
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipSavingsUsd returns the old "vip_savings_usd" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldVipSavingsUsd(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipSavingsUsd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipSavingsUsd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipSavingsUsd: %w", err)
+	}
+	return oldValue.VipSavingsUsd, nil
+}
+
+// AddVipSavingsUsd adds f to the "vip_savings_usd" field.
+func (m *UsageLogMutation) AddVipSavingsUsd(f float64) {
+	if m.addvip_savings_usd != nil {
+		*m.addvip_savings_usd += f
+	} else {
+		m.addvip_savings_usd = &f
+	}
+}
+
+// AddedVipSavingsUsd returns the value that was added to the "vip_savings_usd" field in this mutation.
+func (m *UsageLogMutation) AddedVipSavingsUsd() (r float64, exists bool) {
+	v := m.addvip_savings_usd
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVipSavingsUsd resets all changes to the "vip_savings_usd" field.
+func (m *UsageLogMutation) ResetVipSavingsUsd() {
+	m.vip_savings_usd = nil
+	m.addvip_savings_usd = nil
 }
 
 // SetAccountRateMultiplier sets the "account_rate_multiplier" field.
@@ -36846,6 +37402,33 @@ func (m *UsageLogMutation) ResetSubscription() {
 	m.clearedsubscription = false
 }
 
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (m *UsageLogMutation) ClearVipLevel() {
+	m.clearedvip_level = true
+	m.clearedFields[usagelog.FieldVipLevelID] = struct{}{}
+}
+
+// VipLevelCleared reports if the "vip_level" edge to the VIPLevel entity was cleared.
+func (m *UsageLogMutation) VipLevelCleared() bool {
+	return m.VipLevelIDCleared() || m.clearedvip_level
+}
+
+// VipLevelIDs returns the "vip_level" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VipLevelID instead. It exists only for internal usage by the builders.
+func (m *UsageLogMutation) VipLevelIDs() (ids []int64) {
+	if id := m.vip_level; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVipLevel resets all changes to the "vip_level" edge.
+func (m *UsageLogMutation) ResetVipLevel() {
+	m.vip_level = nil
+	m.clearedvip_level = false
+}
+
 // Where appends a list predicates to the UsageLogMutation builder.
 func (m *UsageLogMutation) Where(ps ...predicate.UsageLog) {
 	m.predicates = append(m.predicates, ps...)
@@ -36880,7 +37463,7 @@ func (m *UsageLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageLogMutation) Fields() []string {
-	fields := make([]string, 0, 41)
+	fields := make([]string, 0, 45)
 	if m.user != nil {
 		fields = append(fields, usagelog.FieldUserID)
 	}
@@ -36920,6 +37503,9 @@ func (m *UsageLogMutation) Fields() []string {
 	if m.subscription != nil {
 		fields = append(fields, usagelog.FieldSubscriptionID)
 	}
+	if m.vip_level != nil {
+		fields = append(fields, usagelog.FieldVipLevelID)
+	}
 	if m.input_tokens != nil {
 		fields = append(fields, usagelog.FieldInputTokens)
 	}
@@ -36958,6 +37544,15 @@ func (m *UsageLogMutation) Fields() []string {
 	}
 	if m.rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldRateMultiplier)
+	}
+	if m.vip_discount_multiplier != nil {
+		fields = append(fields, usagelog.FieldVipDiscountMultiplier)
+	}
+	if m.vip_pre_discount_cost != nil {
+		fields = append(fields, usagelog.FieldVipPreDiscountCost)
+	}
+	if m.vip_savings_usd != nil {
+		fields = append(fields, usagelog.FieldVipSavingsUsd)
 	}
 	if m.account_rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
@@ -37038,6 +37633,8 @@ func (m *UsageLogMutation) Field(name string) (ent.Value, bool) {
 		return m.GroupID()
 	case usagelog.FieldSubscriptionID:
 		return m.SubscriptionID()
+	case usagelog.FieldVipLevelID:
+		return m.VipLevelID()
 	case usagelog.FieldInputTokens:
 		return m.InputTokens()
 	case usagelog.FieldOutputTokens:
@@ -37064,6 +37661,12 @@ func (m *UsageLogMutation) Field(name string) (ent.Value, bool) {
 		return m.ActualCost()
 	case usagelog.FieldRateMultiplier:
 		return m.RateMultiplier()
+	case usagelog.FieldVipDiscountMultiplier:
+		return m.VipDiscountMultiplier()
+	case usagelog.FieldVipPreDiscountCost:
+		return m.VipPreDiscountCost()
+	case usagelog.FieldVipSavingsUsd:
+		return m.VipSavingsUsd()
 	case usagelog.FieldAccountRateMultiplier:
 		return m.AccountRateMultiplier()
 	case usagelog.FieldBillingType:
@@ -37129,6 +37732,8 @@ func (m *UsageLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldGroupID(ctx)
 	case usagelog.FieldSubscriptionID:
 		return m.OldSubscriptionID(ctx)
+	case usagelog.FieldVipLevelID:
+		return m.OldVipLevelID(ctx)
 	case usagelog.FieldInputTokens:
 		return m.OldInputTokens(ctx)
 	case usagelog.FieldOutputTokens:
@@ -37155,6 +37760,12 @@ func (m *UsageLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldActualCost(ctx)
 	case usagelog.FieldRateMultiplier:
 		return m.OldRateMultiplier(ctx)
+	case usagelog.FieldVipDiscountMultiplier:
+		return m.OldVipDiscountMultiplier(ctx)
+	case usagelog.FieldVipPreDiscountCost:
+		return m.OldVipPreDiscountCost(ctx)
+	case usagelog.FieldVipSavingsUsd:
+		return m.OldVipSavingsUsd(ctx)
 	case usagelog.FieldAccountRateMultiplier:
 		return m.OldAccountRateMultiplier(ctx)
 	case usagelog.FieldBillingType:
@@ -37285,6 +37896,13 @@ func (m *UsageLogMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSubscriptionID(v)
 		return nil
+	case usagelog.FieldVipLevelID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipLevelID(v)
+		return nil
 	case usagelog.FieldInputTokens:
 		v, ok := value.(int)
 		if !ok {
@@ -37375,6 +37993,27 @@ func (m *UsageLogMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRateMultiplier(v)
+		return nil
+	case usagelog.FieldVipDiscountMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipDiscountMultiplier(v)
+		return nil
+	case usagelog.FieldVipPreDiscountCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipPreDiscountCost(v)
+		return nil
+	case usagelog.FieldVipSavingsUsd:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipSavingsUsd(v)
 		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		v, ok := value.(float64)
@@ -37531,6 +38170,15 @@ func (m *UsageLogMutation) AddedFields() []string {
 	if m.addrate_multiplier != nil {
 		fields = append(fields, usagelog.FieldRateMultiplier)
 	}
+	if m.addvip_discount_multiplier != nil {
+		fields = append(fields, usagelog.FieldVipDiscountMultiplier)
+	}
+	if m.addvip_pre_discount_cost != nil {
+		fields = append(fields, usagelog.FieldVipPreDiscountCost)
+	}
+	if m.addvip_savings_usd != nil {
+		fields = append(fields, usagelog.FieldVipSavingsUsd)
+	}
 	if m.addaccount_rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
 	}
@@ -37582,6 +38230,12 @@ func (m *UsageLogMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedActualCost()
 	case usagelog.FieldRateMultiplier:
 		return m.AddedRateMultiplier()
+	case usagelog.FieldVipDiscountMultiplier:
+		return m.AddedVipDiscountMultiplier()
+	case usagelog.FieldVipPreDiscountCost:
+		return m.AddedVipPreDiscountCost()
+	case usagelog.FieldVipSavingsUsd:
+		return m.AddedVipSavingsUsd()
 	case usagelog.FieldAccountRateMultiplier:
 		return m.AddedAccountRateMultiplier()
 	case usagelog.FieldBillingType:
@@ -37699,6 +38353,27 @@ func (m *UsageLogMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddRateMultiplier(v)
 		return nil
+	case usagelog.FieldVipDiscountMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVipDiscountMultiplier(v)
+		return nil
+	case usagelog.FieldVipPreDiscountCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVipPreDiscountCost(v)
+		return nil
+	case usagelog.FieldVipSavingsUsd:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVipSavingsUsd(v)
+		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		v, ok := value.(float64)
 		if !ok {
@@ -37765,6 +38440,15 @@ func (m *UsageLogMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(usagelog.FieldSubscriptionID) {
 		fields = append(fields, usagelog.FieldSubscriptionID)
+	}
+	if m.FieldCleared(usagelog.FieldVipLevelID) {
+		fields = append(fields, usagelog.FieldVipLevelID)
+	}
+	if m.FieldCleared(usagelog.FieldVipDiscountMultiplier) {
+		fields = append(fields, usagelog.FieldVipDiscountMultiplier)
+	}
+	if m.FieldCleared(usagelog.FieldVipPreDiscountCost) {
+		fields = append(fields, usagelog.FieldVipPreDiscountCost)
 	}
 	if m.FieldCleared(usagelog.FieldAccountRateMultiplier) {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
@@ -37833,6 +38517,15 @@ func (m *UsageLogMutation) ClearField(name string) error {
 		return nil
 	case usagelog.FieldSubscriptionID:
 		m.ClearSubscriptionID()
+		return nil
+	case usagelog.FieldVipLevelID:
+		m.ClearVipLevelID()
+		return nil
+	case usagelog.FieldVipDiscountMultiplier:
+		m.ClearVipDiscountMultiplier()
+		return nil
+	case usagelog.FieldVipPreDiscountCost:
+		m.ClearVipPreDiscountCost()
 		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		m.ClearAccountRateMultiplier()
@@ -37911,6 +38604,9 @@ func (m *UsageLogMutation) ResetField(name string) error {
 	case usagelog.FieldSubscriptionID:
 		m.ResetSubscriptionID()
 		return nil
+	case usagelog.FieldVipLevelID:
+		m.ResetVipLevelID()
+		return nil
 	case usagelog.FieldInputTokens:
 		m.ResetInputTokens()
 		return nil
@@ -37949,6 +38645,15 @@ func (m *UsageLogMutation) ResetField(name string) error {
 		return nil
 	case usagelog.FieldRateMultiplier:
 		m.ResetRateMultiplier()
+		return nil
+	case usagelog.FieldVipDiscountMultiplier:
+		m.ResetVipDiscountMultiplier()
+		return nil
+	case usagelog.FieldVipPreDiscountCost:
+		m.ResetVipPreDiscountCost()
+		return nil
+	case usagelog.FieldVipSavingsUsd:
+		m.ResetVipSavingsUsd()
 		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		m.ResetAccountRateMultiplier()
@@ -38001,7 +38706,7 @@ func (m *UsageLogMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UsageLogMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.user != nil {
 		edges = append(edges, usagelog.EdgeUser)
 	}
@@ -38016,6 +38721,9 @@ func (m *UsageLogMutation) AddedEdges() []string {
 	}
 	if m.subscription != nil {
 		edges = append(edges, usagelog.EdgeSubscription)
+	}
+	if m.vip_level != nil {
+		edges = append(edges, usagelog.EdgeVipLevel)
 	}
 	return edges
 }
@@ -38044,13 +38752,17 @@ func (m *UsageLogMutation) AddedIDs(name string) []ent.Value {
 		if id := m.subscription; id != nil {
 			return []ent.Value{*id}
 		}
+	case usagelog.EdgeVipLevel:
+		if id := m.vip_level; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UsageLogMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	return edges
 }
 
@@ -38062,7 +38774,7 @@ func (m *UsageLogMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UsageLogMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.cleareduser {
 		edges = append(edges, usagelog.EdgeUser)
 	}
@@ -38077,6 +38789,9 @@ func (m *UsageLogMutation) ClearedEdges() []string {
 	}
 	if m.clearedsubscription {
 		edges = append(edges, usagelog.EdgeSubscription)
+	}
+	if m.clearedvip_level {
+		edges = append(edges, usagelog.EdgeVipLevel)
 	}
 	return edges
 }
@@ -38095,6 +38810,8 @@ func (m *UsageLogMutation) EdgeCleared(name string) bool {
 		return m.clearedgroup
 	case usagelog.EdgeSubscription:
 		return m.clearedsubscription
+	case usagelog.EdgeVipLevel:
+		return m.clearedvip_level
 	}
 	return false
 }
@@ -38118,6 +38835,9 @@ func (m *UsageLogMutation) ClearEdge(name string) error {
 	case usagelog.EdgeSubscription:
 		m.ClearSubscription()
 		return nil
+	case usagelog.EdgeVipLevel:
+		m.ClearVipLevel()
+		return nil
 	}
 	return fmt.Errorf("unknown UsageLog unique edge %s", name)
 }
@@ -38140,6 +38860,9 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 		return nil
 	case usagelog.EdgeSubscription:
 		m.ResetSubscription()
+		return nil
+	case usagelog.EdgeVipLevel:
+		m.ResetVipLevel()
 		return nil
 	}
 	return fmt.Errorf("unknown UsageLog edge %s", name)
@@ -38189,6 +38912,9 @@ type UserMutation struct {
 	subscriptions                 map[int64]struct{}
 	removedsubscriptions          map[int64]struct{}
 	clearedsubscriptions          bool
+	vip_memberships               map[int64]struct{}
+	removedvip_memberships        map[int64]struct{}
+	clearedvip_memberships        bool
 	assigned_subscriptions        map[int64]struct{}
 	removedassigned_subscriptions map[int64]struct{}
 	clearedassigned_subscriptions bool
@@ -39491,6 +40217,60 @@ func (m *UserMutation) ResetSubscriptions() {
 	m.removedsubscriptions = nil
 }
 
+// AddVipMembershipIDs adds the "vip_memberships" edge to the UserVIPMembership entity by ids.
+func (m *UserMutation) AddVipMembershipIDs(ids ...int64) {
+	if m.vip_memberships == nil {
+		m.vip_memberships = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.vip_memberships[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVipMemberships clears the "vip_memberships" edge to the UserVIPMembership entity.
+func (m *UserMutation) ClearVipMemberships() {
+	m.clearedvip_memberships = true
+}
+
+// VipMembershipsCleared reports if the "vip_memberships" edge to the UserVIPMembership entity was cleared.
+func (m *UserMutation) VipMembershipsCleared() bool {
+	return m.clearedvip_memberships
+}
+
+// RemoveVipMembershipIDs removes the "vip_memberships" edge to the UserVIPMembership entity by IDs.
+func (m *UserMutation) RemoveVipMembershipIDs(ids ...int64) {
+	if m.removedvip_memberships == nil {
+		m.removedvip_memberships = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.vip_memberships, ids[i])
+		m.removedvip_memberships[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVipMemberships returns the removed IDs of the "vip_memberships" edge to the UserVIPMembership entity.
+func (m *UserMutation) RemovedVipMembershipsIDs() (ids []int64) {
+	for id := range m.removedvip_memberships {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VipMembershipsIDs returns the "vip_memberships" edge IDs in the mutation.
+func (m *UserMutation) VipMembershipsIDs() (ids []int64) {
+	for id := range m.vip_memberships {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVipMemberships resets all changes to the "vip_memberships" edge.
+func (m *UserMutation) ResetVipMemberships() {
+	m.vip_memberships = nil
+	m.clearedvip_memberships = false
+	m.removedvip_memberships = nil
+}
+
 // AddAssignedSubscriptionIDs adds the "assigned_subscriptions" edge to the UserSubscription entity by ids.
 func (m *UserMutation) AddAssignedSubscriptionIDs(ids ...int64) {
 	if m.assigned_subscriptions == nil {
@@ -40640,7 +41420,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 13)
+	edges := make([]string, 0, 14)
 	if m.api_keys != nil {
 		edges = append(edges, user.EdgeAPIKeys)
 	}
@@ -40649,6 +41429,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.subscriptions != nil {
 		edges = append(edges, user.EdgeSubscriptions)
+	}
+	if m.vip_memberships != nil {
+		edges = append(edges, user.EdgeVipMemberships)
 	}
 	if m.assigned_subscriptions != nil {
 		edges = append(edges, user.EdgeAssignedSubscriptions)
@@ -40702,6 +41485,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	case user.EdgeSubscriptions:
 		ids := make([]ent.Value, 0, len(m.subscriptions))
 		for id := range m.subscriptions {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeVipMemberships:
+		ids := make([]ent.Value, 0, len(m.vip_memberships))
+		for id := range m.vip_memberships {
 			ids = append(ids, id)
 		}
 		return ids
@@ -40771,7 +41560,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 13)
+	edges := make([]string, 0, 14)
 	if m.removedapi_keys != nil {
 		edges = append(edges, user.EdgeAPIKeys)
 	}
@@ -40780,6 +41569,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedsubscriptions != nil {
 		edges = append(edges, user.EdgeSubscriptions)
+	}
+	if m.removedvip_memberships != nil {
+		edges = append(edges, user.EdgeVipMemberships)
 	}
 	if m.removedassigned_subscriptions != nil {
 		edges = append(edges, user.EdgeAssignedSubscriptions)
@@ -40833,6 +41625,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	case user.EdgeSubscriptions:
 		ids := make([]ent.Value, 0, len(m.removedsubscriptions))
 		for id := range m.removedsubscriptions {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeVipMemberships:
+		ids := make([]ent.Value, 0, len(m.removedvip_memberships))
+		for id := range m.removedvip_memberships {
 			ids = append(ids, id)
 		}
 		return ids
@@ -40902,7 +41700,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 13)
+	edges := make([]string, 0, 14)
 	if m.clearedapi_keys {
 		edges = append(edges, user.EdgeAPIKeys)
 	}
@@ -40911,6 +41709,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedsubscriptions {
 		edges = append(edges, user.EdgeSubscriptions)
+	}
+	if m.clearedvip_memberships {
+		edges = append(edges, user.EdgeVipMemberships)
 	}
 	if m.clearedassigned_subscriptions {
 		edges = append(edges, user.EdgeAssignedSubscriptions)
@@ -40955,6 +41756,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedredeem_codes
 	case user.EdgeSubscriptions:
 		return m.clearedsubscriptions
+	case user.EdgeVipMemberships:
+		return m.clearedvip_memberships
 	case user.EdgeAssignedSubscriptions:
 		return m.clearedassigned_subscriptions
 	case user.EdgeAnnouncementReads:
@@ -40999,6 +41802,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeSubscriptions:
 		m.ResetSubscriptions()
+		return nil
+	case user.EdgeVipMemberships:
+		m.ResetVipMemberships()
 		return nil
 	case user.EdgeAssignedSubscriptions:
 		m.ResetAssignedSubscriptions()
@@ -46323,4 +47129,2258 @@ func (m *UserSubscriptionMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown UserSubscription edge %s", name)
+}
+
+// UserVIPMembershipMutation represents an operation that mutates the UserVIPMembership nodes in the graph.
+type UserVIPMembershipMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *int64
+	starts_at           *time.Time
+	expires_at          *time.Time
+	status              *string
+	notes               *string
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	user                *int64
+	cleareduser         bool
+	vip_level           *int64
+	clearedvip_level    bool
+	source_order        *int64
+	clearedsource_order bool
+	done                bool
+	oldValue            func(context.Context) (*UserVIPMembership, error)
+	predicates          []predicate.UserVIPMembership
+}
+
+var _ ent.Mutation = (*UserVIPMembershipMutation)(nil)
+
+// uservipmembershipOption allows management of the mutation configuration using functional options.
+type uservipmembershipOption func(*UserVIPMembershipMutation)
+
+// newUserVIPMembershipMutation creates new mutation for the UserVIPMembership entity.
+func newUserVIPMembershipMutation(c config, op Op, opts ...uservipmembershipOption) *UserVIPMembershipMutation {
+	m := &UserVIPMembershipMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUserVIPMembership,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUserVIPMembershipID sets the ID field of the mutation.
+func withUserVIPMembershipID(id int64) uservipmembershipOption {
+	return func(m *UserVIPMembershipMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UserVIPMembership
+		)
+		m.oldValue = func(ctx context.Context) (*UserVIPMembership, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UserVIPMembership.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUserVIPMembership sets the old UserVIPMembership of the mutation.
+func withUserVIPMembership(node *UserVIPMembership) uservipmembershipOption {
+	return func(m *UserVIPMembershipMutation) {
+		m.oldValue = func(context.Context) (*UserVIPMembership, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UserVIPMembershipMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UserVIPMembershipMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UserVIPMembershipMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UserVIPMembershipMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UserVIPMembership.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UserVIPMembershipMutation) SetUserID(i int64) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UserVIPMembershipMutation) UserID() (r int64, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldUserID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UserVIPMembershipMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetVipLevelID sets the "vip_level_id" field.
+func (m *UserVIPMembershipMutation) SetVipLevelID(i int64) {
+	m.vip_level = &i
+}
+
+// VipLevelID returns the value of the "vip_level_id" field in the mutation.
+func (m *UserVIPMembershipMutation) VipLevelID() (r int64, exists bool) {
+	v := m.vip_level
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVipLevelID returns the old "vip_level_id" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldVipLevelID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVipLevelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVipLevelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVipLevelID: %w", err)
+	}
+	return oldValue.VipLevelID, nil
+}
+
+// ResetVipLevelID resets all changes to the "vip_level_id" field.
+func (m *UserVIPMembershipMutation) ResetVipLevelID() {
+	m.vip_level = nil
+}
+
+// SetStartsAt sets the "starts_at" field.
+func (m *UserVIPMembershipMutation) SetStartsAt(t time.Time) {
+	m.starts_at = &t
+}
+
+// StartsAt returns the value of the "starts_at" field in the mutation.
+func (m *UserVIPMembershipMutation) StartsAt() (r time.Time, exists bool) {
+	v := m.starts_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartsAt returns the old "starts_at" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldStartsAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartsAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartsAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartsAt: %w", err)
+	}
+	return oldValue.StartsAt, nil
+}
+
+// ResetStartsAt resets all changes to the "starts_at" field.
+func (m *UserVIPMembershipMutation) ResetStartsAt() {
+	m.starts_at = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *UserVIPMembershipMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *UserVIPMembershipMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *UserVIPMembershipMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *UserVIPMembershipMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UserVIPMembershipMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UserVIPMembershipMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetSourceOrderID sets the "source_order_id" field.
+func (m *UserVIPMembershipMutation) SetSourceOrderID(i int64) {
+	m.source_order = &i
+}
+
+// SourceOrderID returns the value of the "source_order_id" field in the mutation.
+func (m *UserVIPMembershipMutation) SourceOrderID() (r int64, exists bool) {
+	v := m.source_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceOrderID returns the old "source_order_id" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldSourceOrderID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceOrderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceOrderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceOrderID: %w", err)
+	}
+	return oldValue.SourceOrderID, nil
+}
+
+// ClearSourceOrderID clears the value of the "source_order_id" field.
+func (m *UserVIPMembershipMutation) ClearSourceOrderID() {
+	m.source_order = nil
+	m.clearedFields[uservipmembership.FieldSourceOrderID] = struct{}{}
+}
+
+// SourceOrderIDCleared returns if the "source_order_id" field was cleared in this mutation.
+func (m *UserVIPMembershipMutation) SourceOrderIDCleared() bool {
+	_, ok := m.clearedFields[uservipmembership.FieldSourceOrderID]
+	return ok
+}
+
+// ResetSourceOrderID resets all changes to the "source_order_id" field.
+func (m *UserVIPMembershipMutation) ResetSourceOrderID() {
+	m.source_order = nil
+	delete(m.clearedFields, uservipmembership.FieldSourceOrderID)
+}
+
+// SetNotes sets the "notes" field.
+func (m *UserVIPMembershipMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *UserVIPMembershipMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldNotes(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (m *UserVIPMembershipMutation) ClearNotes() {
+	m.notes = nil
+	m.clearedFields[uservipmembership.FieldNotes] = struct{}{}
+}
+
+// NotesCleared returns if the "notes" field was cleared in this mutation.
+func (m *UserVIPMembershipMutation) NotesCleared() bool {
+	_, ok := m.clearedFields[uservipmembership.FieldNotes]
+	return ok
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *UserVIPMembershipMutation) ResetNotes() {
+	m.notes = nil
+	delete(m.clearedFields, uservipmembership.FieldNotes)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UserVIPMembershipMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UserVIPMembershipMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UserVIPMembershipMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UserVIPMembershipMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UserVIPMembershipMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UserVIPMembership entity.
+// If the UserVIPMembership object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserVIPMembershipMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UserVIPMembershipMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *UserVIPMembershipMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[uservipmembership.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *UserVIPMembershipMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *UserVIPMembershipMutation) UserIDs() (ids []int64) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *UserVIPMembershipMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// ClearVipLevel clears the "vip_level" edge to the VIPLevel entity.
+func (m *UserVIPMembershipMutation) ClearVipLevel() {
+	m.clearedvip_level = true
+	m.clearedFields[uservipmembership.FieldVipLevelID] = struct{}{}
+}
+
+// VipLevelCleared reports if the "vip_level" edge to the VIPLevel entity was cleared.
+func (m *UserVIPMembershipMutation) VipLevelCleared() bool {
+	return m.clearedvip_level
+}
+
+// VipLevelIDs returns the "vip_level" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// VipLevelID instead. It exists only for internal usage by the builders.
+func (m *UserVIPMembershipMutation) VipLevelIDs() (ids []int64) {
+	if id := m.vip_level; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetVipLevel resets all changes to the "vip_level" edge.
+func (m *UserVIPMembershipMutation) ResetVipLevel() {
+	m.vip_level = nil
+	m.clearedvip_level = false
+}
+
+// ClearSourceOrder clears the "source_order" edge to the PaymentOrder entity.
+func (m *UserVIPMembershipMutation) ClearSourceOrder() {
+	m.clearedsource_order = true
+	m.clearedFields[uservipmembership.FieldSourceOrderID] = struct{}{}
+}
+
+// SourceOrderCleared reports if the "source_order" edge to the PaymentOrder entity was cleared.
+func (m *UserVIPMembershipMutation) SourceOrderCleared() bool {
+	return m.SourceOrderIDCleared() || m.clearedsource_order
+}
+
+// SourceOrderIDs returns the "source_order" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SourceOrderID instead. It exists only for internal usage by the builders.
+func (m *UserVIPMembershipMutation) SourceOrderIDs() (ids []int64) {
+	if id := m.source_order; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSourceOrder resets all changes to the "source_order" edge.
+func (m *UserVIPMembershipMutation) ResetSourceOrder() {
+	m.source_order = nil
+	m.clearedsource_order = false
+}
+
+// Where appends a list predicates to the UserVIPMembershipMutation builder.
+func (m *UserVIPMembershipMutation) Where(ps ...predicate.UserVIPMembership) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UserVIPMembershipMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserVIPMembershipMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UserVIPMembership, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UserVIPMembershipMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserVIPMembershipMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UserVIPMembership).
+func (m *UserVIPMembershipMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UserVIPMembershipMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.user != nil {
+		fields = append(fields, uservipmembership.FieldUserID)
+	}
+	if m.vip_level != nil {
+		fields = append(fields, uservipmembership.FieldVipLevelID)
+	}
+	if m.starts_at != nil {
+		fields = append(fields, uservipmembership.FieldStartsAt)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, uservipmembership.FieldExpiresAt)
+	}
+	if m.status != nil {
+		fields = append(fields, uservipmembership.FieldStatus)
+	}
+	if m.source_order != nil {
+		fields = append(fields, uservipmembership.FieldSourceOrderID)
+	}
+	if m.notes != nil {
+		fields = append(fields, uservipmembership.FieldNotes)
+	}
+	if m.created_at != nil {
+		fields = append(fields, uservipmembership.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, uservipmembership.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UserVIPMembershipMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case uservipmembership.FieldUserID:
+		return m.UserID()
+	case uservipmembership.FieldVipLevelID:
+		return m.VipLevelID()
+	case uservipmembership.FieldStartsAt:
+		return m.StartsAt()
+	case uservipmembership.FieldExpiresAt:
+		return m.ExpiresAt()
+	case uservipmembership.FieldStatus:
+		return m.Status()
+	case uservipmembership.FieldSourceOrderID:
+		return m.SourceOrderID()
+	case uservipmembership.FieldNotes:
+		return m.Notes()
+	case uservipmembership.FieldCreatedAt:
+		return m.CreatedAt()
+	case uservipmembership.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UserVIPMembershipMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case uservipmembership.FieldUserID:
+		return m.OldUserID(ctx)
+	case uservipmembership.FieldVipLevelID:
+		return m.OldVipLevelID(ctx)
+	case uservipmembership.FieldStartsAt:
+		return m.OldStartsAt(ctx)
+	case uservipmembership.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	case uservipmembership.FieldStatus:
+		return m.OldStatus(ctx)
+	case uservipmembership.FieldSourceOrderID:
+		return m.OldSourceOrderID(ctx)
+	case uservipmembership.FieldNotes:
+		return m.OldNotes(ctx)
+	case uservipmembership.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case uservipmembership.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown UserVIPMembership field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserVIPMembershipMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case uservipmembership.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case uservipmembership.FieldVipLevelID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVipLevelID(v)
+		return nil
+	case uservipmembership.FieldStartsAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartsAt(v)
+		return nil
+	case uservipmembership.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	case uservipmembership.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case uservipmembership.FieldSourceOrderID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceOrderID(v)
+		return nil
+	case uservipmembership.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
+		return nil
+	case uservipmembership.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case uservipmembership.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserVIPMembership field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UserVIPMembershipMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UserVIPMembershipMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserVIPMembershipMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown UserVIPMembership numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UserVIPMembershipMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(uservipmembership.FieldSourceOrderID) {
+		fields = append(fields, uservipmembership.FieldSourceOrderID)
+	}
+	if m.FieldCleared(uservipmembership.FieldNotes) {
+		fields = append(fields, uservipmembership.FieldNotes)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UserVIPMembershipMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UserVIPMembershipMutation) ClearField(name string) error {
+	switch name {
+	case uservipmembership.FieldSourceOrderID:
+		m.ClearSourceOrderID()
+		return nil
+	case uservipmembership.FieldNotes:
+		m.ClearNotes()
+		return nil
+	}
+	return fmt.Errorf("unknown UserVIPMembership nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UserVIPMembershipMutation) ResetField(name string) error {
+	switch name {
+	case uservipmembership.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case uservipmembership.FieldVipLevelID:
+		m.ResetVipLevelID()
+		return nil
+	case uservipmembership.FieldStartsAt:
+		m.ResetStartsAt()
+		return nil
+	case uservipmembership.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	case uservipmembership.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case uservipmembership.FieldSourceOrderID:
+		m.ResetSourceOrderID()
+		return nil
+	case uservipmembership.FieldNotes:
+		m.ResetNotes()
+		return nil
+	case uservipmembership.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case uservipmembership.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown UserVIPMembership field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UserVIPMembershipMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.user != nil {
+		edges = append(edges, uservipmembership.EdgeUser)
+	}
+	if m.vip_level != nil {
+		edges = append(edges, uservipmembership.EdgeVipLevel)
+	}
+	if m.source_order != nil {
+		edges = append(edges, uservipmembership.EdgeSourceOrder)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UserVIPMembershipMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case uservipmembership.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case uservipmembership.EdgeVipLevel:
+		if id := m.vip_level; id != nil {
+			return []ent.Value{*id}
+		}
+	case uservipmembership.EdgeSourceOrder:
+		if id := m.source_order; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UserVIPMembershipMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UserVIPMembershipMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UserVIPMembershipMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.cleareduser {
+		edges = append(edges, uservipmembership.EdgeUser)
+	}
+	if m.clearedvip_level {
+		edges = append(edges, uservipmembership.EdgeVipLevel)
+	}
+	if m.clearedsource_order {
+		edges = append(edges, uservipmembership.EdgeSourceOrder)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UserVIPMembershipMutation) EdgeCleared(name string) bool {
+	switch name {
+	case uservipmembership.EdgeUser:
+		return m.cleareduser
+	case uservipmembership.EdgeVipLevel:
+		return m.clearedvip_level
+	case uservipmembership.EdgeSourceOrder:
+		return m.clearedsource_order
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UserVIPMembershipMutation) ClearEdge(name string) error {
+	switch name {
+	case uservipmembership.EdgeUser:
+		m.ClearUser()
+		return nil
+	case uservipmembership.EdgeVipLevel:
+		m.ClearVipLevel()
+		return nil
+	case uservipmembership.EdgeSourceOrder:
+		m.ClearSourceOrder()
+		return nil
+	}
+	return fmt.Errorf("unknown UserVIPMembership unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UserVIPMembershipMutation) ResetEdge(name string) error {
+	switch name {
+	case uservipmembership.EdgeUser:
+		m.ResetUser()
+		return nil
+	case uservipmembership.EdgeVipLevel:
+		m.ResetVipLevel()
+		return nil
+	case uservipmembership.EdgeSourceOrder:
+		m.ResetSourceOrder()
+		return nil
+	}
+	return fmt.Errorf("unknown UserVIPMembership edge %s", name)
+}
+
+// VIPLevelMutation represents an operation that mutates the VIPLevel nodes in the graph.
+type VIPLevelMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int64
+	name                   *string
+	description            *string
+	price                  *float64
+	addprice               *float64
+	original_price         *float64
+	addoriginal_price      *float64
+	validity_days          *int
+	addvalidity_days       *int
+	discount_multiplier    *float64
+	adddiscount_multiplier *float64
+	features               *string
+	benefits               *map[string]interface{}
+	for_sale               *bool
+	sort_order             *int
+	addsort_order          *int
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	memberships            map[int64]struct{}
+	removedmemberships     map[int64]struct{}
+	clearedmemberships     bool
+	usage_logs             map[int64]struct{}
+	removedusage_logs      map[int64]struct{}
+	clearedusage_logs      bool
+	done                   bool
+	oldValue               func(context.Context) (*VIPLevel, error)
+	predicates             []predicate.VIPLevel
+}
+
+var _ ent.Mutation = (*VIPLevelMutation)(nil)
+
+// viplevelOption allows management of the mutation configuration using functional options.
+type viplevelOption func(*VIPLevelMutation)
+
+// newVIPLevelMutation creates new mutation for the VIPLevel entity.
+func newVIPLevelMutation(c config, op Op, opts ...viplevelOption) *VIPLevelMutation {
+	m := &VIPLevelMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeVIPLevel,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withVIPLevelID sets the ID field of the mutation.
+func withVIPLevelID(id int64) viplevelOption {
+	return func(m *VIPLevelMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *VIPLevel
+		)
+		m.oldValue = func(ctx context.Context) (*VIPLevel, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().VIPLevel.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withVIPLevel sets the old VIPLevel of the mutation.
+func withVIPLevel(node *VIPLevel) viplevelOption {
+	return func(m *VIPLevelMutation) {
+		m.oldValue = func(context.Context) (*VIPLevel, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m VIPLevelMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m VIPLevelMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *VIPLevelMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *VIPLevelMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().VIPLevel.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *VIPLevelMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *VIPLevelMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *VIPLevelMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *VIPLevelMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *VIPLevelMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *VIPLevelMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetPrice sets the "price" field.
+func (m *VIPLevelMutation) SetPrice(f float64) {
+	m.price = &f
+	m.addprice = nil
+}
+
+// Price returns the value of the "price" field in the mutation.
+func (m *VIPLevelMutation) Price() (r float64, exists bool) {
+	v := m.price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrice returns the old "price" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldPrice(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrice: %w", err)
+	}
+	return oldValue.Price, nil
+}
+
+// AddPrice adds f to the "price" field.
+func (m *VIPLevelMutation) AddPrice(f float64) {
+	if m.addprice != nil {
+		*m.addprice += f
+	} else {
+		m.addprice = &f
+	}
+}
+
+// AddedPrice returns the value that was added to the "price" field in this mutation.
+func (m *VIPLevelMutation) AddedPrice() (r float64, exists bool) {
+	v := m.addprice
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPrice resets all changes to the "price" field.
+func (m *VIPLevelMutation) ResetPrice() {
+	m.price = nil
+	m.addprice = nil
+}
+
+// SetOriginalPrice sets the "original_price" field.
+func (m *VIPLevelMutation) SetOriginalPrice(f float64) {
+	m.original_price = &f
+	m.addoriginal_price = nil
+}
+
+// OriginalPrice returns the value of the "original_price" field in the mutation.
+func (m *VIPLevelMutation) OriginalPrice() (r float64, exists bool) {
+	v := m.original_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalPrice returns the old "original_price" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldOriginalPrice(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalPrice: %w", err)
+	}
+	return oldValue.OriginalPrice, nil
+}
+
+// AddOriginalPrice adds f to the "original_price" field.
+func (m *VIPLevelMutation) AddOriginalPrice(f float64) {
+	if m.addoriginal_price != nil {
+		*m.addoriginal_price += f
+	} else {
+		m.addoriginal_price = &f
+	}
+}
+
+// AddedOriginalPrice returns the value that was added to the "original_price" field in this mutation.
+func (m *VIPLevelMutation) AddedOriginalPrice() (r float64, exists bool) {
+	v := m.addoriginal_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearOriginalPrice clears the value of the "original_price" field.
+func (m *VIPLevelMutation) ClearOriginalPrice() {
+	m.original_price = nil
+	m.addoriginal_price = nil
+	m.clearedFields[viplevel.FieldOriginalPrice] = struct{}{}
+}
+
+// OriginalPriceCleared returns if the "original_price" field was cleared in this mutation.
+func (m *VIPLevelMutation) OriginalPriceCleared() bool {
+	_, ok := m.clearedFields[viplevel.FieldOriginalPrice]
+	return ok
+}
+
+// ResetOriginalPrice resets all changes to the "original_price" field.
+func (m *VIPLevelMutation) ResetOriginalPrice() {
+	m.original_price = nil
+	m.addoriginal_price = nil
+	delete(m.clearedFields, viplevel.FieldOriginalPrice)
+}
+
+// SetValidityDays sets the "validity_days" field.
+func (m *VIPLevelMutation) SetValidityDays(i int) {
+	m.validity_days = &i
+	m.addvalidity_days = nil
+}
+
+// ValidityDays returns the value of the "validity_days" field in the mutation.
+func (m *VIPLevelMutation) ValidityDays() (r int, exists bool) {
+	v := m.validity_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidityDays returns the old "validity_days" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldValidityDays(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidityDays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidityDays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidityDays: %w", err)
+	}
+	return oldValue.ValidityDays, nil
+}
+
+// AddValidityDays adds i to the "validity_days" field.
+func (m *VIPLevelMutation) AddValidityDays(i int) {
+	if m.addvalidity_days != nil {
+		*m.addvalidity_days += i
+	} else {
+		m.addvalidity_days = &i
+	}
+}
+
+// AddedValidityDays returns the value that was added to the "validity_days" field in this mutation.
+func (m *VIPLevelMutation) AddedValidityDays() (r int, exists bool) {
+	v := m.addvalidity_days
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetValidityDays resets all changes to the "validity_days" field.
+func (m *VIPLevelMutation) ResetValidityDays() {
+	m.validity_days = nil
+	m.addvalidity_days = nil
+}
+
+// SetDiscountMultiplier sets the "discount_multiplier" field.
+func (m *VIPLevelMutation) SetDiscountMultiplier(f float64) {
+	m.discount_multiplier = &f
+	m.adddiscount_multiplier = nil
+}
+
+// DiscountMultiplier returns the value of the "discount_multiplier" field in the mutation.
+func (m *VIPLevelMutation) DiscountMultiplier() (r float64, exists bool) {
+	v := m.discount_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscountMultiplier returns the old "discount_multiplier" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldDiscountMultiplier(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscountMultiplier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscountMultiplier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscountMultiplier: %w", err)
+	}
+	return oldValue.DiscountMultiplier, nil
+}
+
+// AddDiscountMultiplier adds f to the "discount_multiplier" field.
+func (m *VIPLevelMutation) AddDiscountMultiplier(f float64) {
+	if m.adddiscount_multiplier != nil {
+		*m.adddiscount_multiplier += f
+	} else {
+		m.adddiscount_multiplier = &f
+	}
+}
+
+// AddedDiscountMultiplier returns the value that was added to the "discount_multiplier" field in this mutation.
+func (m *VIPLevelMutation) AddedDiscountMultiplier() (r float64, exists bool) {
+	v := m.adddiscount_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDiscountMultiplier resets all changes to the "discount_multiplier" field.
+func (m *VIPLevelMutation) ResetDiscountMultiplier() {
+	m.discount_multiplier = nil
+	m.adddiscount_multiplier = nil
+}
+
+// SetFeatures sets the "features" field.
+func (m *VIPLevelMutation) SetFeatures(s string) {
+	m.features = &s
+}
+
+// Features returns the value of the "features" field in the mutation.
+func (m *VIPLevelMutation) Features() (r string, exists bool) {
+	v := m.features
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFeatures returns the old "features" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldFeatures(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFeatures is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFeatures requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFeatures: %w", err)
+	}
+	return oldValue.Features, nil
+}
+
+// ResetFeatures resets all changes to the "features" field.
+func (m *VIPLevelMutation) ResetFeatures() {
+	m.features = nil
+}
+
+// SetBenefits sets the "benefits" field.
+func (m *VIPLevelMutation) SetBenefits(value map[string]interface{}) {
+	m.benefits = &value
+}
+
+// Benefits returns the value of the "benefits" field in the mutation.
+func (m *VIPLevelMutation) Benefits() (r map[string]interface{}, exists bool) {
+	v := m.benefits
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBenefits returns the old "benefits" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldBenefits(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBenefits is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBenefits requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBenefits: %w", err)
+	}
+	return oldValue.Benefits, nil
+}
+
+// ClearBenefits clears the value of the "benefits" field.
+func (m *VIPLevelMutation) ClearBenefits() {
+	m.benefits = nil
+	m.clearedFields[viplevel.FieldBenefits] = struct{}{}
+}
+
+// BenefitsCleared returns if the "benefits" field was cleared in this mutation.
+func (m *VIPLevelMutation) BenefitsCleared() bool {
+	_, ok := m.clearedFields[viplevel.FieldBenefits]
+	return ok
+}
+
+// ResetBenefits resets all changes to the "benefits" field.
+func (m *VIPLevelMutation) ResetBenefits() {
+	m.benefits = nil
+	delete(m.clearedFields, viplevel.FieldBenefits)
+}
+
+// SetForSale sets the "for_sale" field.
+func (m *VIPLevelMutation) SetForSale(b bool) {
+	m.for_sale = &b
+}
+
+// ForSale returns the value of the "for_sale" field in the mutation.
+func (m *VIPLevelMutation) ForSale() (r bool, exists bool) {
+	v := m.for_sale
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldForSale returns the old "for_sale" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldForSale(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldForSale is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldForSale requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldForSale: %w", err)
+	}
+	return oldValue.ForSale, nil
+}
+
+// ResetForSale resets all changes to the "for_sale" field.
+func (m *VIPLevelMutation) ResetForSale() {
+	m.for_sale = nil
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (m *VIPLevelMutation) SetSortOrder(i int) {
+	m.sort_order = &i
+	m.addsort_order = nil
+}
+
+// SortOrder returns the value of the "sort_order" field in the mutation.
+func (m *VIPLevelMutation) SortOrder() (r int, exists bool) {
+	v := m.sort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSortOrder returns the old "sort_order" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldSortOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSortOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSortOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSortOrder: %w", err)
+	}
+	return oldValue.SortOrder, nil
+}
+
+// AddSortOrder adds i to the "sort_order" field.
+func (m *VIPLevelMutation) AddSortOrder(i int) {
+	if m.addsort_order != nil {
+		*m.addsort_order += i
+	} else {
+		m.addsort_order = &i
+	}
+}
+
+// AddedSortOrder returns the value that was added to the "sort_order" field in this mutation.
+func (m *VIPLevelMutation) AddedSortOrder() (r int, exists bool) {
+	v := m.addsort_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSortOrder resets all changes to the "sort_order" field.
+func (m *VIPLevelMutation) ResetSortOrder() {
+	m.sort_order = nil
+	m.addsort_order = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *VIPLevelMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *VIPLevelMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *VIPLevelMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *VIPLevelMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *VIPLevelMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the VIPLevel entity.
+// If the VIPLevel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *VIPLevelMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *VIPLevelMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// AddMembershipIDs adds the "memberships" edge to the UserVIPMembership entity by ids.
+func (m *VIPLevelMutation) AddMembershipIDs(ids ...int64) {
+	if m.memberships == nil {
+		m.memberships = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.memberships[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMemberships clears the "memberships" edge to the UserVIPMembership entity.
+func (m *VIPLevelMutation) ClearMemberships() {
+	m.clearedmemberships = true
+}
+
+// MembershipsCleared reports if the "memberships" edge to the UserVIPMembership entity was cleared.
+func (m *VIPLevelMutation) MembershipsCleared() bool {
+	return m.clearedmemberships
+}
+
+// RemoveMembershipIDs removes the "memberships" edge to the UserVIPMembership entity by IDs.
+func (m *VIPLevelMutation) RemoveMembershipIDs(ids ...int64) {
+	if m.removedmemberships == nil {
+		m.removedmemberships = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.memberships, ids[i])
+		m.removedmemberships[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMemberships returns the removed IDs of the "memberships" edge to the UserVIPMembership entity.
+func (m *VIPLevelMutation) RemovedMembershipsIDs() (ids []int64) {
+	for id := range m.removedmemberships {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MembershipsIDs returns the "memberships" edge IDs in the mutation.
+func (m *VIPLevelMutation) MembershipsIDs() (ids []int64) {
+	for id := range m.memberships {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMemberships resets all changes to the "memberships" edge.
+func (m *VIPLevelMutation) ResetMemberships() {
+	m.memberships = nil
+	m.clearedmemberships = false
+	m.removedmemberships = nil
+}
+
+// AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by ids.
+func (m *VIPLevelMutation) AddUsageLogIDs(ids ...int64) {
+	if m.usage_logs == nil {
+		m.usage_logs = make(map[int64]struct{})
+	}
+	for i := range ids {
+		m.usage_logs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsageLogs clears the "usage_logs" edge to the UsageLog entity.
+func (m *VIPLevelMutation) ClearUsageLogs() {
+	m.clearedusage_logs = true
+}
+
+// UsageLogsCleared reports if the "usage_logs" edge to the UsageLog entity was cleared.
+func (m *VIPLevelMutation) UsageLogsCleared() bool {
+	return m.clearedusage_logs
+}
+
+// RemoveUsageLogIDs removes the "usage_logs" edge to the UsageLog entity by IDs.
+func (m *VIPLevelMutation) RemoveUsageLogIDs(ids ...int64) {
+	if m.removedusage_logs == nil {
+		m.removedusage_logs = make(map[int64]struct{})
+	}
+	for i := range ids {
+		delete(m.usage_logs, ids[i])
+		m.removedusage_logs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsageLogs returns the removed IDs of the "usage_logs" edge to the UsageLog entity.
+func (m *VIPLevelMutation) RemovedUsageLogsIDs() (ids []int64) {
+	for id := range m.removedusage_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsageLogsIDs returns the "usage_logs" edge IDs in the mutation.
+func (m *VIPLevelMutation) UsageLogsIDs() (ids []int64) {
+	for id := range m.usage_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsageLogs resets all changes to the "usage_logs" edge.
+func (m *VIPLevelMutation) ResetUsageLogs() {
+	m.usage_logs = nil
+	m.clearedusage_logs = false
+	m.removedusage_logs = nil
+}
+
+// Where appends a list predicates to the VIPLevelMutation builder.
+func (m *VIPLevelMutation) Where(ps ...predicate.VIPLevel) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the VIPLevelMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *VIPLevelMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.VIPLevel, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *VIPLevelMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *VIPLevelMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (VIPLevel).
+func (m *VIPLevelMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *VIPLevelMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.name != nil {
+		fields = append(fields, viplevel.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, viplevel.FieldDescription)
+	}
+	if m.price != nil {
+		fields = append(fields, viplevel.FieldPrice)
+	}
+	if m.original_price != nil {
+		fields = append(fields, viplevel.FieldOriginalPrice)
+	}
+	if m.validity_days != nil {
+		fields = append(fields, viplevel.FieldValidityDays)
+	}
+	if m.discount_multiplier != nil {
+		fields = append(fields, viplevel.FieldDiscountMultiplier)
+	}
+	if m.features != nil {
+		fields = append(fields, viplevel.FieldFeatures)
+	}
+	if m.benefits != nil {
+		fields = append(fields, viplevel.FieldBenefits)
+	}
+	if m.for_sale != nil {
+		fields = append(fields, viplevel.FieldForSale)
+	}
+	if m.sort_order != nil {
+		fields = append(fields, viplevel.FieldSortOrder)
+	}
+	if m.created_at != nil {
+		fields = append(fields, viplevel.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, viplevel.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *VIPLevelMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case viplevel.FieldName:
+		return m.Name()
+	case viplevel.FieldDescription:
+		return m.Description()
+	case viplevel.FieldPrice:
+		return m.Price()
+	case viplevel.FieldOriginalPrice:
+		return m.OriginalPrice()
+	case viplevel.FieldValidityDays:
+		return m.ValidityDays()
+	case viplevel.FieldDiscountMultiplier:
+		return m.DiscountMultiplier()
+	case viplevel.FieldFeatures:
+		return m.Features()
+	case viplevel.FieldBenefits:
+		return m.Benefits()
+	case viplevel.FieldForSale:
+		return m.ForSale()
+	case viplevel.FieldSortOrder:
+		return m.SortOrder()
+	case viplevel.FieldCreatedAt:
+		return m.CreatedAt()
+	case viplevel.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *VIPLevelMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case viplevel.FieldName:
+		return m.OldName(ctx)
+	case viplevel.FieldDescription:
+		return m.OldDescription(ctx)
+	case viplevel.FieldPrice:
+		return m.OldPrice(ctx)
+	case viplevel.FieldOriginalPrice:
+		return m.OldOriginalPrice(ctx)
+	case viplevel.FieldValidityDays:
+		return m.OldValidityDays(ctx)
+	case viplevel.FieldDiscountMultiplier:
+		return m.OldDiscountMultiplier(ctx)
+	case viplevel.FieldFeatures:
+		return m.OldFeatures(ctx)
+	case viplevel.FieldBenefits:
+		return m.OldBenefits(ctx)
+	case viplevel.FieldForSale:
+		return m.OldForSale(ctx)
+	case viplevel.FieldSortOrder:
+		return m.OldSortOrder(ctx)
+	case viplevel.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case viplevel.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown VIPLevel field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VIPLevelMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case viplevel.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case viplevel.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case viplevel.FieldPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrice(v)
+		return nil
+	case viplevel.FieldOriginalPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalPrice(v)
+		return nil
+	case viplevel.FieldValidityDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidityDays(v)
+		return nil
+	case viplevel.FieldDiscountMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDiscountMultiplier(v)
+		return nil
+	case viplevel.FieldFeatures:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFeatures(v)
+		return nil
+	case viplevel.FieldBenefits:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBenefits(v)
+		return nil
+	case viplevel.FieldForSale:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetForSale(v)
+		return nil
+	case viplevel.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSortOrder(v)
+		return nil
+	case viplevel.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case viplevel.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown VIPLevel field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *VIPLevelMutation) AddedFields() []string {
+	var fields []string
+	if m.addprice != nil {
+		fields = append(fields, viplevel.FieldPrice)
+	}
+	if m.addoriginal_price != nil {
+		fields = append(fields, viplevel.FieldOriginalPrice)
+	}
+	if m.addvalidity_days != nil {
+		fields = append(fields, viplevel.FieldValidityDays)
+	}
+	if m.adddiscount_multiplier != nil {
+		fields = append(fields, viplevel.FieldDiscountMultiplier)
+	}
+	if m.addsort_order != nil {
+		fields = append(fields, viplevel.FieldSortOrder)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *VIPLevelMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case viplevel.FieldPrice:
+		return m.AddedPrice()
+	case viplevel.FieldOriginalPrice:
+		return m.AddedOriginalPrice()
+	case viplevel.FieldValidityDays:
+		return m.AddedValidityDays()
+	case viplevel.FieldDiscountMultiplier:
+		return m.AddedDiscountMultiplier()
+	case viplevel.FieldSortOrder:
+		return m.AddedSortOrder()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *VIPLevelMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case viplevel.FieldPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPrice(v)
+		return nil
+	case viplevel.FieldOriginalPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOriginalPrice(v)
+		return nil
+	case viplevel.FieldValidityDays:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddValidityDays(v)
+		return nil
+	case viplevel.FieldDiscountMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDiscountMultiplier(v)
+		return nil
+	case viplevel.FieldSortOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSortOrder(v)
+		return nil
+	}
+	return fmt.Errorf("unknown VIPLevel numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *VIPLevelMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(viplevel.FieldOriginalPrice) {
+		fields = append(fields, viplevel.FieldOriginalPrice)
+	}
+	if m.FieldCleared(viplevel.FieldBenefits) {
+		fields = append(fields, viplevel.FieldBenefits)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *VIPLevelMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *VIPLevelMutation) ClearField(name string) error {
+	switch name {
+	case viplevel.FieldOriginalPrice:
+		m.ClearOriginalPrice()
+		return nil
+	case viplevel.FieldBenefits:
+		m.ClearBenefits()
+		return nil
+	}
+	return fmt.Errorf("unknown VIPLevel nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *VIPLevelMutation) ResetField(name string) error {
+	switch name {
+	case viplevel.FieldName:
+		m.ResetName()
+		return nil
+	case viplevel.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case viplevel.FieldPrice:
+		m.ResetPrice()
+		return nil
+	case viplevel.FieldOriginalPrice:
+		m.ResetOriginalPrice()
+		return nil
+	case viplevel.FieldValidityDays:
+		m.ResetValidityDays()
+		return nil
+	case viplevel.FieldDiscountMultiplier:
+		m.ResetDiscountMultiplier()
+		return nil
+	case viplevel.FieldFeatures:
+		m.ResetFeatures()
+		return nil
+	case viplevel.FieldBenefits:
+		m.ResetBenefits()
+		return nil
+	case viplevel.FieldForSale:
+		m.ResetForSale()
+		return nil
+	case viplevel.FieldSortOrder:
+		m.ResetSortOrder()
+		return nil
+	case viplevel.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case viplevel.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown VIPLevel field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *VIPLevelMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.memberships != nil {
+		edges = append(edges, viplevel.EdgeMemberships)
+	}
+	if m.usage_logs != nil {
+		edges = append(edges, viplevel.EdgeUsageLogs)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *VIPLevelMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case viplevel.EdgeMemberships:
+		ids := make([]ent.Value, 0, len(m.memberships))
+		for id := range m.memberships {
+			ids = append(ids, id)
+		}
+		return ids
+	case viplevel.EdgeUsageLogs:
+		ids := make([]ent.Value, 0, len(m.usage_logs))
+		for id := range m.usage_logs {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *VIPLevelMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedmemberships != nil {
+		edges = append(edges, viplevel.EdgeMemberships)
+	}
+	if m.removedusage_logs != nil {
+		edges = append(edges, viplevel.EdgeUsageLogs)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *VIPLevelMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case viplevel.EdgeMemberships:
+		ids := make([]ent.Value, 0, len(m.removedmemberships))
+		for id := range m.removedmemberships {
+			ids = append(ids, id)
+		}
+		return ids
+	case viplevel.EdgeUsageLogs:
+		ids := make([]ent.Value, 0, len(m.removedusage_logs))
+		for id := range m.removedusage_logs {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *VIPLevelMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedmemberships {
+		edges = append(edges, viplevel.EdgeMemberships)
+	}
+	if m.clearedusage_logs {
+		edges = append(edges, viplevel.EdgeUsageLogs)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *VIPLevelMutation) EdgeCleared(name string) bool {
+	switch name {
+	case viplevel.EdgeMemberships:
+		return m.clearedmemberships
+	case viplevel.EdgeUsageLogs:
+		return m.clearedusage_logs
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *VIPLevelMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown VIPLevel unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *VIPLevelMutation) ResetEdge(name string) error {
+	switch name {
+	case viplevel.EdgeMemberships:
+		m.ResetMemberships()
+		return nil
+	case viplevel.EdgeUsageLogs:
+		m.ResetUsageLogs()
+		return nil
+	}
+	return fmt.Errorf("unknown VIPLevel edge %s", name)
 }

@@ -652,6 +652,18 @@ const routes: RouteRecordRaw[] = [
       requiresPayment: true
     }
   },
+  {
+    path: '/admin/orders/vip',
+    name: 'AdminPaymentVIP',
+    component: () => import('@/views/admin/orders/AdminPaymentVIPView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'VIP Levels',
+      titleKey: 'nav.paymentVIP',
+      requiresPayment: true
+    }
+  },
 
   // ==================== 404 Not Found ====================
   {

@@ -83,6 +83,7 @@ type CreateOrderRequest struct {
 	PaymentSource   string
 	OrderType       string
 	PlanID          int64
+	VIPLevelID      int64
 	Locale          string
 }
 
@@ -108,6 +109,9 @@ type CreateOrderResponse struct {
 	ExpiresAt    time.Time                       `json:"expires_at"`
 	PaymentMode  string                          `json:"payment_mode,omitempty"`
 	ResumeToken  string                          `json:"resume_token,omitempty"`
+	OrderType    string                          `json:"order_type,omitempty"`
+	PlanID       *int64                          `json:"plan_id,omitempty"`
+	VIPLevelID   *int64                          `json:"vip_level_id,omitempty"`
 }
 
 type OrderListParams struct {

@@ -81,10 +81,16 @@ func (PaymentOrder) Fields() []ent.Field {
 		field.Int64("plan_id").
 			Optional().
 			Nillable(),
+		field.Int64("vip_level_id").
+			Optional().
+			Nillable(),
 		field.Int64("subscription_group_id").
 			Optional().
 			Nillable(),
 		field.Int("subscription_days").
+			Optional().
+			Nillable(),
+		field.Int("vip_days").
 			Optional().
 			Nillable(),
 		field.String("provider_instance_id").
@@ -180,6 +186,7 @@ func (PaymentOrder) Edges() []ent.Edge {
 			Field("user_id").
 			Unique().
 			Required(),
+		edge.To("vip_memberships", UserVIPMembership.Type),
 	}
 }
 

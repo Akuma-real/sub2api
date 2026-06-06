@@ -20,7 +20,7 @@ export type OrderStatus =
 
 export type PaymentType = 'alipay' | 'wxpay' | 'alipay_direct' | 'wxpay_direct' | 'stripe' | 'easypay' | 'airwallex'
 
-export type OrderType = 'balance' | 'subscription'
+export type OrderType = 'balance' | 'subscription' | 'vip'
 
 // ==================== Configuration ====================
 
@@ -96,6 +96,7 @@ export interface PaymentOrder {
   refund_requested_by?: number
   refund_request_reason?: string
   plan_id?: number
+  vip_level_id?: number
   provider_instance_id?: string
 }
 
@@ -121,6 +122,48 @@ export interface SubscriptionPlan {
   features: string[]
   for_sale: boolean
   sort_order: number
+}
+
+export interface VIPLevel {
+  id: number
+  name: string
+  description: string
+  price: number
+  original_price?: number
+  validity_days: number
+  discount_multiplier: number
+  features: string
+  benefits?: Record<string, unknown>
+  for_sale: boolean
+  sort_order: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface UserVIPMembership {
+  id: number
+  user_id: number
+  vip_level_id: number
+  starts_at: string
+  expires_at: string
+  status: string
+  source_order_id?: number
+  notes?: string
+  level?: VIPLevel
+}
+
+export interface VIPOverview {
+  current?: UserVIPMembership | null
+  history?: UserVIPMembership[]
+  total_savings_usd: number
+}
+
+export interface VIPUserSummary {
+  user_id: number
+  email: string
+  username: string
+  current?: UserVIPMembership | null
+  total_savings_usd: number
 }
 
 export interface PaymentChannel {
@@ -158,6 +201,7 @@ export interface CreateOrderRequest {
   payment_type: string
   order_type: string
   plan_id?: number
+  vip_level_id?: number
   return_url?: string
   payment_source?: string
   openid?: string
@@ -203,6 +247,9 @@ export interface CreateOrderResult {
   out_trade_no?: string
   payment_mode?: string
   resume_token?: string
+  order_type?: OrderType
+  plan_id?: number
+  vip_level_id?: number
   oauth?: WechatOAuthInfo
   jsapi?: WechatJSAPIPayload
   jsapi_payload?: WechatJSAPIPayload

@@ -75,7 +75,7 @@
               <Icon name="refresh" size="sm" />
               {{ t("payment.admin.retry") }}
             </button>
-            <template v-if="row.status === 'REFUND_REQUESTED'">
+            <template v-if="row.order_type !== 'vip' && row.status === 'REFUND_REQUESTED'">
               <span
                 v-if="row.refund_amount"
                 class="rounded-full bg-primary-100 px-1.5 py-0.5 text-xs font-medium text-primary-700"
@@ -91,7 +91,7 @@
               </button>
             </template>
             <button
-              v-else-if="row.status === 'REFUND_FAILED'"
+              v-else-if="row.order_type !== 'vip' && row.status === 'REFUND_FAILED'"
               @click="openRefundDialog(row)"
               class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary-700 hover:bg-primary-50"
             >
@@ -100,8 +100,9 @@
             </button>
             <button
               v-else-if="
-                row.status === 'COMPLETED' ||
-                row.status === 'PARTIALLY_REFUNDED'
+                row.order_type !== 'vip' &&
+                (row.status === 'COMPLETED' ||
+                  row.status === 'PARTIALLY_REFUNDED')
               "
               @click="openRefundDialog(row)"
               class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-error hover:bg-error/15"
@@ -396,6 +397,7 @@ const orderTypeFilterOptions = computed(() => [
   { value: "", label: t("payment.admin.allOrderTypes") },
   { value: "balance", label: t("payment.admin.balanceOrder") },
   { value: "subscription", label: t("payment.admin.subscriptionOrder") },
+  { value: "vip", label: t("payment.admin.vipOrder") },
 ]);
 
 async function showOrderDetail(order: PaymentOrder) {
