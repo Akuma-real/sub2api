@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	apperrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/stretchr/testify/require"
 )
@@ -265,17 +266,42 @@ func (s *deleteGroupAPIKeyRepoStub) ListKeysByGroupID(ctx context.Context, group
 
 type proxyRepoStub struct {
 	deleteErr    error
+	createErr    error
+	updateErr    error
 	countErr     error
 	accountCount int64
 	deletedIDs   []int64
+	created      []*Proxy
+	updated      []*Proxy
+	proxiesByID  map[int64]*Proxy
+	allowCreate  bool
+	allowUpdate  bool
+	nextProxyID  int64
 }
 
 func (s *proxyRepoStub) Create(ctx context.Context, proxy *Proxy) error {
-	panic("unexpected Create call")
+	if !s.allowCreate {
+		panic("unexpected Create call")
+	}
+	if s.createErr != nil {
+		return s.createErr
+	}
+	if s.nextProxyID != 0 && proxy.ID == 0 {
+		proxy.ID = s.nextProxyID
+	}
+	s.created = append(s.created, proxy)
+	return nil
 }
 
 func (s *proxyRepoStub) GetByID(ctx context.Context, id int64) (*Proxy, error) {
-	panic("unexpected GetByID call")
+	if s.proxiesByID == nil {
+		panic("unexpected GetByID call")
+	}
+	proxy, ok := s.proxiesByID[id]
+	if !ok {
+		return nil, ErrProxyNotFound
+	}
+	return proxy, nil
 }
 
 func (s *proxyRepoStub) ListByIDs(ctx context.Context, ids []int64) ([]Proxy, error) {
@@ -283,7 +309,14 @@ func (s *proxyRepoStub) ListByIDs(ctx context.Context, ids []int64) ([]Proxy, er
 }
 
 func (s *proxyRepoStub) Update(ctx context.Context, proxy *Proxy) error {
-	panic("unexpected Update call")
+	if !s.allowUpdate {
+		panic("unexpected Update call")
+	}
+	if s.updateErr != nil {
+		return s.updateErr
+	}
+	s.updated = append(s.updated, proxy)
+	return nil
 }
 
 func (s *proxyRepoStub) Delete(ctx context.Context, id int64) error {
@@ -671,6 +704,164 @@ func TestAdminService_DeleteProxy_Error(t *testing.T) {
 
 	err := svc.DeleteProxy(context.Background(), 33)
 	require.ErrorIs(t, err, deleteErr)
+}
+
+func TestAdminService_CreateProxy_ValidatesBackupProxy(t *testing.T) {
+	backupID := int64(2)
+
+	t.Run("accepts active backup", func(t *testing.T) {
+		repo := &proxyRepoStub{
+			allowCreate: true,
+			nextProxyID: 1,
+			proxiesByID: map[int64]*Proxy{
+				backupID: {ID: backupID, Status: StatusActive},
+			},
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		proxy, err := svc.CreateProxy(context.Background(), &CreateProxyInput{
+			Name:          "primary",
+			Protocol:      "http",
+			Host:          "127.0.0.1",
+			Port:          8080,
+			FallbackMode:  FallbackModeProxy,
+			BackupProxyID: &backupID,
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, proxy)
+		require.Len(t, repo.created, 1)
+		require.Equal(t, backupID, *repo.created[0].BackupProxyID)
+	})
+
+	t.Run("rejects missing backup", func(t *testing.T) {
+		repo := &proxyRepoStub{
+			allowCreate: true,
+			proxiesByID: map[int64]*Proxy{},
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		_, err := svc.CreateProxy(context.Background(), &CreateProxyInput{
+			Name:          "primary",
+			Protocol:      "http",
+			Host:          "127.0.0.1",
+			Port:          8080,
+			FallbackMode:  FallbackModeProxy,
+			BackupProxyID: &backupID,
+		})
+
+		require.ErrorIs(t, err, ErrProxyNotFound)
+		require.Empty(t, repo.created)
+	})
+
+	t.Run("rejects inactive backup", func(t *testing.T) {
+		repo := &proxyRepoStub{
+			allowCreate: true,
+			proxiesByID: map[int64]*Proxy{
+				backupID: {ID: backupID, Status: "inactive"},
+			},
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		_, err := svc.CreateProxy(context.Background(), &CreateProxyInput{
+			Name:          "primary",
+			Protocol:      "http",
+			Host:          "127.0.0.1",
+			Port:          8080,
+			FallbackMode:  FallbackModeProxy,
+			BackupProxyID: &backupID,
+		})
+
+		require.Equal(t, "PROXY_BACKUP_UNAVAILABLE", apperrors.Reason(err))
+		require.Empty(t, repo.created)
+	})
+
+	t.Run("clears backup when fallback mode is not proxy", func(t *testing.T) {
+		repo := &proxyRepoStub{
+			allowCreate: true,
+			nextProxyID: 1,
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		proxy, err := svc.CreateProxy(context.Background(), &CreateProxyInput{
+			Name:          "primary",
+			Protocol:      "http",
+			Host:          "127.0.0.1",
+			Port:          8080,
+			FallbackMode:  FallbackModeNone,
+			BackupProxyID: &backupID,
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, proxy)
+		require.Len(t, repo.created, 1)
+		require.Nil(t, repo.created[0].BackupProxyID)
+	})
+}
+
+func TestAdminService_UpdateProxy_ValidatesBackupProxy(t *testing.T) {
+	backupID := int64(2)
+	t.Run("rejects expired backup", func(t *testing.T) {
+		now := time.Now()
+		expiredAt := now.Add(-time.Minute)
+		repo := &proxyRepoStub{
+			allowUpdate: true,
+			proxiesByID: map[int64]*Proxy{
+				1:        {ID: 1, Name: "primary", Protocol: "http", Host: "127.0.0.1", Port: 8080, Status: StatusActive},
+				backupID: {ID: backupID, Status: StatusActive, ExpiresAt: &expiredAt},
+			},
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		_, err := svc.UpdateProxy(context.Background(), 1, &UpdateProxyInput{
+			FallbackMode:  FallbackModeProxy,
+			BackupProxyID: &backupID,
+		})
+
+		require.Equal(t, "PROXY_BACKUP_UNAVAILABLE", apperrors.Reason(err))
+		require.Empty(t, repo.updated)
+	})
+
+	t.Run("rejects self backup when fallback mode is proxy", func(t *testing.T) {
+		selfID := int64(1)
+		repo := &proxyRepoStub{
+			allowUpdate: true,
+			proxiesByID: map[int64]*Proxy{
+				selfID: {ID: selfID, Name: "primary", Protocol: "http", Host: "127.0.0.1", Port: 8080, Status: StatusActive},
+			},
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		_, err := svc.UpdateProxy(context.Background(), selfID, &UpdateProxyInput{
+			FallbackMode:  FallbackModeProxy,
+			BackupProxyID: &selfID,
+		})
+
+		require.Equal(t, "PROXY_BACKUP_SELF", apperrors.Reason(err))
+		require.Empty(t, repo.updated)
+	})
+
+	t.Run("clears self backup when fallback mode is not proxy", func(t *testing.T) {
+		selfID := int64(1)
+		repo := &proxyRepoStub{
+			allowUpdate: true,
+			proxiesByID: map[int64]*Proxy{
+				selfID: {ID: selfID, Name: "primary", Protocol: "http", Host: "127.0.0.1", Port: 8080, Status: StatusActive},
+			},
+		}
+		svc := &adminServiceImpl{proxyRepo: repo}
+
+		proxy, err := svc.UpdateProxy(context.Background(), selfID, &UpdateProxyInput{
+			FallbackMode:  FallbackModeNone,
+			BackupProxyID: &selfID,
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, proxy)
+		require.Len(t, repo.updated, 1)
+		require.Equal(t, FallbackModeNone, repo.updated[0].FallbackMode)
+		require.Nil(t, repo.updated[0].BackupProxyID)
+	})
 }
 
 func TestAdminService_DeleteRedeemCode_Success(t *testing.T) {

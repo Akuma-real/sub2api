@@ -95,7 +95,7 @@
                   : t("admin.proxies.dataExport")
               }}
             </button>
-            <button @click="showCreateModal = true" class="btn btn-primary">
+            <button @click="openCreateModal" class="btn btn-primary">
               <Icon name="plus" size="md" class="mr-2" />
               {{ t("admin.proxies.createProxy") }}
             </button>
@@ -400,7 +400,7 @@
                 :title="t('admin.proxies.noProxiesYet')"
                 :description="t('admin.proxies.createFirstProxy')"
                 :action-text="t('admin.proxies.createProxy')"
-                @action="showCreateModal = true"
+                @action="openCreateModal"
               />
             </template>
           </DataTable>
@@ -582,7 +582,12 @@
         </div>
         <div v-if="createForm.fallback_mode === 'proxy'">
           <label class="input-label">{{ t("admin.proxies.backupProxy") }}</label>
-          <Select v-model="createForm.backup_proxy_id" :options="backupProxyOptions()" />
+          <Select
+            v-model="createForm.backup_proxy_id"
+            :options="backupProxyOptions()"
+            :disabled="backupProxyOptionsLoading"
+            :placeholder="backupProxyOptionsLoading ? t('common.loading') : undefined"
+          />
         </div>
       </form>
 
@@ -683,7 +688,7 @@
             v-if="createMode === 'standard'"
             type="submit"
             form="create-proxy-form"
-            :disabled="submitting"
+            :disabled="submitting || (createForm.fallback_mode === 'proxy' && backupProxyOptionsLoading)"
             class="btn btn-primary"
           >
             <svg
@@ -848,7 +853,12 @@
         </div>
         <div v-if="editForm.fallback_mode === 'proxy'">
           <label class="input-label">{{ t("admin.proxies.backupProxy") }}</label>
-          <Select v-model="editForm.backup_proxy_id" :options="backupProxyOptions(editingProxy?.id)" />
+          <Select
+            v-model="editForm.backup_proxy_id"
+            :options="backupProxyOptions(editingProxy?.id)"
+            :disabled="backupProxyOptionsLoading"
+            :placeholder="backupProxyOptionsLoading ? t('common.loading') : undefined"
+          />
         </div>
       </form>
 
@@ -865,7 +875,7 @@
             v-if="editingProxy"
             type="submit"
             form="edit-proxy-form"
-            :disabled="submitting"
+            :disabled="submitting || (editForm.fallback_mode === 'proxy' && backupProxyOptionsLoading)"
             class="btn btn-primary"
           >
             <svg
@@ -1141,7 +1151,14 @@ import { useSwipeSelect } from "@/composables/useSwipeSelect";
 import { useTableSelection } from "@/composables/useTableSelection";
 import { getPersistedPageSize } from "@/composables/usePersistedPageSize";
 import { formatDateTime } from "@/utils/format";
-import { proxyExpiryBadgeClass, proxyExpiryLabelKey } from "@/utils/proxyExpiry";
+import {
+  isProxyBackupSelectable,
+  isoToLocalDateInput,
+  localDateInputEndUnixSeconds,
+  proxyExpiryBadgeClass,
+  proxyExpiryLabelKey,
+  toLocalDateStr,
+} from "@/utils/proxyExpiry";
 
 const { t } = useI18n();
 const appStore = useAppStore();
@@ -1335,16 +1352,61 @@ const editForm = reactive({
 });
 
 const allProxiesForBackup = ref<Proxy[]>([]);
-const loadBackupProxyOptions = async () => {
-  allProxiesForBackup.value = await adminAPI.proxies.getAllWithCount();
-};
-const backupProxyOptions = (excludeId?: number) =>
+const backupProxyOptionsLoading = ref(false);
+let backupProxyOptionsRequestID = 0;
+const selectableBackupProxies = (excludeId?: number) =>
   allProxiesForBackup.value
     .filter((proxy) => proxy.id !== excludeId)
-    .map((proxy) => ({
-      label: `${proxy.name} (${proxy.host}:${proxy.port})`,
-      value: proxy.id,
-    }));
+    .filter((proxy) => isProxyBackupSelectable(proxy));
+const clearUnavailableBackupSelections = () => {
+  if (
+    createForm.fallback_mode === "proxy" &&
+    createForm.backup_proxy_id !== null &&
+    !selectableBackupProxies().some((proxy) => proxy.id === createForm.backup_proxy_id)
+  ) {
+    createForm.backup_proxy_id = null;
+  }
+  if (
+    editForm.fallback_mode === "proxy" &&
+    editForm.backup_proxy_id !== null &&
+    !selectableBackupProxies(editingProxy.value?.id).some(
+      (proxy) => proxy.id === editForm.backup_proxy_id,
+    )
+  ) {
+    editForm.backup_proxy_id = null;
+  }
+};
+const loadBackupProxyOptions = async () => {
+  const requestID = ++backupProxyOptionsRequestID;
+  backupProxyOptionsLoading.value = true;
+  try {
+    const proxies = await adminAPI.proxies.getAllWithCount();
+    if (requestID === backupProxyOptionsRequestID) {
+      allProxiesForBackup.value = proxies;
+      clearUnavailableBackupSelections();
+    }
+  } catch (error) {
+    if (requestID === backupProxyOptionsRequestID) {
+      allProxiesForBackup.value = [];
+      clearUnavailableBackupSelections();
+      appStore.showError(t("admin.proxies.failedToLoad"));
+    }
+    console.error("Error loading backup proxy options: ", error);
+  } finally {
+    if (requestID === backupProxyOptionsRequestID) {
+      backupProxyOptionsLoading.value = false;
+    }
+  }
+};
+const backupProxyOptions = (excludeId?: number) =>
+  selectableBackupProxies(excludeId).map((proxy) => ({
+    label: `${proxy.name} (${proxy.host}:${proxy.port})`,
+    value: proxy.id,
+  }));
+
+const refreshProxyLists = async () => {
+  await Promise.all([loadProxies(), loadBackupProxyOptions()]);
+};
 
 let abortController: AbortController | null = null;
 
@@ -1444,6 +1506,11 @@ const handleSort = (key: string, order: "asc" | "desc") => {
   loadProxies();
 };
 
+const openCreateModal = () => {
+  showCreateModal.value = true;
+  loadBackupProxyOptions();
+};
+
 const closeCreateModal = () => {
   showCreateModal.value = false;
   createMode.value = "standard";
@@ -1468,7 +1535,7 @@ const closeCreateModal = () => {
 
 const handleDataImported = () => {
   showImportData.value = false;
-  loadProxies();
+  refreshProxyLists();
 };
 
 // Parse proxy URL: protocol://user:pass@host:port or protocol://host:port
@@ -1553,7 +1620,7 @@ const handleBatchCreate = async () => {
     }
 
     closeCreateModal();
-    loadProxies();
+    refreshProxyLists();
   } catch (error: any) {
     appStore.showError(
       error.response?.data?.detail || t("admin.proxies.failedToImport"),
@@ -1587,7 +1654,7 @@ const handleCreateProxy = async () => {
       username: createForm.username.trim() || null,
       password: createForm.password.trim() || null,
       expires_at: createForm.expires_at
-        ? Math.floor(new Date(createForm.expires_at).getTime() / 1000)
+        ? localDateInputEndUnixSeconds(createForm.expires_at)
         : null,
       fallback_mode: createForm.fallback_mode,
       backup_proxy_id:
@@ -1598,7 +1665,7 @@ const handleCreateProxy = async () => {
     });
     appStore.showSuccess(t("admin.proxies.proxyCreated"));
     closeCreateModal();
-    loadProxies();
+    refreshProxyLists();
   } catch (error: any) {
     appStore.showError(
       error.response?.data?.detail || t("admin.proxies.failedToCreate"),
@@ -1618,13 +1685,14 @@ const handleEdit = (proxy: Proxy) => {
   editForm.username = proxy.username || "";
   editForm.password = proxy.password || "";
   editForm.status = proxy.status === "expired" ? "inactive" : proxy.status;
-  editForm.expires_at = proxy.expires_at ? proxy.expires_at.slice(0, 10) : "";
+  editForm.expires_at = proxy.expires_at ? isoToLocalDateInput(proxy.expires_at) : "";
   editForm.fallback_mode = proxy.fallback_mode || "none";
   editForm.backup_proxy_id = proxy.backup_proxy_id ?? null;
   editForm.expiry_warn_days = proxy.expiry_warn_days ?? 7;
   editPasswordVisible.value = false;
   editPasswordDirty.value = false;
   showEditModal.value = true;
+  loadBackupProxyOptions();
 };
 
 const closeEditModal = () => {
@@ -1659,7 +1727,7 @@ const handleUpdateProxy = async () => {
       username: editForm.username.trim() || null,
       status: editForm.status,
       expires_at: editForm.expires_at
-        ? Math.floor(new Date(editForm.expires_at).getTime() / 1000)
+        ? localDateInputEndUnixSeconds(editForm.expires_at)
         : null,
       fallback_mode: editForm.fallback_mode,
       backup_proxy_id:
@@ -1675,7 +1743,7 @@ const handleUpdateProxy = async () => {
     await adminAPI.proxies.update(editingProxy.value.id, updateData);
     appStore.showSuccess(t("admin.proxies.proxyUpdated"));
     closeEditModal();
-    loadProxies();
+    refreshProxyLists();
   } catch (error: any) {
     appStore.showError(
       error.response?.data?.detail || t("admin.proxies.failedToUpdate"),
@@ -1939,12 +2007,6 @@ const qualityStatusLabel = (status: string) => {
 
 // 有效期「选天数」⇄ 日历联动:天数自 base 起算(创建=今天;编辑=代理创建日),本地日历日 round-trip 稳定;canonical 仍是 expires_at 日期串
 const EXPIRY_PRESETS = [7, 30, 90, 180]
-const toLocalDateStr = (dt: Date): string => {
-  const y = dt.getFullYear()
-  const m = String(dt.getMonth() + 1).padStart(2, '0')
-  const d = String(dt.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 // base 为空 → 今天本地 00:00;否则该日期本地 00:00
 const baseDateOrToday = (baseDateStr: string): Date => {
   const base = baseDateStr ? new Date(`${baseDateStr}T00:00:00`) : new Date()
@@ -2195,7 +2257,7 @@ const confirmDelete = async () => {
     showDeleteDialog.value = false;
     removeSelectedProxies([deletingProxy.value.id]);
     deletingProxy.value = null;
-    loadProxies();
+    refreshProxyLists();
   } catch (error: any) {
     appStore.showError(
       error.response?.data?.detail || t("admin.proxies.failedToDelete"),
@@ -2226,7 +2288,7 @@ const confirmBatchDelete = async () => {
 
     clearSelectedProxies();
     showBatchDeleteDialog.value = false;
-    loadProxies();
+    refreshProxyLists();
   } catch (error: any) {
     appStore.showError(
       error.response?.data?.detail || t("admin.proxies.batchDeleteFailed"),

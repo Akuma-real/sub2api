@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { daysUntil, proxyExpiryBadgeClass, proxyExpiryLabelKey } from '../proxyExpiry'
+import {
+  daysUntil,
+  isProxyBackupSelectable,
+  isoToLocalDateInput,
+  localDateInputEndUnixSeconds,
+  proxyExpiryBadgeClass,
+  proxyExpiryLabelKey,
+  toLocalDateStr,
+} from '../proxyExpiry'
 
 // 固定「现在」,按天数构造确定输入:isoInDays(n) 距今正好 n 天
 const NOW = new Date('2026-06-02T00:00:00Z')
@@ -17,6 +25,31 @@ describe('daysUntil', () => {
   it('返回距今整天数', () => {
     expect(daysUntil(isoInDays(10))).toBe(10)
     expect(daysUntil(isoInDays(-3))).toBe(-3)
+  })
+})
+
+describe('local date helpers', () => {
+  it('formats a Date using local calendar fields', () => {
+    expect(toLocalDateStr(new Date(2026, 5, 9, 12, 30, 0))).toBe('2026-06-09')
+  })
+
+  it('converts an ISO timestamp back to the local date input value', () => {
+    const local = new Date(2026, 5, 9, 23, 59, 59, 999)
+    expect(isoToLocalDateInput(local.toISOString())).toBe('2026-06-09')
+  })
+
+  it('converts a date input to local end-of-day unix seconds', () => {
+    const expected = Math.floor(new Date(2026, 5, 9, 23, 59, 59, 999).getTime() / 1000)
+    expect(localDateInputEndUnixSeconds('2026-06-09')).toBe(expected)
+  })
+})
+
+describe('isProxyBackupSelectable', () => {
+  it('only accepts active proxies that are not expired by time', () => {
+    expect(isProxyBackupSelectable({ status: 'active', expires_at: null }, NOW)).toBe(true)
+    expect(isProxyBackupSelectable({ status: 'active', expires_at: isoInDays(1) }, NOW)).toBe(true)
+    expect(isProxyBackupSelectable({ status: 'inactive', expires_at: isoInDays(1) }, NOW)).toBe(false)
+    expect(isProxyBackupSelectable({ status: 'active', expires_at: isoInDays(-1) }, NOW)).toBe(false)
   })
 })
 

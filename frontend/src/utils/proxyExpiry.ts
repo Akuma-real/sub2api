@@ -3,6 +3,26 @@
 export const EXPIRY_WARN_DAYS = 7
 export const EXPIRY_DANGER_DAYS = 3
 
+export const toLocalDateStr = (dt: Date): string => {
+  const y = dt.getFullYear()
+  const m = String(dt.getMonth() + 1).padStart(2, '0')
+  const d = String(dt.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+export const isoToLocalDateInput = (iso: string): string => toLocalDateStr(new Date(iso))
+
+export const localDateInputEndUnixSeconds = (dateStr: string): number => {
+  const dt = new Date(`${dateStr}T00:00:00`)
+  dt.setHours(23, 59, 59, 999)
+  return Math.floor(dt.getTime() / 1000)
+}
+
+export const isProxyBackupSelectable = (
+  proxy: { status?: string; expires_at?: string | null },
+  now = new Date(),
+): boolean => proxy.status === 'active' && (!proxy.expires_at || new Date(proxy.expires_at).getTime() > now.getTime())
+
 // 距今整天数(向上取整)。
 export const daysUntil = (iso: string): number =>
   Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000)
