@@ -16,7 +16,7 @@
       :placeholder="t('auth.passwordPlaceholder')"
       :disabled="isSubmitting"
     />
-    <div v-if="turnstileEnabled && turnstileSiteKey" class="space-y-2">
+    <div v-if="emailVerifyEnabled && turnstileEnabled && turnstileSiteKey" class="space-y-2">
       <TurnstileWidget
         ref="turnstileRef"
         :site-key="turnstileSiteKey"
@@ -25,7 +25,7 @@
         @error="onTurnstileError"
       />
     </div>
-    <div class="flex gap-3">
+    <div v-if="emailVerifyEnabled" class="flex gap-3">
       <input
         v-model="verifyCode"
         :data-testid="`${testIdPrefix}-create-account-verify-code`"
@@ -58,10 +58,10 @@
         }}
       </button>
     </div>
-    <p v-if="sendCodeSuccess" class="text-sm text-success">
+    <p v-if="emailVerifyEnabled && sendCodeSuccess" class="text-sm text-success">
       {{ t("auth.codeSentSuccess") }}
     </p>
-    <p v-else class="text-xs text-muted">
+    <p v-else-if="emailVerifyEnabled" class="text-xs text-muted">
       {{ t("auth.verificationCodeHint") }}
     </p>
     <input
@@ -136,6 +136,7 @@ const sendCodeError = ref("");
 const sendCodeSuccess = ref(false);
 const countdown = ref(0);
 const invitationCodeEnabled = ref(false);
+const emailVerifyEnabled = ref(true);
 const turnstileEnabled = ref(false);
 const turnstileSiteKey = ref("");
 const turnstileToken = ref("");
@@ -271,7 +272,7 @@ function handleSubmit() {
   emit("submit", {
     email: trimmedEmail,
     password: password.value,
-    verifyCode: verifyCode.value.trim(),
+    verifyCode: emailVerifyEnabled.value ? verifyCode.value.trim() : "",
     invitationCode: invitationCode.value.trim() || undefined,
   });
 }
@@ -284,10 +285,12 @@ onMounted(async () => {
   try {
     const settings = await getPublicSettings();
     invitationCodeEnabled.value = settings.invitation_code_enabled === true;
+    emailVerifyEnabled.value = settings.email_verify_enabled !== false;
     turnstileEnabled.value = settings.turnstile_enabled === true;
     turnstileSiteKey.value = settings.turnstile_site_key || "";
   } catch {
     invitationCodeEnabled.value = false;
+    emailVerifyEnabled.value = true;
     turnstileEnabled.value = false;
     turnstileSiteKey.value = "";
   }
