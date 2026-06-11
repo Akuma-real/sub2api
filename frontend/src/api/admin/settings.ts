@@ -454,6 +454,12 @@ export interface SystemSettings {
   contact_info: string;
   doc_url: string;
   home_content: string;
+  region_restriction_enabled: boolean;
+  region_restriction_countries: string[];
+  region_restriction_title: string;
+  region_restriction_message: string;
+  region_restriction_detected: string;
+  region_restriction_action_text: string;
   hide_ccs_import_button: boolean;
   table_default_page_size: number;
   table_page_size_options: number[];
@@ -712,6 +718,12 @@ export interface UpdateSettingsRequest {
   contact_info?: string;
   doc_url?: string;
   home_content?: string;
+  region_restriction_enabled?: boolean;
+  region_restriction_countries?: string[];
+  region_restriction_title?: string;
+  region_restriction_message?: string;
+  region_restriction_detected?: string;
+  region_restriction_action_text?: string;
   hide_ccs_import_button?: boolean;
   table_default_page_size?: number;
   table_page_size_options?: number[];

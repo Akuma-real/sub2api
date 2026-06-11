@@ -372,6 +372,14 @@ export default {
     adminCompliance: 'Deployment and Operation Compliance Commitment'
   },
 
+  regionRestriction: {
+    title: 'OpenAI-related services are unavailable in your current region',
+    description:
+      'Based on applicable legal, regulatory, and OpenAI supported-country requirements, this site does not provide OpenAI/ChatGPT, API relay, account quota distribution, shared subscriptions, or related paid-call services to users in Mainland China. If you are located in Mainland China, do not register, sign in, purchase, or initiate calls.',
+    actionBlocked: 'OpenAI-related services are unavailable in your current region. Interface actions have been restricted.',
+    detectedFrom: 'Detected access location: {country}'
+  },
+
   // Navigation
   nav: {
     dashboard: 'Dashboard',
@@ -5977,6 +5985,22 @@ export default {
         homeContentPlaceholder: 'Enter custom content for the home page. Supports Markdown & HTML. If a URL is entered, it will be displayed as an iframe.',
         homeContentHint: 'Customize the home page content. Supports Markdown/HTML. If you enter a URL (starting with http:// or https://), it will be used as an iframe src to embed an external page. When set, the default status information will no longer be displayed.',
         homeContentIframeWarning: '⚠️ iframe mode note: Some websites have X-Frame-Options or CSP security policies that prevent embedding in iframes. If the page appears blank or shows an error, please verify the target website allows embedding, or consider using HTML mode to build your own content.',
+        regionRestrictionTitle: 'Region Notice and UI Blocking',
+        regionRestrictionDescription:
+          'When enabled, visitors matching the configured country/region codes see the notice and homepage entry, sign-in, and sign-up UI actions are disabled. API requests are not blocked.',
+        regionRestrictionCountries: 'Country / Region Codes',
+        regionRestrictionCountriesPlaceholder: 'CN',
+        regionRestrictionCountriesHint: 'Use ISO 3166-1 alpha-2 codes separated by commas, for example CN, IR.',
+        regionRestrictionCountriesFormatError: 'Invalid country/region codes. Enter 2-letter codes separated by commas.',
+        regionRestrictionNoticeTitle: 'Notice Title',
+        regionRestrictionNoticeTitlePlaceholder: 'OpenAI-related services are unavailable in your current region',
+        regionRestrictionMessage: 'Notice Body',
+        regionRestrictionMessagePlaceholder: 'Enter the message shown to matching visitors',
+        regionRestrictionDetected: 'Detected Location Template',
+        regionRestrictionDetectedPlaceholder: 'Detected access location: {country}',
+        regionRestrictionDetectedHint: 'Use {country} as the detected country/region placeholder.',
+        regionRestrictionActionText: 'Blocked Action Toast',
+        regionRestrictionActionTextPlaceholder: 'OpenAI-related services are unavailable in your current region. Interface actions have been restricted.',
         hideCcsImportButton: 'Hide CCS Import Button',
         hideCcsImportButtonHint: 'When enabled, the "Import to CCS" button will be hidden on the API Keys page'
       },

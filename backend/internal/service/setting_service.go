@@ -324,6 +324,61 @@ const (
 	defaultLoginAgreementDate    = "2026-03-31"
 )
 
+var defaultRegionRestrictionCountries = []string{"CN"}
+
+const (
+	defaultRegionRestrictionTitle      = "当前地区暂不提供 OpenAI 相关服务"
+	defaultRegionRestrictionMessage    = "根据适用法律法规、监管要求及 OpenAI 支持国家/地区政策，本站不向中国大陆地区用户提供 OpenAI/ChatGPT、API 中转、账号额度分发、共享订阅或相关付费调用服务。若你位于中国大陆，请不要注册、登录、购买或发起调用。"
+	defaultRegionRestrictionDetected   = "检测到当前访问来源：{country}"
+	defaultRegionRestrictionActionText = "当前地区暂不提供 OpenAI 相关服务，界面操作已被限制。"
+)
+
+func parseRegionRestrictionCountries(raw string) []string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return append([]string(nil), defaultRegionRestrictionCountries...)
+	}
+
+	var values []string
+	if err := json.Unmarshal([]byte(raw), &values); err != nil {
+		values = strings.FieldsFunc(raw, func(r rune) bool {
+			return r == ',' || r == '，' || r == '\n' || r == '\r' || r == '\t' || r == ' '
+		})
+	}
+
+	return normalizeRegionRestrictionCountries(values)
+}
+
+func normalizeRegionRestrictionCountries(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	normalized := make([]string, 0, len(values))
+	for _, value := range values {
+		code := strings.ToUpper(strings.TrimSpace(value))
+		if len(code) != 2 {
+			continue
+		}
+		if code[0] < 'A' || code[0] > 'Z' || code[1] < 'A' || code[1] > 'Z' {
+			continue
+		}
+		if _, ok := seen[code]; ok {
+			continue
+		}
+		seen[code] = struct{}{}
+		normalized = append(normalized, code)
+	}
+	if len(normalized) == 0 {
+		return append([]string(nil), defaultRegionRestrictionCountries...)
+	}
+	return normalized
+}
+
+func regionRestrictionTextOrDefault(value, fallback string) string {
+	if trimmed := strings.TrimSpace(value); trimmed != "" {
+		return trimmed
+	}
+	return fallback
+}
+
 func normalizeLoginAgreementMode(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
 	case "checkbox":
@@ -717,6 +772,12 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyContactInfo,
 		SettingKeyDocURL,
 		SettingKeyHomeContent,
+		SettingKeyRegionRestrictionEnabled,
+		SettingKeyRegionRestrictionCountries,
+		SettingKeyRegionRestrictionTitle,
+		SettingKeyRegionRestrictionMessage,
+		SettingKeyRegionRestrictionDetected,
+		SettingKeyRegionRestrictionActionText,
 		SettingKeyHideCcsImportButton,
 		SettingKeyPurchaseSubscriptionEnabled,
 		SettingKeyPurchaseSubscriptionURL,
@@ -842,6 +903,12 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		ContactInfo:                      settings[SettingKeyContactInfo],
 		DocURL:                           settings[SettingKeyDocURL],
 		HomeContent:                      settings[SettingKeyHomeContent],
+		RegionRestrictionEnabled:         settings[SettingKeyRegionRestrictionEnabled] == "true",
+		RegionRestrictionCountries:       parseRegionRestrictionCountries(settings[SettingKeyRegionRestrictionCountries]),
+		RegionRestrictionTitle:           regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionTitle], defaultRegionRestrictionTitle),
+		RegionRestrictionMessage:         regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionMessage], defaultRegionRestrictionMessage),
+		RegionRestrictionDetected:        regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionDetected], defaultRegionRestrictionDetected),
+		RegionRestrictionActionText:      regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionActionText], defaultRegionRestrictionActionText),
 		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
@@ -1156,6 +1223,12 @@ type PublicSettingsInjectionPayload struct {
 	ContactInfo                      string                   `json:"contact_info"`
 	DocURL                           string                   `json:"doc_url"`
 	HomeContent                      string                   `json:"home_content"`
+	RegionRestrictionEnabled         bool                     `json:"region_restriction_enabled"`
+	RegionRestrictionCountries       []string                 `json:"region_restriction_countries"`
+	RegionRestrictionTitle           string                   `json:"region_restriction_title"`
+	RegionRestrictionMessage         string                   `json:"region_restriction_message"`
+	RegionRestrictionDetected        string                   `json:"region_restriction_detected"`
+	RegionRestrictionActionText      string                   `json:"region_restriction_action_text"`
 	HideCcsImportButton              bool                     `json:"hide_ccs_import_button"`
 	PurchaseSubscriptionEnabled      bool                     `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL          string                   `json:"purchase_subscription_url"`
@@ -1222,6 +1295,12 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ContactInfo:                      settings.ContactInfo,
 		DocURL:                           settings.DocURL,
 		HomeContent:                      settings.HomeContent,
+		RegionRestrictionEnabled:         settings.RegionRestrictionEnabled,
+		RegionRestrictionCountries:       settings.RegionRestrictionCountries,
+		RegionRestrictionTitle:           settings.RegionRestrictionTitle,
+		RegionRestrictionMessage:         settings.RegionRestrictionMessage,
+		RegionRestrictionDetected:        settings.RegionRestrictionDetected,
+		RegionRestrictionActionText:      settings.RegionRestrictionActionText,
 		HideCcsImportButton:              settings.HideCcsImportButton,
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
@@ -1815,6 +1894,17 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeyContactInfo] = settings.ContactInfo
 	updates[SettingKeyDocURL] = settings.DocURL
 	updates[SettingKeyHomeContent] = settings.HomeContent
+	settings.RegionRestrictionCountries = normalizeRegionRestrictionCountries(settings.RegionRestrictionCountries)
+	regionRestrictionCountriesJSON, err := json.Marshal(settings.RegionRestrictionCountries)
+	if err != nil {
+		return nil, fmt.Errorf("marshal region restriction countries: %w", err)
+	}
+	updates[SettingKeyRegionRestrictionEnabled] = strconv.FormatBool(settings.RegionRestrictionEnabled)
+	updates[SettingKeyRegionRestrictionCountries] = string(regionRestrictionCountriesJSON)
+	updates[SettingKeyRegionRestrictionTitle] = regionRestrictionTextOrDefault(settings.RegionRestrictionTitle, defaultRegionRestrictionTitle)
+	updates[SettingKeyRegionRestrictionMessage] = regionRestrictionTextOrDefault(settings.RegionRestrictionMessage, defaultRegionRestrictionMessage)
+	updates[SettingKeyRegionRestrictionDetected] = regionRestrictionTextOrDefault(settings.RegionRestrictionDetected, defaultRegionRestrictionDetected)
+	updates[SettingKeyRegionRestrictionActionText] = regionRestrictionTextOrDefault(settings.RegionRestrictionActionText, defaultRegionRestrictionActionText)
 	updates[SettingKeyHideCcsImportButton] = strconv.FormatBool(settings.HideCcsImportButton)
 	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
 	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
@@ -2690,6 +2780,12 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyAPIKeyACLTrustForwardedIP:                 "false",
 		SettingKeySiteName:                                  "Sub2API",
 		SettingKeySiteLogo:                                  "",
+		SettingKeyRegionRestrictionEnabled:                  "false",
+		SettingKeyRegionRestrictionCountries:                `["CN"]`,
+		SettingKeyRegionRestrictionTitle:                    defaultRegionRestrictionTitle,
+		SettingKeyRegionRestrictionMessage:                  defaultRegionRestrictionMessage,
+		SettingKeyRegionRestrictionDetected:                 defaultRegionRestrictionDetected,
+		SettingKeyRegionRestrictionActionText:               defaultRegionRestrictionActionText,
 		SettingKeyPurchaseSubscriptionEnabled:               "false",
 		SettingKeyPurchaseSubscriptionURL:                   "",
 		SettingKeyTableDefaultPageSize:                      "20",
@@ -2885,6 +2981,12 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		ContactInfo:                      settings[SettingKeyContactInfo],
 		DocURL:                           settings[SettingKeyDocURL],
 		HomeContent:                      settings[SettingKeyHomeContent],
+		RegionRestrictionEnabled:         settings[SettingKeyRegionRestrictionEnabled] == "true",
+		RegionRestrictionCountries:       parseRegionRestrictionCountries(settings[SettingKeyRegionRestrictionCountries]),
+		RegionRestrictionTitle:           regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionTitle], defaultRegionRestrictionTitle),
+		RegionRestrictionMessage:         regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionMessage], defaultRegionRestrictionMessage),
+		RegionRestrictionDetected:        regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionDetected], defaultRegionRestrictionDetected),
+		RegionRestrictionActionText:      regionRestrictionTextOrDefault(settings[SettingKeyRegionRestrictionActionText], defaultRegionRestrictionActionText),
 		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),

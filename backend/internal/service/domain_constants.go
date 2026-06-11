@@ -241,20 +241,26 @@ const (
 	SettingKeyGoogleOAuthFrontendRedirectURL = "google_oauth_frontend_redirect_url"
 
 	// OEM设置
-	SettingKeySiteName                    = "site_name"                     // 网站名称
-	SettingKeySiteLogo                    = "site_logo"                     // 网站Logo (base64)
-	SettingKeySiteSubtitle                = "site_subtitle"                 // 网站副标题
-	SettingKeyAPIBaseURL                  = "api_base_url"                  // API端点地址（用于客户端配置和导入）
-	SettingKeyContactInfo                 = "contact_info"                  // 客服联系方式
-	SettingKeyDocURL                      = "doc_url"                       // 文档链接
-	SettingKeyHomeContent                 = "home_content"                  // 首页内容（支持 Markdown/HTML，或 URL 作为 iframe src）
-	SettingKeyHideCcsImportButton         = "hide_ccs_import_button"        // 是否隐藏 API Keys 页面的导入 CCS 按钮
-	SettingKeyPurchaseSubscriptionEnabled = "purchase_subscription_enabled" // 是否展示"购买订阅"页面入口
-	SettingKeyPurchaseSubscriptionURL     = "purchase_subscription_url"     // "购买订阅"页面 URL（作为 iframe src）
-	SettingKeyTableDefaultPageSize        = "table_default_page_size"       // 表格默认每页条数
-	SettingKeyTablePageSizeOptions        = "table_page_size_options"       // 表格可选每页条数（JSON 数组）
-	SettingKeyCustomMenuItems             = "custom_menu_items"             // 自定义菜单项（JSON 数组）
-	SettingKeyCustomEndpoints             = "custom_endpoints"              // 自定义端点列表（JSON 数组）
+	SettingKeySiteName                    = "site_name"                      // 网站名称
+	SettingKeySiteLogo                    = "site_logo"                      // 网站Logo (base64)
+	SettingKeySiteSubtitle                = "site_subtitle"                  // 网站副标题
+	SettingKeyAPIBaseURL                  = "api_base_url"                   // API端点地址（用于客户端配置和导入）
+	SettingKeyContactInfo                 = "contact_info"                   // 客服联系方式
+	SettingKeyDocURL                      = "doc_url"                        // 文档链接
+	SettingKeyHomeContent                 = "home_content"                   // 首页内容（支持 Markdown/HTML，或 URL 作为 iframe src）
+	SettingKeyRegionRestrictionEnabled    = "region_restriction_enabled"     // 是否启用前端区域提示与界面阻断
+	SettingKeyRegionRestrictionCountries  = "region_restriction_countries"   // 区域阻断国家/地区代码列表（JSON 数组）
+	SettingKeyRegionRestrictionTitle      = "region_restriction_title"       // 区域阻断提示标题
+	SettingKeyRegionRestrictionMessage    = "region_restriction_message"     // 区域阻断提示正文
+	SettingKeyRegionRestrictionDetected   = "region_restriction_detected"    // 区域阻断检测来源模板（支持 {country}）
+	SettingKeyRegionRestrictionActionText = "region_restriction_action_text" // 区域阻断操作拦截提示
+	SettingKeyHideCcsImportButton         = "hide_ccs_import_button"         // 是否隐藏 API Keys 页面的导入 CCS 按钮
+	SettingKeyPurchaseSubscriptionEnabled = "purchase_subscription_enabled"  // 是否展示"购买订阅"页面入口
+	SettingKeyPurchaseSubscriptionURL     = "purchase_subscription_url"      // "购买订阅"页面 URL（作为 iframe src）
+	SettingKeyTableDefaultPageSize        = "table_default_page_size"        // 表格默认每页条数
+	SettingKeyTablePageSizeOptions        = "table_page_size_options"        // 表格可选每页条数（JSON 数组）
+	SettingKeyCustomMenuItems             = "custom_menu_items"              // 自定义菜单项（JSON 数组）
+	SettingKeyCustomEndpoints             = "custom_endpoints"               // 自定义端点列表（JSON 数组）
 
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"    // 新用户默认并发量

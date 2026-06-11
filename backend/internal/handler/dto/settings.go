@@ -134,6 +134,12 @@ type SystemSettings struct {
 	ContactInfo                 string           `json:"contact_info"`
 	DocURL                      string           `json:"doc_url"`
 	HomeContent                 string           `json:"home_content"`
+	RegionRestrictionEnabled    bool             `json:"region_restriction_enabled"`
+	RegionRestrictionCountries  []string         `json:"region_restriction_countries"`
+	RegionRestrictionTitle      string           `json:"region_restriction_title"`
+	RegionRestrictionMessage    string           `json:"region_restriction_message"`
+	RegionRestrictionDetected   string           `json:"region_restriction_detected"`
+	RegionRestrictionActionText string           `json:"region_restriction_action_text"`
 	HideCcsImportButton         bool             `json:"hide_ccs_import_button"`
 	PurchaseSubscriptionEnabled bool             `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     string           `json:"purchase_subscription_url"`
@@ -285,6 +291,12 @@ type PublicSettings struct {
 	ContactInfo                      string                   `json:"contact_info"`
 	DocURL                           string                   `json:"doc_url"`
 	HomeContent                      string                   `json:"home_content"`
+	RegionRestrictionEnabled         bool                     `json:"region_restriction_enabled"`
+	RegionRestrictionCountries       []string                 `json:"region_restriction_countries"`
+	RegionRestrictionTitle           string                   `json:"region_restriction_title"`
+	RegionRestrictionMessage         string                   `json:"region_restriction_message"`
+	RegionRestrictionDetected        string                   `json:"region_restriction_detected"`
+	RegionRestrictionActionText      string                   `json:"region_restriction_action_text"`
 	HideCcsImportButton              bool                     `json:"hide_ccs_import_button"`
 	PurchaseSubscriptionEnabled      bool                     `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL          string                   `json:"purchase_subscription_url"`

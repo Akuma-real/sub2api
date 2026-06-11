@@ -4566,6 +4566,95 @@
                 </p>
               </div>
 
+              <!-- Region Restriction Notice -->
+              <div class="border-t border-hairline-soft pt-4">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 class="text-sm font-medium text-ink">
+                      {{ t("admin.settings.site.regionRestrictionTitle") }}
+                    </h3>
+                    <p class="mt-1 text-xs text-muted">
+                      {{ t("admin.settings.site.regionRestrictionDescription") }}
+                    </p>
+                  </div>
+                  <Toggle v-model="form.region_restriction_enabled" />
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="mb-2 block text-sm font-medium text-body">
+                      {{ t("admin.settings.site.regionRestrictionCountries") }}
+                    </label>
+                    <input
+                      v-model="regionRestrictionCountriesInput"
+                      type="text"
+                      class="input font-mono text-sm"
+                      :placeholder="
+                        t('admin.settings.site.regionRestrictionCountriesPlaceholder')
+                      "
+                    />
+                    <p class="mt-1.5 text-xs text-muted">
+                      {{ t("admin.settings.site.regionRestrictionCountriesHint") }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="mb-2 block text-sm font-medium text-body">
+                      {{ t("admin.settings.site.regionRestrictionNoticeTitle") }}
+                    </label>
+                    <input
+                      v-model="form.region_restriction_title"
+                      type="text"
+                      class="input"
+                      :placeholder="
+                        t('admin.settings.site.regionRestrictionNoticeTitlePlaceholder')
+                      "
+                    />
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="mb-2 block text-sm font-medium text-body">
+                      {{ t("admin.settings.site.regionRestrictionMessage") }}
+                    </label>
+                    <textarea
+                      v-model="form.region_restriction_message"
+                      rows="4"
+                      class="input text-sm"
+                      :placeholder="
+                        t('admin.settings.site.regionRestrictionMessagePlaceholder')
+                      "
+                    ></textarea>
+                  </div>
+                  <div>
+                    <label class="mb-2 block text-sm font-medium text-body">
+                      {{ t("admin.settings.site.regionRestrictionDetected") }}
+                    </label>
+                    <input
+                      v-model="form.region_restriction_detected"
+                      type="text"
+                      class="input"
+                      :placeholder="
+                        t('admin.settings.site.regionRestrictionDetectedPlaceholder')
+                      "
+                    />
+                    <p class="mt-1.5 text-xs text-muted">
+                      {{ t("admin.settings.site.regionRestrictionDetectedHint") }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="mb-2 block text-sm font-medium text-body">
+                      {{ t("admin.settings.site.regionRestrictionActionText") }}
+                    </label>
+                    <input
+                      v-model="form.region_restriction_action_text"
+                      type="text"
+                      class="input"
+                      :placeholder="
+                        t('admin.settings.site.regionRestrictionActionTextPlaceholder')
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+
               <!-- Hide CCS Import Button -->
               <div
                 class="flex items-center justify-between border-t border-hairline-soft pt-4"
@@ -6894,6 +6983,7 @@ const testEmailAddress = ref("");
 const registrationEmailSuffixWhitelistTags = ref<string[]>([]);
 const registrationEmailSuffixWhitelistDraft = ref("");
 const tablePageSizeOptionsInput = ref("10, 20, 50, 100");
+const regionRestrictionCountriesInput = ref("CN");
 
 // Admin API Key 状态
 const adminApiKeyLoading = ref(true);
@@ -7078,6 +7168,14 @@ const form = reactive<SettingsForm>({
   contact_info: "",
   doc_url: "",
   home_content: "",
+  region_restriction_enabled: false,
+  region_restriction_countries: ["CN"],
+  region_restriction_title: "当前地区暂不提供 OpenAI 相关服务",
+  region_restriction_message:
+    "根据适用法律法规、监管要求及 OpenAI 支持国家/地区政策，本站不向中国大陆地区用户提供 OpenAI/ChatGPT、API 中转、账号额度分发、共享订阅或相关付费调用服务。若你位于中国大陆，请不要注册、登录、购买或发起调用。",
+  region_restriction_detected: "检测到当前访问来源：{country}",
+  region_restriction_action_text:
+    "当前地区暂不提供 OpenAI 相关服务，界面操作已被限制。",
   backend_mode_enabled: false,
   hide_ccs_import_button: false,
   payment_enabled: false,
@@ -7879,6 +7977,26 @@ function parseTablePageSizeOptionsInput(raw: string): number[] | null {
   return deduped;
 }
 
+function formatRegionRestrictionCountries(countries: string[] | undefined): string {
+  const values = Array.isArray(countries) && countries.length > 0 ? countries : ["CN"];
+  return values.join(", ");
+}
+
+function parseRegionRestrictionCountriesInput(raw: string): string[] | null {
+  const tokens = raw
+    .split(/[\s,，]+/)
+    .map((token) => token.trim().toUpperCase())
+    .filter((token) => token.length > 0);
+
+  if (tokens.length === 0) {
+    return null;
+  }
+  if (tokens.some((token) => !/^[A-Z]{2}$/.test(token))) {
+    return null;
+  }
+  return Array.from(new Set(tokens));
+}
+
 async function loadSettings() {
   loading.value = true;
   loadFailed.value = false;
@@ -7922,6 +8040,9 @@ async function loadSettings() {
       Array.isArray(settings.table_page_size_options)
         ? settings.table_page_size_options
         : [10, 20, 50, 100],
+    );
+    regionRestrictionCountriesInput.value = formatRegionRestrictionCountries(
+      settings.region_restriction_countries,
     );
     registrationEmailSuffixWhitelistDraft.value = "";
     form.smtp_password = "";
@@ -8127,6 +8248,16 @@ async function saveSettings() {
     form.table_default_page_size = normalizedTableDefaultPageSize;
     form.table_page_size_options = normalizedTablePageSizeOptions;
 
+    const normalizedRegionRestrictionCountries =
+      parseRegionRestrictionCountriesInput(regionRestrictionCountriesInput.value);
+    if (!normalizedRegionRestrictionCountries) {
+      appStore.showError(
+        t("admin.settings.site.regionRestrictionCountriesFormatError"),
+      );
+      return;
+    }
+    form.region_restriction_countries = normalizedRegionRestrictionCountries;
+
     const normalizedLoginAgreementDocuments =
       normalizeLoginAgreementDocumentsForSave();
     if (
@@ -8280,6 +8411,12 @@ async function saveSettings() {
       contact_info: form.contact_info,
       doc_url: form.doc_url,
       home_content: form.home_content,
+      region_restriction_enabled: form.region_restriction_enabled,
+      region_restriction_countries: form.region_restriction_countries,
+      region_restriction_title: form.region_restriction_title,
+      region_restriction_message: form.region_restriction_message,
+      region_restriction_detected: form.region_restriction_detected,
+      region_restriction_action_text: form.region_restriction_action_text,
       backend_mode_enabled: form.backend_mode_enabled,
       hide_ccs_import_button: form.hide_ccs_import_button,
       table_default_page_size: form.table_default_page_size,
@@ -8507,6 +8644,9 @@ async function saveSettings() {
       Array.isArray(updated.table_page_size_options)
         ? updated.table_page_size_options
         : [10, 20, 50, 100],
+    );
+    regionRestrictionCountriesInput.value = formatRegionRestrictionCountries(
+      updated.region_restriction_countries,
     );
     registrationEmailSuffixWhitelistDraft.value = "";
     form.smtp_password = "";

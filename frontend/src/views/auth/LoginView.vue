@@ -10,6 +10,11 @@
           {{ t('auth.signInToAccount') }}
         </p>
       </div>
+      <RegionRestrictionNotice
+        v-if="isMainlandChinaRestricted"
+        :detected-from="geoInfo.countryName"
+        :copy="restrictionCopy"
+      />
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-5">
         <!-- Email Input -->
@@ -79,7 +84,7 @@
         </div>
 
         <!-- Turnstile Widget -->
-        <div v-if="turnstileEnabled && turnstileSiteKey">
+        <div v-if="turnstileEnabled && turnstileSiteKey && !isMainlandChinaRestricted">
           <TurnstileWidget
             ref="turnstileRef"
             :site-key="turnstileSiteKey"
@@ -120,7 +125,7 @@
         </button>
 
         <LoginAgreementPrompt
-          v-if="loginAgreementEnabled"
+          v-if="loginAgreementEnabled && !isMainlandChinaRestricted"
           :accepted="agreementAccepted"
           :documents="loginAgreementDocuments"
           :mode="loginAgreementMode"
@@ -176,7 +181,14 @@
     <template v-if="!backendModeEnabled" #footer>
       <p class="text-muted">
         {{ t('auth.dontHaveAccount') }}
+        <span
+          v-if="isMainlandChinaRestricted"
+          class="font-medium text-muted-soft"
+        >
+          {{ t('auth.signUp') }}
+        </span>
         <router-link
+          v-else
           to="/register"
           class="font-medium text-primary-600 transition-colors hover:text-primary-500"
         >
@@ -202,6 +214,7 @@ import { computed, ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
+import RegionRestrictionNotice from '@/components/common/RegionRestrictionNotice.vue'
 import LinuxDoOAuthSection from '@/components/auth/LinuxDoOAuthSection.vue'
 import DingTalkOAuthSection from '@/components/auth/DingTalkOAuthSection.vue'
 import OidcOAuthSection from '@/components/auth/OidcOAuthSection.vue'
@@ -212,10 +225,11 @@ import TotpLoginModal from '@/components/auth/TotpLoginModal.vue'
 import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
-import { getPublicSettings, isTotp2FARequired, isWeChatWebOAuthEnabled } from '@/api/auth'
+import { isTotp2FARequired, isWeChatWebOAuthEnabled } from '@/api/auth'
 import type { LoginAgreementDocument, TotpLoginResponse } from '@/types'
 import { extractI18nErrorMessage } from '@/utils/apiError'
 import { clearAllAffiliateReferralCodes } from '@/utils/oauthAffiliate'
+import { useRegionRestriction } from '@/composables/useRegionRestriction'
 
 const { t } = useI18n()
 const LOGIN_AGREEMENT_STORAGE_KEY = 'sub2api_login_agreement_consent'
@@ -225,6 +239,12 @@ const LOGIN_AGREEMENT_STORAGE_KEY = 'sub2api_login_agreement_consent'
 const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
+const {
+  geoInfo,
+  restrictionCopy,
+  isMainlandChinaRestricted,
+  loadRegionRestriction,
+} = useRegionRestriction()
 
 // ==================== State ====================
 
@@ -283,7 +303,11 @@ const agreementGateActive = computed(
 )
 
 const authActionDisabled = computed(
-  () => isLoading.value || !publicSettingsLoaded.value || agreementGateActive.value
+  () =>
+    isLoading.value ||
+    !publicSettingsLoaded.value ||
+    agreementGateActive.value ||
+    isMainlandChinaRestricted.value
 )
 
 const showOAuthLogin = computed(
@@ -306,6 +330,8 @@ watch(validationToastMessage, (value, previousValue) => {
 // ==================== Lifecycle ====================
 
 onMounted(async () => {
+  loadRegionRestriction()
+
   const expiredFlag = sessionStorage.getItem('auth_expired')
   if (expiredFlag) {
     sessionStorage.removeItem('auth_expired')
@@ -315,7 +341,10 @@ onMounted(async () => {
   }
 
   try {
-    const settings = await getPublicSettings()
+    const settings = await appStore.fetchPublicSettings()
+    if (!settings) {
+      throw new Error('public settings unavailable')
+    }
     turnstileEnabled.value = settings.turnstile_enabled
     turnstileSiteKey.value = settings.turnstile_site_key || ''
     linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
@@ -467,6 +496,11 @@ function validateForm(): boolean {
 async function handleLogin(): Promise<void> {
   // Clear previous error
   errorMessage.value = ''
+
+  if (isMainlandChinaRestricted.value) {
+    appStore.showWarning(restrictionCopy.value.actionText)
+    return
+  }
 
   // Validate form
   if (!validateForm()) {

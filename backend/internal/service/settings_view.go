@@ -134,6 +134,12 @@ type SystemSettings struct {
 	ContactInfo                 string
 	DocURL                      string
 	HomeContent                 string
+	RegionRestrictionEnabled    bool
+	RegionRestrictionCountries  []string
+	RegionRestrictionTitle      string
+	RegionRestrictionMessage    string
+	RegionRestrictionDetected   string
+	RegionRestrictionActionText string
 	HideCcsImportButton         bool
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
@@ -256,6 +262,12 @@ type PublicSettings struct {
 	ContactInfo                      string
 	DocURL                           string
 	HomeContent                      string
+	RegionRestrictionEnabled         bool
+	RegionRestrictionCountries       []string
+	RegionRestrictionTitle           string
+	RegionRestrictionMessage         string
+	RegionRestrictionDetected        string
+	RegionRestrictionActionText      string
 	HideCcsImportButton              bool
 
 	PurchaseSubscriptionEnabled bool

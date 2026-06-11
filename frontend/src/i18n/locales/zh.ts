@@ -372,6 +372,14 @@ export default {
     adminCompliance: '部署与运营合规承诺'
   },
 
+  regionRestriction: {
+    title: '当前地区暂不提供 OpenAI 相关服务',
+    description:
+      '根据适用法律法规、监管要求及 OpenAI 支持国家/地区政策，本站不向中国大陆地区用户提供 OpenAI/ChatGPT、API 中转、账号额度分发、共享订阅或相关付费调用服务。若你位于中国大陆，请不要注册、登录、购买或发起调用。',
+    actionBlocked: '当前地区暂不提供 OpenAI 相关服务，界面操作已被限制。',
+    detectedFrom: '检测到当前访问来源：{country}'
+  },
+
   // Navigation
   nav: {
     dashboard: '仪表盘',
@@ -6133,6 +6141,22 @@ export default {
           '自定义首页内容，支持 Markdown/HTML。如果输入的是链接（以 http:// 或 https:// 开头），则会使用该链接作为 iframe 的 src 属性，这允许你设置任意网页作为首页。设置后首页的状态信息将不再显示。',
         homeContentIframeWarning:
           '⚠️ iframe 模式提示：部分网站设置了 X-Frame-Options 或 CSP 安全策略，禁止被嵌入到 iframe 中。如果页面显示空白或报错，请确认目标网站允许被嵌入，或考虑使用 HTML 模式自行构建页面内容。',
+        regionRestrictionTitle: '区域提示与界面阻断',
+        regionRestrictionDescription:
+          '启用后，命中国家/地区代码的访客会看到提示，并且首页入口、登录、注册等界面操作会被禁用；不会阻断 API 请求。',
+        regionRestrictionCountries: '国家/地区代码',
+        regionRestrictionCountriesPlaceholder: 'CN',
+        regionRestrictionCountriesHint: '使用 ISO 3166-1 alpha-2 代码，多个代码用英文逗号分隔，例如 CN, IR。',
+        regionRestrictionCountriesFormatError: '区域阻断国家/地区代码格式无效，请输入 2 位字母代码并用逗号分隔。',
+        regionRestrictionNoticeTitle: '提示标题',
+        regionRestrictionNoticeTitlePlaceholder: '当前地区暂不提供 OpenAI 相关服务',
+        regionRestrictionMessage: '提示正文',
+        regionRestrictionMessagePlaceholder: '输入展示给命中访客的说明文案',
+        regionRestrictionDetected: '检测来源模板',
+        regionRestrictionDetectedPlaceholder: '检测到当前访问来源：{country}',
+        regionRestrictionDetectedHint: '可使用 {country} 作为检测到的国家/地区占位符。',
+        regionRestrictionActionText: '操作拦截提示',
+        regionRestrictionActionTextPlaceholder: '当前地区暂不提供 OpenAI 相关服务，界面操作已被限制。',
         hideCcsImportButton: '隐藏 CCS 导入按钮',
         hideCcsImportButtonHint: '启用后将在 API Keys 页面隐藏"导入 CCS"按钮'
       },

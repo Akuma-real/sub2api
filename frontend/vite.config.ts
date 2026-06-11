@@ -3,6 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import checker from 'vite-plugin-checker'
 import { resolve } from 'path'
 
+process.env.BROWSERSLIST_IGNORE_OLD_DATA ??= '1'
+
 /**
  * Vite 插件：开发模式下注入公开配置到 index.html
  * 与生产模式的后端注入行为保持一致，消除闪烁
@@ -44,6 +46,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       checker({
+        enableBuild: false,
         vueTsc: true
       }),
       injectPublicSettings(backendUrl)
@@ -63,6 +66,7 @@ export default defineConfig(({ mode }) => {
   build: {
     outDir: '../backend/internal/web/dist',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         /**

@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config'
 import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
 
+process.env.BROWSERSLIST_IGNORE_OLD_DATA ??= '1'
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {

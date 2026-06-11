@@ -218,6 +218,12 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		ContactInfo:                            settings.ContactInfo,
 		DocURL:                                 settings.DocURL,
 		HomeContent:                            settings.HomeContent,
+		RegionRestrictionEnabled:               settings.RegionRestrictionEnabled,
+		RegionRestrictionCountries:             settings.RegionRestrictionCountries,
+		RegionRestrictionTitle:                 settings.RegionRestrictionTitle,
+		RegionRestrictionMessage:               settings.RegionRestrictionMessage,
+		RegionRestrictionDetected:              settings.RegionRestrictionDetected,
+		RegionRestrictionActionText:            settings.RegionRestrictionActionText,
 		HideCcsImportButton:                    settings.HideCcsImportButton,
 		PurchaseSubscriptionEnabled:            settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:                settings.PurchaseSubscriptionURL,
@@ -499,6 +505,12 @@ type UpdateSettingsRequest struct {
 	ContactInfo                 string                `json:"contact_info"`
 	DocURL                      string                `json:"doc_url"`
 	HomeContent                 string                `json:"home_content"`
+	RegionRestrictionEnabled    *bool                 `json:"region_restriction_enabled"`
+	RegionRestrictionCountries  *[]string             `json:"region_restriction_countries"`
+	RegionRestrictionTitle      *string               `json:"region_restriction_title"`
+	RegionRestrictionMessage    *string               `json:"region_restriction_message"`
+	RegionRestrictionDetected   *string               `json:"region_restriction_detected"`
+	RegionRestrictionActionText *string               `json:"region_restriction_action_text"`
 	HideCcsImportButton         bool                  `json:"hide_ccs_import_button"`
 	PurchaseSubscriptionEnabled *bool                 `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     *string               `json:"purchase_subscription_url"`
@@ -1569,6 +1581,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ContactInfo:                            req.ContactInfo,
 		DocURL:                                 req.DocURL,
 		HomeContent:                            req.HomeContent,
+		RegionRestrictionEnabled:               boolValueOrDefault(req.RegionRestrictionEnabled, previousSettings.RegionRestrictionEnabled),
+		RegionRestrictionCountries:             stringSliceValueOrDefault(req.RegionRestrictionCountries, previousSettings.RegionRestrictionCountries),
+		RegionRestrictionTitle:                 stringValueOrDefault(req.RegionRestrictionTitle, previousSettings.RegionRestrictionTitle),
+		RegionRestrictionMessage:               stringValueOrDefault(req.RegionRestrictionMessage, previousSettings.RegionRestrictionMessage),
+		RegionRestrictionDetected:              stringValueOrDefault(req.RegionRestrictionDetected, previousSettings.RegionRestrictionDetected),
+		RegionRestrictionActionText:            stringValueOrDefault(req.RegionRestrictionActionText, previousSettings.RegionRestrictionActionText),
 		HideCcsImportButton:                    req.HideCcsImportButton,
 		PurchaseSubscriptionEnabled:            purchaseEnabled,
 		PurchaseSubscriptionURL:                purchaseURL,
@@ -2012,6 +2030,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		ContactInfo:                            updatedSettings.ContactInfo,
 		DocURL:                                 updatedSettings.DocURL,
 		HomeContent:                            updatedSettings.HomeContent,
+		RegionRestrictionEnabled:               updatedSettings.RegionRestrictionEnabled,
+		RegionRestrictionCountries:             updatedSettings.RegionRestrictionCountries,
+		RegionRestrictionTitle:                 updatedSettings.RegionRestrictionTitle,
+		RegionRestrictionMessage:               updatedSettings.RegionRestrictionMessage,
+		RegionRestrictionDetected:              updatedSettings.RegionRestrictionDetected,
+		RegionRestrictionActionText:            updatedSettings.RegionRestrictionActionText,
 		HideCcsImportButton:                    updatedSettings.HideCcsImportButton,
 		PurchaseSubscriptionEnabled:            updatedSettings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:                updatedSettings.PurchaseSubscriptionURL,
@@ -2412,6 +2436,24 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.HomeContent != after.HomeContent {
 		changed = append(changed, "home_content")
 	}
+	if before.RegionRestrictionEnabled != after.RegionRestrictionEnabled {
+		changed = append(changed, service.SettingKeyRegionRestrictionEnabled)
+	}
+	if !equalStringSlice(before.RegionRestrictionCountries, after.RegionRestrictionCountries) {
+		changed = append(changed, service.SettingKeyRegionRestrictionCountries)
+	}
+	if before.RegionRestrictionTitle != after.RegionRestrictionTitle {
+		changed = append(changed, service.SettingKeyRegionRestrictionTitle)
+	}
+	if before.RegionRestrictionMessage != after.RegionRestrictionMessage {
+		changed = append(changed, service.SettingKeyRegionRestrictionMessage)
+	}
+	if before.RegionRestrictionDetected != after.RegionRestrictionDetected {
+		changed = append(changed, service.SettingKeyRegionRestrictionDetected)
+	}
+	if before.RegionRestrictionActionText != after.RegionRestrictionActionText {
+		changed = append(changed, service.SettingKeyRegionRestrictionActionText)
+	}
 	if before.HideCcsImportButton != after.HideCcsImportButton {
 		changed = append(changed, "hide_ccs_import_button")
 	}
@@ -2674,6 +2716,20 @@ func boolValueOrDefault(value *bool, fallback bool) bool {
 		return fallback
 	}
 	return *value
+}
+
+func stringValueOrDefault(value *string, fallback string) string {
+	if value == nil {
+		return fallback
+	}
+	return strings.TrimSpace(*value)
+}
+
+func stringSliceValueOrDefault(value *[]string, fallback []string) []string {
+	if value == nil {
+		return fallback
+	}
+	return append([]string(nil), (*value)...)
 }
 
 func defaultSubscriptionsValueOrDefault(input *[]dto.DefaultSubscriptionSetting, fallback []service.DefaultSubscriptionSetting) []service.DefaultSubscriptionSetting {

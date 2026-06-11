@@ -104,6 +104,29 @@ func TestSettingService_GetPublicSettings_ExposesAllowUserViewErrorRequests(t *t
 	require.True(t, settings.AllowUserViewErrorRequests)
 }
 
+func TestSettingService_GetPublicSettings_ExposesRegionRestrictionSettings(t *testing.T) {
+	repo := &settingPublicRepoStub{
+		values: map[string]string{
+			SettingKeyRegionRestrictionEnabled:    "true",
+			SettingKeyRegionRestrictionCountries:  `["cn","US","invalid","US"]`,
+			SettingKeyRegionRestrictionTitle:      "Blocked title",
+			SettingKeyRegionRestrictionMessage:    "Blocked message",
+			SettingKeyRegionRestrictionDetected:   "From {country}",
+			SettingKeyRegionRestrictionActionText: "Blocked action",
+		},
+	}
+	svc := NewSettingService(repo, &config.Config{})
+
+	settings, err := svc.GetPublicSettings(context.Background())
+	require.NoError(t, err)
+	require.True(t, settings.RegionRestrictionEnabled)
+	require.Equal(t, []string{"CN", "US"}, settings.RegionRestrictionCountries)
+	require.Equal(t, "Blocked title", settings.RegionRestrictionTitle)
+	require.Equal(t, "Blocked message", settings.RegionRestrictionMessage)
+	require.Equal(t, "From {country}", settings.RegionRestrictionDetected)
+	require.Equal(t, "Blocked action", settings.RegionRestrictionActionText)
+}
+
 func TestSettingService_GetPublicSettings_ExposesWeChatOAuthModeCapabilities(t *testing.T) {
 	svc := NewSettingService(&settingPublicRepoStub{
 		values: map[string]string{

@@ -52,8 +52,23 @@
             <Icon name="book" size="md" />
           </a>
 
+          <button
+            v-if="isMainlandChinaRestricted"
+            type="button"
+            disabled
+            class="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-surface-dark/50 py-1 pl-1 pr-2.5 opacity-60"
+          >
+            <span
+              class="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-semibold text-on-primary"
+            >
+              {{ isAuthenticated ? userInitial : "!" }}
+            </span>
+            <span class="text-xs font-medium text-on-primary">{{
+              isAuthenticated ? t("home.dashboard") : t("home.login")
+            }}</span>
+          </button>
           <router-link
-            v-if="isAuthenticated"
+            v-else-if="isAuthenticated"
             :to="dashboardPath"
             class="inline-flex items-center gap-1.5 rounded-full bg-surface-dark py-1 pl-1 pr-2.5 transition-colors hover:bg-surface-dark-elevated"
           >
@@ -113,10 +128,36 @@
               {{ siteSubtitle }}
             </p>
 
+            <RegionRestrictionNotice
+              v-if="isMainlandChinaRestricted"
+              :detected-from="geoInfo.countryName"
+              :copy="restrictionCopy"
+              class="mx-auto mb-8 max-w-2xl lg:mx-0"
+            />
+
             <div
               class="flex flex-col items-center gap-3 sm:flex-row lg:items-start"
             >
+              <button
+                v-if="isMainlandChinaRestricted"
+                type="button"
+                disabled
+                class="btn btn-primary px-8 py-3 text-base"
+              >
+                {{
+                  isAuthenticated
+                    ? t("home.goToDashboard")
+                    : t("home.getStarted")
+                }}
+                <Icon
+                  name="arrowRight"
+                  size="md"
+                  class="ml-2"
+                  :stroke-width="2"
+                />
+              </button>
               <router-link
+                v-else
                 :to="isAuthenticated ? dashboardPath : '/login'"
                 class="btn btn-primary px-8 py-3 text-base"
               >
@@ -337,8 +378,9 @@
             }}</span>
             <span
               class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
-              >{{ t("home.providers.supported") }}</span
             >
+              {{ t("home.providers.supported") }}
+            </span>
           </div>
           <!-- GPT - Supported -->
           <div
@@ -352,8 +394,9 @@
             <span class="text-sm font-medium text-body">GPT</span>
             <span
               class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
-              >{{ t("home.providers.supported") }}</span
             >
+              {{ t("home.providers.supported") }}
+            </span>
           </div>
           <!-- Gemini - Supported -->
           <div
@@ -369,8 +412,9 @@
             }}</span>
             <span
               class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
-              >{{ t("home.providers.supported") }}</span
             >
+              {{ t("home.providers.supported") }}
+            </span>
           </div>
           <!-- Antigravity - Supported -->
           <div
@@ -386,8 +430,9 @@
             }}</span>
             <span
               class="rounded bg-primary-100 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
-              >{{ t("home.providers.supported") }}</span
             >
+              {{ t("home.providers.supported") }}
+            </span>
           </div>
           <!-- More - Coming Soon -->
           <div
@@ -403,8 +448,9 @@
             }}</span>
             <span
               class="rounded bg-canvas px-1.5 py-0.5 text-[10px] font-medium text-body-strong"
-              >{{ t("home.providers.soon") }}</span
             >
+              {{ t("home.providers.soon") }}
+            </span>
           </div>
         </div>
       </div>
@@ -446,11 +492,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAuthStore, useAppStore } from "@/stores";
 import LocaleSwitcher from "@/components/common/LocaleSwitcher.vue";
+import RegionRestrictionNotice from "@/components/common/RegionRestrictionNotice.vue";
 import Icon from "@/components/icons/Icon.vue";
+import { useRegionRestriction } from "@/composables/useRegionRestriction";
 
 const { t } = useI18n();
 
@@ -501,154 +549,13 @@ const shellUsername = computed(() => {
   return username || "guest";
 });
 
-type GeoStatus = "loading" | "success" | "error";
-
-interface GeoInfo {
-  ip: string;
-  asnText: string;
-  countryName: string;
-}
-
-const GEO_REQUEST_TIMEOUT_MS = 2500;
-const geoStatus = ref<GeoStatus>("loading");
-const geoInfo = ref<GeoInfo>({
-  ip: "",
-  asnText: "",
-  countryName: "",
-});
-
-const geoEndpoints = [
-  "https://api.ip.sb/geoip",
-  "https://api.country.is/?fields=asn",
-] as const;
-
-function getRecord(value: unknown): Record<string, unknown> | null {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  return null;
-}
-
-function getString(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getNumberOrString(value: unknown): string {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
-  }
-  return getString(value);
-}
-
-function countryCodeToName(countryCode: string): string {
-  if (!countryCode) {
-    return "";
-  }
-
-  try {
-    return (
-      new Intl.DisplayNames(["en"], { type: "region" }).of(
-        countryCode.toUpperCase(),
-      ) || countryCode.toUpperCase()
-    );
-  } catch {
-    return countryCode.toUpperCase();
-  }
-}
-
-function normalizeCountryName(data: Record<string, unknown>): string {
-  const countryName = getString(data.country_name);
-  if (countryName) {
-    return countryName;
-  }
-
-  const country = getString(data.country);
-  if (country.length === 2) {
-    return countryCodeToName(country);
-  }
-
-  return country || countryCodeToName(getString(data.country_code));
-}
-
-function normalizeAsnText(data: Record<string, unknown>): string {
-  const nestedAsn = getRecord(data.asn);
-  const asnNumber =
-    getNumberOrString(data.asn) ||
-    getNumberOrString(data.asn_number) ||
-    getNumberOrString(nestedAsn?.number);
-  const organization =
-    getString(data.asn_organization) ||
-    getString(data.organization) ||
-    getString(data.isp) ||
-    getString(nestedAsn?.organization);
-
-  if (asnNumber && organization) {
-    return `AS${asnNumber.replace(/^AS/i, "")} (${organization})`;
-  }
-  if (asnNumber) {
-    return `AS${asnNumber.replace(/^AS/i, "")}`;
-  }
-  return organization || "Unknown";
-}
-
-function normalizeGeoInfo(payload: unknown): GeoInfo | null {
-  const data = getRecord(payload);
-  if (!data) {
-    return null;
-  }
-
-  const ip = getString(data.ip);
-  const countryName = normalizeCountryName(data);
-
-  if (!ip || !countryName) {
-    return null;
-  }
-
-  return {
-    ip,
-    asnText: normalizeAsnText(data),
-    countryName,
-  };
-}
-
-async function fetchGeoEndpoint(endpoint: string): Promise<GeoInfo | null> {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(
-    () => controller.abort(),
-    GEO_REQUEST_TIMEOUT_MS,
-  );
-
-  try {
-    const response = await fetch(endpoint, {
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      return null;
-    }
-
-    return normalizeGeoInfo(await response.json());
-  } catch {
-    return null;
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
-}
-
-async function loadGeoInfo(): Promise<void> {
-  geoStatus.value = "loading";
-
-  for (const endpoint of geoEndpoints) {
-    const result = await fetchGeoEndpoint(endpoint);
-    if (result) {
-      geoInfo.value = result;
-      geoStatus.value = "success";
-      return;
-    }
-  }
-
-  geoStatus.value = "error";
-}
+const {
+  geoStatus,
+  geoInfo,
+  restrictionCopy,
+  isMainlandChinaRestricted,
+  loadRegionRestriction,
+} = useRegionRestriction();
 
 // Current year for footer
 const currentYear = computed(() => new Date().getFullYear());
@@ -662,7 +569,7 @@ onMounted(() => {
     appStore.fetchPublicSettings();
   }
 
-  loadGeoInfo();
+  loadRegionRestriction();
 });
 </script>
 
