@@ -76,8 +76,61 @@ func TestUsageBillingRepositoryApply_DeduplicatesBalanceBilling(t *testing.T) {
 	require.Equal(t, service.StatusAPIKeyQuotaExhausted, status)
 
 	var dedupCount int
-	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT COUNT(*) FROM usage_billing_dedup WHERE request_id = $1 AND api_key_id = $2", requestID, apiKey.ID).Scan(&dedupCount))
+	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT COUNT(*) FROM usage_billing_dedup WHERE request_id = $1 AND api_key_id = $2 AND attempt_id = $3", requestID, apiKey.ID, "primary").Scan(&dedupCount))
 	require.Equal(t, 1, dedupCount)
+}
+
+func TestUsageBillingRepositoryApply_DeduplicatesByAttemptID(t *testing.T) {
+	ctx := context.Background()
+	client := testEntClient(t)
+	repo := NewUsageBillingRepository(client, integrationDB)
+
+	user := mustCreateUser(t, client, &service.User{
+		Email:        fmt.Sprintf("usage-billing-attempt-user-%d@example.com", time.Now().UnixNano()),
+		PasswordHash: "hash",
+		Balance:      100,
+	})
+	apiKey := mustCreateApiKey(t, client, &service.APIKey{
+		UserID: user.ID,
+		Key:    "sk-usage-billing-attempt-" + uuid.NewString(),
+		Name:   "billing-attempt",
+	})
+
+	requestID := uuid.NewString()
+	primary := &service.UsageBillingCommand{
+		RequestID:   requestID,
+		AttemptID:   "primary",
+		APIKeyID:    apiKey.ID,
+		UserID:      user.ID,
+		BalanceCost: 1.25,
+	}
+	secondary := &service.UsageBillingCommand{
+		RequestID:   requestID,
+		AttemptID:   "secondary",
+		APIKeyID:    apiKey.ID,
+		UserID:      user.ID,
+		BalanceCost: 2.50,
+	}
+
+	result1, err := repo.Apply(ctx, primary)
+	require.NoError(t, err)
+	require.True(t, result1.Applied)
+
+	result2, err := repo.Apply(ctx, secondary)
+	require.NoError(t, err)
+	require.True(t, result2.Applied)
+
+	result3, err := repo.Apply(ctx, secondary)
+	require.NoError(t, err)
+	require.False(t, result3.Applied)
+
+	var balance float64
+	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT balance FROM users WHERE id = $1", user.ID).Scan(&balance))
+	require.InDelta(t, 96.25, balance, 0.000001)
+
+	var dedupCount int
+	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT COUNT(*) FROM usage_billing_dedup WHERE request_id = $1 AND api_key_id = $2", requestID, apiKey.ID).Scan(&dedupCount))
+	require.Equal(t, 2, dedupCount)
 }
 
 func TestUsageBillingRepositoryApply_DeduplicatesSubscriptionBilling(t *testing.T) {
@@ -160,6 +213,59 @@ func TestUsageBillingRepositoryApply_RequestFingerprintConflict(t *testing.T) {
 		BalanceCost: 2.50,
 	})
 	require.ErrorIs(t, err, service.ErrUsageBillingRequestConflict)
+}
+
+func TestUsageBillingRepositoryApply_VIPDoesNotDiscountProtectedBalanceCost(t *testing.T) {
+	ctx := context.Background()
+	client := testEntClient(t)
+	repo := NewUsageBillingRepository(client, integrationDB)
+
+	user := mustCreateUser(t, client, &service.User{
+		Email:        fmt.Sprintf("usage-billing-vip-protected-user-%d@example.com", time.Now().UnixNano()),
+		PasswordHash: "hash",
+		Balance:      100,
+	})
+	apiKey := mustCreateApiKey(t, client, &service.APIKey{
+		UserID: user.ID,
+		Key:    "sk-usage-billing-vip-protected-" + uuid.NewString(),
+		Name:   "billing-vip-protected",
+	})
+
+	var vipLevelID int64
+	require.NoError(t, integrationDB.QueryRowContext(ctx, `
+		INSERT INTO vip_levels (name, price, validity_days, discount_multiplier, created_at, updated_at)
+		VALUES ($1, 0, 30, 0.5, NOW(), NOW())
+		RETURNING id
+	`, "protected-cost-test-"+uuid.NewString()).Scan(&vipLevelID))
+	_, err := integrationDB.ExecContext(ctx, `
+		INSERT INTO user_vip_memberships (user_id, vip_level_id, starts_at, expires_at, status, created_at, updated_at)
+		VALUES ($1, $2, NOW(), NOW() + INTERVAL '30 days', $3, NOW(), NOW())
+	`, user.ID, vipLevelID, service.VIPMembershipStatusActive)
+	require.NoError(t, err)
+
+	result, err := repo.Apply(ctx, &service.UsageBillingCommand{
+		RequestID:                  uuid.NewString(),
+		APIKeyID:                   apiKey.ID,
+		UserID:                     user.ID,
+		BalanceCost:                3.0,
+		VIPDiscountableBalanceCost: 2.0,
+		VIPProtectedBalanceCost:    1.0,
+		APIKeyQuotaCost:            3.0,
+		APIKeyRateLimitCost:        3.0,
+	})
+	require.NoError(t, err)
+	require.True(t, result.Applied)
+	require.NotNil(t, result.VIPLevelID)
+	require.InDelta(t, 2.0, *result.VIPPreDiscountCost, 0.000001)
+	require.InDelta(t, 1.0, result.VIPSavingsUSD, 0.000001)
+
+	var balance float64
+	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT balance FROM users WHERE id = $1", user.ID).Scan(&balance))
+	require.InDelta(t, 98.0, balance, 0.000001, "only discountable cost should be halved; protected cost stays at full cost")
+
+	var quotaUsed float64
+	require.NoError(t, integrationDB.QueryRowContext(ctx, "SELECT quota_used FROM api_keys WHERE id = $1", apiKey.ID).Scan(&quotaUsed))
+	require.InDelta(t, 2.0, quotaUsed, 0.000001)
 }
 
 func TestUsageBillingRepositoryApply_UpdatesAccountQuota(t *testing.T) {
@@ -297,8 +403,8 @@ func TestDashboardAggregationRepositoryCleanupUsageBillingDedup_BatchDeletesOldR
 	newCreatedAt := time.Now().UTC().Add(-time.Hour)
 
 	_, err := integrationDB.ExecContext(ctx, `
-		INSERT INTO usage_billing_dedup (request_id, api_key_id, request_fingerprint, created_at)
-		VALUES ($1, 1, $2, $3), ($4, 1, $5, $6)
+		INSERT INTO usage_billing_dedup (request_id, api_key_id, attempt_id, request_fingerprint, created_at)
+		VALUES ($1, 1, 'primary', $2, $3), ($4, 1, 'primary', $5, $6)
 	`,
 		oldRequestID, strings.Repeat("a", 64), oldCreatedAt,
 		newRequestID, strings.Repeat("b", 64), newCreatedAt,

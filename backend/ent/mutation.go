@@ -27,6 +27,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/identityadoptiondecision"
+	"github.com/Wei-Shaw/sub2api/ent/openaidualattempt"
 	"github.com/Wei-Shaw/sub2api/ent/paymentauditlog"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/paymentproviderinstance"
@@ -77,6 +78,7 @@ const (
 	TypeGroup                         = "Group"
 	TypeIdempotencyRecord             = "IdempotencyRecord"
 	TypeIdentityAdoptionDecision      = "IdentityAdoptionDecision"
+	TypeOpenAIDualAttempt             = "OpenAIDualAttempt"
 	TypePaymentAuditLog               = "PaymentAuditLog"
 	TypePaymentOrder                  = "PaymentOrder"
 	TypePaymentProviderInstance       = "PaymentProviderInstance"
@@ -104,51 +106,52 @@ const (
 // APIKeyMutation represents an operation that mutates the APIKey nodes in the graph.
 type APIKeyMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *int64
-	created_at         *time.Time
-	updated_at         *time.Time
-	deleted_at         *time.Time
-	key                *string
-	name               *string
-	status             *string
-	last_used_at       *time.Time
-	ip_whitelist       *[]string
-	appendip_whitelist []string
-	ip_blacklist       *[]string
-	appendip_blacklist []string
-	quota              *float64
-	addquota           *float64
-	quota_used         *float64
-	addquota_used      *float64
-	expires_at         *time.Time
-	rate_limit_5h      *float64
-	addrate_limit_5h   *float64
-	rate_limit_1d      *float64
-	addrate_limit_1d   *float64
-	rate_limit_7d      *float64
-	addrate_limit_7d   *float64
-	usage_5h           *float64
-	addusage_5h        *float64
-	usage_1d           *float64
-	addusage_1d        *float64
-	usage_7d           *float64
-	addusage_7d        *float64
-	window_5h_start    *time.Time
-	window_1d_start    *time.Time
-	window_7d_start    *time.Time
-	clearedFields      map[string]struct{}
-	user               *int64
-	cleareduser        bool
-	group              *int64
-	clearedgroup       bool
-	usage_logs         map[int64]struct{}
-	removedusage_logs  map[int64]struct{}
-	clearedusage_logs  bool
-	done               bool
-	oldValue           func(context.Context) (*APIKey, error)
-	predicates         []predicate.APIKey
+	op                    Op
+	typ                   string
+	id                    *int64
+	created_at            *time.Time
+	updated_at            *time.Time
+	deleted_at            *time.Time
+	key                   *string
+	name                  *string
+	status                *string
+	last_used_at          *time.Time
+	ip_whitelist          *[]string
+	appendip_whitelist    []string
+	ip_blacklist          *[]string
+	appendip_blacklist    []string
+	acceleration_settings *map[string]interface{}
+	quota                 *float64
+	addquota              *float64
+	quota_used            *float64
+	addquota_used         *float64
+	expires_at            *time.Time
+	rate_limit_5h         *float64
+	addrate_limit_5h      *float64
+	rate_limit_1d         *float64
+	addrate_limit_1d      *float64
+	rate_limit_7d         *float64
+	addrate_limit_7d      *float64
+	usage_5h              *float64
+	addusage_5h           *float64
+	usage_1d              *float64
+	addusage_1d           *float64
+	usage_7d              *float64
+	addusage_7d           *float64
+	window_5h_start       *time.Time
+	window_1d_start       *time.Time
+	window_7d_start       *time.Time
+	clearedFields         map[string]struct{}
+	user                  *int64
+	cleareduser           bool
+	group                 *int64
+	clearedgroup          bool
+	usage_logs            map[int64]struct{}
+	removedusage_logs     map[int64]struct{}
+	clearedusage_logs     bool
+	done                  bool
+	oldValue              func(context.Context) (*APIKey, error)
+	predicates            []predicate.APIKey
 }
 
 var _ ent.Mutation = (*APIKeyMutation)(nil)
@@ -740,6 +743,55 @@ func (m *APIKeyMutation) ResetIPBlacklist() {
 	m.ip_blacklist = nil
 	m.appendip_blacklist = nil
 	delete(m.clearedFields, apikey.FieldIPBlacklist)
+}
+
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (m *APIKeyMutation) SetAccelerationSettings(value map[string]interface{}) {
+	m.acceleration_settings = &value
+}
+
+// AccelerationSettings returns the value of the "acceleration_settings" field in the mutation.
+func (m *APIKeyMutation) AccelerationSettings() (r map[string]interface{}, exists bool) {
+	v := m.acceleration_settings
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccelerationSettings returns the old "acceleration_settings" field's value of the APIKey entity.
+// If the APIKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *APIKeyMutation) OldAccelerationSettings(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccelerationSettings is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccelerationSettings requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccelerationSettings: %w", err)
+	}
+	return oldValue.AccelerationSettings, nil
+}
+
+// ClearAccelerationSettings clears the value of the "acceleration_settings" field.
+func (m *APIKeyMutation) ClearAccelerationSettings() {
+	m.acceleration_settings = nil
+	m.clearedFields[apikey.FieldAccelerationSettings] = struct{}{}
+}
+
+// AccelerationSettingsCleared returns if the "acceleration_settings" field was cleared in this mutation.
+func (m *APIKeyMutation) AccelerationSettingsCleared() bool {
+	_, ok := m.clearedFields[apikey.FieldAccelerationSettings]
+	return ok
+}
+
+// ResetAccelerationSettings resets all changes to the "acceleration_settings" field.
+func (m *APIKeyMutation) ResetAccelerationSettings() {
+	m.acceleration_settings = nil
+	delete(m.clearedFields, apikey.FieldAccelerationSettings)
 }
 
 // SetQuota sets the "quota" field.
@@ -1528,7 +1580,7 @@ func (m *APIKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *APIKeyMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, apikey.FieldCreatedAt)
 	}
@@ -1561,6 +1613,9 @@ func (m *APIKeyMutation) Fields() []string {
 	}
 	if m.ip_blacklist != nil {
 		fields = append(fields, apikey.FieldIPBlacklist)
+	}
+	if m.acceleration_settings != nil {
+		fields = append(fields, apikey.FieldAccelerationSettings)
 	}
 	if m.quota != nil {
 		fields = append(fields, apikey.FieldQuota)
@@ -1628,6 +1683,8 @@ func (m *APIKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.IPWhitelist()
 	case apikey.FieldIPBlacklist:
 		return m.IPBlacklist()
+	case apikey.FieldAccelerationSettings:
+		return m.AccelerationSettings()
 	case apikey.FieldQuota:
 		return m.Quota()
 	case apikey.FieldQuotaUsed:
@@ -1683,6 +1740,8 @@ func (m *APIKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldIPWhitelist(ctx)
 	case apikey.FieldIPBlacklist:
 		return m.OldIPBlacklist(ctx)
+	case apikey.FieldAccelerationSettings:
+		return m.OldAccelerationSettings(ctx)
 	case apikey.FieldQuota:
 		return m.OldQuota(ctx)
 	case apikey.FieldQuotaUsed:
@@ -1792,6 +1851,13 @@ func (m *APIKeyMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIPBlacklist(v)
+		return nil
+	case apikey.FieldAccelerationSettings:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccelerationSettings(v)
 		return nil
 	case apikey.FieldQuota:
 		v, ok := value.(float64)
@@ -2021,6 +2087,9 @@ func (m *APIKeyMutation) ClearedFields() []string {
 	if m.FieldCleared(apikey.FieldIPBlacklist) {
 		fields = append(fields, apikey.FieldIPBlacklist)
 	}
+	if m.FieldCleared(apikey.FieldAccelerationSettings) {
+		fields = append(fields, apikey.FieldAccelerationSettings)
+	}
 	if m.FieldCleared(apikey.FieldExpiresAt) {
 		fields = append(fields, apikey.FieldExpiresAt)
 	}
@@ -2061,6 +2130,9 @@ func (m *APIKeyMutation) ClearField(name string) error {
 		return nil
 	case apikey.FieldIPBlacklist:
 		m.ClearIPBlacklist()
+		return nil
+	case apikey.FieldAccelerationSettings:
+		m.ClearAccelerationSettings()
 		return nil
 	case apikey.FieldExpiresAt:
 		m.ClearExpiresAt()
@@ -2114,6 +2186,9 @@ func (m *APIKeyMutation) ResetField(name string) error {
 		return nil
 	case apikey.FieldIPBlacklist:
 		m.ResetIPBlacklist()
+		return nil
+	case apikey.FieldAccelerationSettings:
+		m.ResetAccelerationSettings()
 		return nil
 	case apikey.FieldQuota:
 		m.ResetQuota()
@@ -20055,6 +20130,1677 @@ func (m *IdentityAdoptionDecisionMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown IdentityAdoptionDecision edge %s", name)
 }
 
+// OpenAIDualAttemptMutation represents an operation that mutates the OpenAIDualAttempt nodes in the graph.
+type OpenAIDualAttemptMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int64
+	request_id             *string
+	attempt_id             *string
+	api_key_id             *int64
+	addapi_key_id          *int64
+	user_id                *int64
+	adduser_id             *int64
+	account_id             *int64
+	addaccount_id          *int64
+	endpoint               *string
+	method                 *string
+	role                   *string
+	outcome                *string
+	service_tier           *string
+	status                 *string
+	billing_basis          *string
+	estimated_cost         *float64
+	addestimated_cost      *float64
+	actual_cost            *float64
+	addactual_cost         *float64
+	billed_cost            *float64
+	addbilled_cost         *float64
+	upstream_dispatched_at *time.Time
+	cancel_reason          *string
+	metadata               *map[string]interface{}
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*OpenAIDualAttempt, error)
+	predicates             []predicate.OpenAIDualAttempt
+}
+
+var _ ent.Mutation = (*OpenAIDualAttemptMutation)(nil)
+
+// openaidualattemptOption allows management of the mutation configuration using functional options.
+type openaidualattemptOption func(*OpenAIDualAttemptMutation)
+
+// newOpenAIDualAttemptMutation creates new mutation for the OpenAIDualAttempt entity.
+func newOpenAIDualAttemptMutation(c config, op Op, opts ...openaidualattemptOption) *OpenAIDualAttemptMutation {
+	m := &OpenAIDualAttemptMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeOpenAIDualAttempt,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withOpenAIDualAttemptID sets the ID field of the mutation.
+func withOpenAIDualAttemptID(id int64) openaidualattemptOption {
+	return func(m *OpenAIDualAttemptMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *OpenAIDualAttempt
+		)
+		m.oldValue = func(ctx context.Context) (*OpenAIDualAttempt, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().OpenAIDualAttempt.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withOpenAIDualAttempt sets the old OpenAIDualAttempt of the mutation.
+func withOpenAIDualAttempt(node *OpenAIDualAttempt) openaidualattemptOption {
+	return func(m *OpenAIDualAttemptMutation) {
+		m.oldValue = func(context.Context) (*OpenAIDualAttempt, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m OpenAIDualAttemptMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m OpenAIDualAttemptMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *OpenAIDualAttemptMutation) ID() (id int64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *OpenAIDualAttemptMutation) IDs(ctx context.Context) ([]int64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().OpenAIDualAttempt.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetRequestID sets the "request_id" field.
+func (m *OpenAIDualAttemptMutation) SetRequestID(s string) {
+	m.request_id = &s
+}
+
+// RequestID returns the value of the "request_id" field in the mutation.
+func (m *OpenAIDualAttemptMutation) RequestID() (r string, exists bool) {
+	v := m.request_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestID returns the old "request_id" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldRequestID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
+	}
+	return oldValue.RequestID, nil
+}
+
+// ResetRequestID resets all changes to the "request_id" field.
+func (m *OpenAIDualAttemptMutation) ResetRequestID() {
+	m.request_id = nil
+}
+
+// SetAttemptID sets the "attempt_id" field.
+func (m *OpenAIDualAttemptMutation) SetAttemptID(s string) {
+	m.attempt_id = &s
+}
+
+// AttemptID returns the value of the "attempt_id" field in the mutation.
+func (m *OpenAIDualAttemptMutation) AttemptID() (r string, exists bool) {
+	v := m.attempt_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptID returns the old "attempt_id" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldAttemptID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptID: %w", err)
+	}
+	return oldValue.AttemptID, nil
+}
+
+// ResetAttemptID resets all changes to the "attempt_id" field.
+func (m *OpenAIDualAttemptMutation) ResetAttemptID() {
+	m.attempt_id = nil
+}
+
+// SetAPIKeyID sets the "api_key_id" field.
+func (m *OpenAIDualAttemptMutation) SetAPIKeyID(i int64) {
+	m.api_key_id = &i
+	m.addapi_key_id = nil
+}
+
+// APIKeyID returns the value of the "api_key_id" field in the mutation.
+func (m *OpenAIDualAttemptMutation) APIKeyID() (r int64, exists bool) {
+	v := m.api_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIKeyID returns the old "api_key_id" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldAPIKeyID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIKeyID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIKeyID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIKeyID: %w", err)
+	}
+	return oldValue.APIKeyID, nil
+}
+
+// AddAPIKeyID adds i to the "api_key_id" field.
+func (m *OpenAIDualAttemptMutation) AddAPIKeyID(i int64) {
+	if m.addapi_key_id != nil {
+		*m.addapi_key_id += i
+	} else {
+		m.addapi_key_id = &i
+	}
+}
+
+// AddedAPIKeyID returns the value that was added to the "api_key_id" field in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedAPIKeyID() (r int64, exists bool) {
+	v := m.addapi_key_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAPIKeyID resets all changes to the "api_key_id" field.
+func (m *OpenAIDualAttemptMutation) ResetAPIKeyID() {
+	m.api_key_id = nil
+	m.addapi_key_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *OpenAIDualAttemptMutation) SetUserID(i int64) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *OpenAIDualAttemptMutation) UserID() (r int64, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldUserID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *OpenAIDualAttemptMutation) AddUserID(i int64) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedUserID() (r int64, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *OpenAIDualAttemptMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetAccountID sets the "account_id" field.
+func (m *OpenAIDualAttemptMutation) SetAccountID(i int64) {
+	m.account_id = &i
+	m.addaccount_id = nil
+}
+
+// AccountID returns the value of the "account_id" field in the mutation.
+func (m *OpenAIDualAttemptMutation) AccountID() (r int64, exists bool) {
+	v := m.account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAccountID returns the old "account_id" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldAccountID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAccountID: %w", err)
+	}
+	return oldValue.AccountID, nil
+}
+
+// AddAccountID adds i to the "account_id" field.
+func (m *OpenAIDualAttemptMutation) AddAccountID(i int64) {
+	if m.addaccount_id != nil {
+		*m.addaccount_id += i
+	} else {
+		m.addaccount_id = &i
+	}
+}
+
+// AddedAccountID returns the value that was added to the "account_id" field in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedAccountID() (r int64, exists bool) {
+	v := m.addaccount_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAccountID clears the value of the "account_id" field.
+func (m *OpenAIDualAttemptMutation) ClearAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+	m.clearedFields[openaidualattempt.FieldAccountID] = struct{}{}
+}
+
+// AccountIDCleared returns if the "account_id" field was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) AccountIDCleared() bool {
+	_, ok := m.clearedFields[openaidualattempt.FieldAccountID]
+	return ok
+}
+
+// ResetAccountID resets all changes to the "account_id" field.
+func (m *OpenAIDualAttemptMutation) ResetAccountID() {
+	m.account_id = nil
+	m.addaccount_id = nil
+	delete(m.clearedFields, openaidualattempt.FieldAccountID)
+}
+
+// SetEndpoint sets the "endpoint" field.
+func (m *OpenAIDualAttemptMutation) SetEndpoint(s string) {
+	m.endpoint = &s
+}
+
+// Endpoint returns the value of the "endpoint" field in the mutation.
+func (m *OpenAIDualAttemptMutation) Endpoint() (r string, exists bool) {
+	v := m.endpoint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndpoint returns the old "endpoint" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldEndpoint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndpoint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndpoint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndpoint: %w", err)
+	}
+	return oldValue.Endpoint, nil
+}
+
+// ResetEndpoint resets all changes to the "endpoint" field.
+func (m *OpenAIDualAttemptMutation) ResetEndpoint() {
+	m.endpoint = nil
+}
+
+// SetMethod sets the "method" field.
+func (m *OpenAIDualAttemptMutation) SetMethod(s string) {
+	m.method = &s
+}
+
+// Method returns the value of the "method" field in the mutation.
+func (m *OpenAIDualAttemptMutation) Method() (r string, exists bool) {
+	v := m.method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMethod returns the old "method" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldMethod(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMethod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMethod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMethod: %w", err)
+	}
+	return oldValue.Method, nil
+}
+
+// ResetMethod resets all changes to the "method" field.
+func (m *OpenAIDualAttemptMutation) ResetMethod() {
+	m.method = nil
+}
+
+// SetRole sets the "role" field.
+func (m *OpenAIDualAttemptMutation) SetRole(s string) {
+	m.role = &s
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *OpenAIDualAttemptMutation) Role() (r string, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *OpenAIDualAttemptMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetOutcome sets the "outcome" field.
+func (m *OpenAIDualAttemptMutation) SetOutcome(s string) {
+	m.outcome = &s
+}
+
+// Outcome returns the value of the "outcome" field in the mutation.
+func (m *OpenAIDualAttemptMutation) Outcome() (r string, exists bool) {
+	v := m.outcome
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcome returns the old "outcome" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldOutcome(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcome is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcome requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcome: %w", err)
+	}
+	return oldValue.Outcome, nil
+}
+
+// ResetOutcome resets all changes to the "outcome" field.
+func (m *OpenAIDualAttemptMutation) ResetOutcome() {
+	m.outcome = nil
+}
+
+// SetServiceTier sets the "service_tier" field.
+func (m *OpenAIDualAttemptMutation) SetServiceTier(s string) {
+	m.service_tier = &s
+}
+
+// ServiceTier returns the value of the "service_tier" field in the mutation.
+func (m *OpenAIDualAttemptMutation) ServiceTier() (r string, exists bool) {
+	v := m.service_tier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceTier returns the old "service_tier" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldServiceTier(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceTier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceTier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceTier: %w", err)
+	}
+	return oldValue.ServiceTier, nil
+}
+
+// ClearServiceTier clears the value of the "service_tier" field.
+func (m *OpenAIDualAttemptMutation) ClearServiceTier() {
+	m.service_tier = nil
+	m.clearedFields[openaidualattempt.FieldServiceTier] = struct{}{}
+}
+
+// ServiceTierCleared returns if the "service_tier" field was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) ServiceTierCleared() bool {
+	_, ok := m.clearedFields[openaidualattempt.FieldServiceTier]
+	return ok
+}
+
+// ResetServiceTier resets all changes to the "service_tier" field.
+func (m *OpenAIDualAttemptMutation) ResetServiceTier() {
+	m.service_tier = nil
+	delete(m.clearedFields, openaidualattempt.FieldServiceTier)
+}
+
+// SetStatus sets the "status" field.
+func (m *OpenAIDualAttemptMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *OpenAIDualAttemptMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *OpenAIDualAttemptMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetBillingBasis sets the "billing_basis" field.
+func (m *OpenAIDualAttemptMutation) SetBillingBasis(s string) {
+	m.billing_basis = &s
+}
+
+// BillingBasis returns the value of the "billing_basis" field in the mutation.
+func (m *OpenAIDualAttemptMutation) BillingBasis() (r string, exists bool) {
+	v := m.billing_basis
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBillingBasis returns the old "billing_basis" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldBillingBasis(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBillingBasis is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBillingBasis requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBillingBasis: %w", err)
+	}
+	return oldValue.BillingBasis, nil
+}
+
+// ClearBillingBasis clears the value of the "billing_basis" field.
+func (m *OpenAIDualAttemptMutation) ClearBillingBasis() {
+	m.billing_basis = nil
+	m.clearedFields[openaidualattempt.FieldBillingBasis] = struct{}{}
+}
+
+// BillingBasisCleared returns if the "billing_basis" field was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) BillingBasisCleared() bool {
+	_, ok := m.clearedFields[openaidualattempt.FieldBillingBasis]
+	return ok
+}
+
+// ResetBillingBasis resets all changes to the "billing_basis" field.
+func (m *OpenAIDualAttemptMutation) ResetBillingBasis() {
+	m.billing_basis = nil
+	delete(m.clearedFields, openaidualattempt.FieldBillingBasis)
+}
+
+// SetEstimatedCost sets the "estimated_cost" field.
+func (m *OpenAIDualAttemptMutation) SetEstimatedCost(f float64) {
+	m.estimated_cost = &f
+	m.addestimated_cost = nil
+}
+
+// EstimatedCost returns the value of the "estimated_cost" field in the mutation.
+func (m *OpenAIDualAttemptMutation) EstimatedCost() (r float64, exists bool) {
+	v := m.estimated_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEstimatedCost returns the old "estimated_cost" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldEstimatedCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEstimatedCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEstimatedCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEstimatedCost: %w", err)
+	}
+	return oldValue.EstimatedCost, nil
+}
+
+// AddEstimatedCost adds f to the "estimated_cost" field.
+func (m *OpenAIDualAttemptMutation) AddEstimatedCost(f float64) {
+	if m.addestimated_cost != nil {
+		*m.addestimated_cost += f
+	} else {
+		m.addestimated_cost = &f
+	}
+}
+
+// AddedEstimatedCost returns the value that was added to the "estimated_cost" field in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedEstimatedCost() (r float64, exists bool) {
+	v := m.addestimated_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetEstimatedCost resets all changes to the "estimated_cost" field.
+func (m *OpenAIDualAttemptMutation) ResetEstimatedCost() {
+	m.estimated_cost = nil
+	m.addestimated_cost = nil
+}
+
+// SetActualCost sets the "actual_cost" field.
+func (m *OpenAIDualAttemptMutation) SetActualCost(f float64) {
+	m.actual_cost = &f
+	m.addactual_cost = nil
+}
+
+// ActualCost returns the value of the "actual_cost" field in the mutation.
+func (m *OpenAIDualAttemptMutation) ActualCost() (r float64, exists bool) {
+	v := m.actual_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActualCost returns the old "actual_cost" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldActualCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActualCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActualCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActualCost: %w", err)
+	}
+	return oldValue.ActualCost, nil
+}
+
+// AddActualCost adds f to the "actual_cost" field.
+func (m *OpenAIDualAttemptMutation) AddActualCost(f float64) {
+	if m.addactual_cost != nil {
+		*m.addactual_cost += f
+	} else {
+		m.addactual_cost = &f
+	}
+}
+
+// AddedActualCost returns the value that was added to the "actual_cost" field in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedActualCost() (r float64, exists bool) {
+	v := m.addactual_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetActualCost resets all changes to the "actual_cost" field.
+func (m *OpenAIDualAttemptMutation) ResetActualCost() {
+	m.actual_cost = nil
+	m.addactual_cost = nil
+}
+
+// SetBilledCost sets the "billed_cost" field.
+func (m *OpenAIDualAttemptMutation) SetBilledCost(f float64) {
+	m.billed_cost = &f
+	m.addbilled_cost = nil
+}
+
+// BilledCost returns the value of the "billed_cost" field in the mutation.
+func (m *OpenAIDualAttemptMutation) BilledCost() (r float64, exists bool) {
+	v := m.billed_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBilledCost returns the old "billed_cost" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldBilledCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBilledCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBilledCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBilledCost: %w", err)
+	}
+	return oldValue.BilledCost, nil
+}
+
+// AddBilledCost adds f to the "billed_cost" field.
+func (m *OpenAIDualAttemptMutation) AddBilledCost(f float64) {
+	if m.addbilled_cost != nil {
+		*m.addbilled_cost += f
+	} else {
+		m.addbilled_cost = &f
+	}
+}
+
+// AddedBilledCost returns the value that was added to the "billed_cost" field in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedBilledCost() (r float64, exists bool) {
+	v := m.addbilled_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBilledCost resets all changes to the "billed_cost" field.
+func (m *OpenAIDualAttemptMutation) ResetBilledCost() {
+	m.billed_cost = nil
+	m.addbilled_cost = nil
+}
+
+// SetUpstreamDispatchedAt sets the "upstream_dispatched_at" field.
+func (m *OpenAIDualAttemptMutation) SetUpstreamDispatchedAt(t time.Time) {
+	m.upstream_dispatched_at = &t
+}
+
+// UpstreamDispatchedAt returns the value of the "upstream_dispatched_at" field in the mutation.
+func (m *OpenAIDualAttemptMutation) UpstreamDispatchedAt() (r time.Time, exists bool) {
+	v := m.upstream_dispatched_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamDispatchedAt returns the old "upstream_dispatched_at" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldUpstreamDispatchedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamDispatchedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamDispatchedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamDispatchedAt: %w", err)
+	}
+	return oldValue.UpstreamDispatchedAt, nil
+}
+
+// ClearUpstreamDispatchedAt clears the value of the "upstream_dispatched_at" field.
+func (m *OpenAIDualAttemptMutation) ClearUpstreamDispatchedAt() {
+	m.upstream_dispatched_at = nil
+	m.clearedFields[openaidualattempt.FieldUpstreamDispatchedAt] = struct{}{}
+}
+
+// UpstreamDispatchedAtCleared returns if the "upstream_dispatched_at" field was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) UpstreamDispatchedAtCleared() bool {
+	_, ok := m.clearedFields[openaidualattempt.FieldUpstreamDispatchedAt]
+	return ok
+}
+
+// ResetUpstreamDispatchedAt resets all changes to the "upstream_dispatched_at" field.
+func (m *OpenAIDualAttemptMutation) ResetUpstreamDispatchedAt() {
+	m.upstream_dispatched_at = nil
+	delete(m.clearedFields, openaidualattempt.FieldUpstreamDispatchedAt)
+}
+
+// SetCancelReason sets the "cancel_reason" field.
+func (m *OpenAIDualAttemptMutation) SetCancelReason(s string) {
+	m.cancel_reason = &s
+}
+
+// CancelReason returns the value of the "cancel_reason" field in the mutation.
+func (m *OpenAIDualAttemptMutation) CancelReason() (r string, exists bool) {
+	v := m.cancel_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelReason returns the old "cancel_reason" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldCancelReason(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelReason: %w", err)
+	}
+	return oldValue.CancelReason, nil
+}
+
+// ClearCancelReason clears the value of the "cancel_reason" field.
+func (m *OpenAIDualAttemptMutation) ClearCancelReason() {
+	m.cancel_reason = nil
+	m.clearedFields[openaidualattempt.FieldCancelReason] = struct{}{}
+}
+
+// CancelReasonCleared returns if the "cancel_reason" field was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) CancelReasonCleared() bool {
+	_, ok := m.clearedFields[openaidualattempt.FieldCancelReason]
+	return ok
+}
+
+// ResetCancelReason resets all changes to the "cancel_reason" field.
+func (m *OpenAIDualAttemptMutation) ResetCancelReason() {
+	m.cancel_reason = nil
+	delete(m.clearedFields, openaidualattempt.FieldCancelReason)
+}
+
+// SetMetadata sets the "metadata" field.
+func (m *OpenAIDualAttemptMutation) SetMetadata(value map[string]interface{}) {
+	m.metadata = &value
+}
+
+// Metadata returns the value of the "metadata" field in the mutation.
+func (m *OpenAIDualAttemptMutation) Metadata() (r map[string]interface{}, exists bool) {
+	v := m.metadata
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetadata returns the old "metadata" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldMetadata(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetadata is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetadata requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetadata: %w", err)
+	}
+	return oldValue.Metadata, nil
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (m *OpenAIDualAttemptMutation) ClearMetadata() {
+	m.metadata = nil
+	m.clearedFields[openaidualattempt.FieldMetadata] = struct{}{}
+}
+
+// MetadataCleared returns if the "metadata" field was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) MetadataCleared() bool {
+	_, ok := m.clearedFields[openaidualattempt.FieldMetadata]
+	return ok
+}
+
+// ResetMetadata resets all changes to the "metadata" field.
+func (m *OpenAIDualAttemptMutation) ResetMetadata() {
+	m.metadata = nil
+	delete(m.clearedFields, openaidualattempt.FieldMetadata)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *OpenAIDualAttemptMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *OpenAIDualAttemptMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *OpenAIDualAttemptMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *OpenAIDualAttemptMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *OpenAIDualAttemptMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the OpenAIDualAttempt entity.
+// If the OpenAIDualAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OpenAIDualAttemptMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *OpenAIDualAttemptMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the OpenAIDualAttemptMutation builder.
+func (m *OpenAIDualAttemptMutation) Where(ps ...predicate.OpenAIDualAttempt) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the OpenAIDualAttemptMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *OpenAIDualAttemptMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.OpenAIDualAttempt, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *OpenAIDualAttemptMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *OpenAIDualAttemptMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (OpenAIDualAttempt).
+func (m *OpenAIDualAttemptMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *OpenAIDualAttemptMutation) Fields() []string {
+	fields := make([]string, 0, 20)
+	if m.request_id != nil {
+		fields = append(fields, openaidualattempt.FieldRequestID)
+	}
+	if m.attempt_id != nil {
+		fields = append(fields, openaidualattempt.FieldAttemptID)
+	}
+	if m.api_key_id != nil {
+		fields = append(fields, openaidualattempt.FieldAPIKeyID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, openaidualattempt.FieldUserID)
+	}
+	if m.account_id != nil {
+		fields = append(fields, openaidualattempt.FieldAccountID)
+	}
+	if m.endpoint != nil {
+		fields = append(fields, openaidualattempt.FieldEndpoint)
+	}
+	if m.method != nil {
+		fields = append(fields, openaidualattempt.FieldMethod)
+	}
+	if m.role != nil {
+		fields = append(fields, openaidualattempt.FieldRole)
+	}
+	if m.outcome != nil {
+		fields = append(fields, openaidualattempt.FieldOutcome)
+	}
+	if m.service_tier != nil {
+		fields = append(fields, openaidualattempt.FieldServiceTier)
+	}
+	if m.status != nil {
+		fields = append(fields, openaidualattempt.FieldStatus)
+	}
+	if m.billing_basis != nil {
+		fields = append(fields, openaidualattempt.FieldBillingBasis)
+	}
+	if m.estimated_cost != nil {
+		fields = append(fields, openaidualattempt.FieldEstimatedCost)
+	}
+	if m.actual_cost != nil {
+		fields = append(fields, openaidualattempt.FieldActualCost)
+	}
+	if m.billed_cost != nil {
+		fields = append(fields, openaidualattempt.FieldBilledCost)
+	}
+	if m.upstream_dispatched_at != nil {
+		fields = append(fields, openaidualattempt.FieldUpstreamDispatchedAt)
+	}
+	if m.cancel_reason != nil {
+		fields = append(fields, openaidualattempt.FieldCancelReason)
+	}
+	if m.metadata != nil {
+		fields = append(fields, openaidualattempt.FieldMetadata)
+	}
+	if m.created_at != nil {
+		fields = append(fields, openaidualattempt.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, openaidualattempt.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *OpenAIDualAttemptMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case openaidualattempt.FieldRequestID:
+		return m.RequestID()
+	case openaidualattempt.FieldAttemptID:
+		return m.AttemptID()
+	case openaidualattempt.FieldAPIKeyID:
+		return m.APIKeyID()
+	case openaidualattempt.FieldUserID:
+		return m.UserID()
+	case openaidualattempt.FieldAccountID:
+		return m.AccountID()
+	case openaidualattempt.FieldEndpoint:
+		return m.Endpoint()
+	case openaidualattempt.FieldMethod:
+		return m.Method()
+	case openaidualattempt.FieldRole:
+		return m.Role()
+	case openaidualattempt.FieldOutcome:
+		return m.Outcome()
+	case openaidualattempt.FieldServiceTier:
+		return m.ServiceTier()
+	case openaidualattempt.FieldStatus:
+		return m.Status()
+	case openaidualattempt.FieldBillingBasis:
+		return m.BillingBasis()
+	case openaidualattempt.FieldEstimatedCost:
+		return m.EstimatedCost()
+	case openaidualattempt.FieldActualCost:
+		return m.ActualCost()
+	case openaidualattempt.FieldBilledCost:
+		return m.BilledCost()
+	case openaidualattempt.FieldUpstreamDispatchedAt:
+		return m.UpstreamDispatchedAt()
+	case openaidualattempt.FieldCancelReason:
+		return m.CancelReason()
+	case openaidualattempt.FieldMetadata:
+		return m.Metadata()
+	case openaidualattempt.FieldCreatedAt:
+		return m.CreatedAt()
+	case openaidualattempt.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *OpenAIDualAttemptMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case openaidualattempt.FieldRequestID:
+		return m.OldRequestID(ctx)
+	case openaidualattempt.FieldAttemptID:
+		return m.OldAttemptID(ctx)
+	case openaidualattempt.FieldAPIKeyID:
+		return m.OldAPIKeyID(ctx)
+	case openaidualattempt.FieldUserID:
+		return m.OldUserID(ctx)
+	case openaidualattempt.FieldAccountID:
+		return m.OldAccountID(ctx)
+	case openaidualattempt.FieldEndpoint:
+		return m.OldEndpoint(ctx)
+	case openaidualattempt.FieldMethod:
+		return m.OldMethod(ctx)
+	case openaidualattempt.FieldRole:
+		return m.OldRole(ctx)
+	case openaidualattempt.FieldOutcome:
+		return m.OldOutcome(ctx)
+	case openaidualattempt.FieldServiceTier:
+		return m.OldServiceTier(ctx)
+	case openaidualattempt.FieldStatus:
+		return m.OldStatus(ctx)
+	case openaidualattempt.FieldBillingBasis:
+		return m.OldBillingBasis(ctx)
+	case openaidualattempt.FieldEstimatedCost:
+		return m.OldEstimatedCost(ctx)
+	case openaidualattempt.FieldActualCost:
+		return m.OldActualCost(ctx)
+	case openaidualattempt.FieldBilledCost:
+		return m.OldBilledCost(ctx)
+	case openaidualattempt.FieldUpstreamDispatchedAt:
+		return m.OldUpstreamDispatchedAt(ctx)
+	case openaidualattempt.FieldCancelReason:
+		return m.OldCancelReason(ctx)
+	case openaidualattempt.FieldMetadata:
+		return m.OldMetadata(ctx)
+	case openaidualattempt.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case openaidualattempt.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown OpenAIDualAttempt field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *OpenAIDualAttemptMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case openaidualattempt.FieldRequestID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestID(v)
+		return nil
+	case openaidualattempt.FieldAttemptID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptID(v)
+		return nil
+	case openaidualattempt.FieldAPIKeyID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIKeyID(v)
+		return nil
+	case openaidualattempt.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case openaidualattempt.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAccountID(v)
+		return nil
+	case openaidualattempt.FieldEndpoint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndpoint(v)
+		return nil
+	case openaidualattempt.FieldMethod:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMethod(v)
+		return nil
+	case openaidualattempt.FieldRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	case openaidualattempt.FieldOutcome:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcome(v)
+		return nil
+	case openaidualattempt.FieldServiceTier:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceTier(v)
+		return nil
+	case openaidualattempt.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case openaidualattempt.FieldBillingBasis:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBillingBasis(v)
+		return nil
+	case openaidualattempt.FieldEstimatedCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEstimatedCost(v)
+		return nil
+	case openaidualattempt.FieldActualCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActualCost(v)
+		return nil
+	case openaidualattempt.FieldBilledCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBilledCost(v)
+		return nil
+	case openaidualattempt.FieldUpstreamDispatchedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamDispatchedAt(v)
+		return nil
+	case openaidualattempt.FieldCancelReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelReason(v)
+		return nil
+	case openaidualattempt.FieldMetadata:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetadata(v)
+		return nil
+	case openaidualattempt.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case openaidualattempt.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown OpenAIDualAttempt field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *OpenAIDualAttemptMutation) AddedFields() []string {
+	var fields []string
+	if m.addapi_key_id != nil {
+		fields = append(fields, openaidualattempt.FieldAPIKeyID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, openaidualattempt.FieldUserID)
+	}
+	if m.addaccount_id != nil {
+		fields = append(fields, openaidualattempt.FieldAccountID)
+	}
+	if m.addestimated_cost != nil {
+		fields = append(fields, openaidualattempt.FieldEstimatedCost)
+	}
+	if m.addactual_cost != nil {
+		fields = append(fields, openaidualattempt.FieldActualCost)
+	}
+	if m.addbilled_cost != nil {
+		fields = append(fields, openaidualattempt.FieldBilledCost)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *OpenAIDualAttemptMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case openaidualattempt.FieldAPIKeyID:
+		return m.AddedAPIKeyID()
+	case openaidualattempt.FieldUserID:
+		return m.AddedUserID()
+	case openaidualattempt.FieldAccountID:
+		return m.AddedAccountID()
+	case openaidualattempt.FieldEstimatedCost:
+		return m.AddedEstimatedCost()
+	case openaidualattempt.FieldActualCost:
+		return m.AddedActualCost()
+	case openaidualattempt.FieldBilledCost:
+		return m.AddedBilledCost()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *OpenAIDualAttemptMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case openaidualattempt.FieldAPIKeyID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAPIKeyID(v)
+		return nil
+	case openaidualattempt.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case openaidualattempt.FieldAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAccountID(v)
+		return nil
+	case openaidualattempt.FieldEstimatedCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddEstimatedCost(v)
+		return nil
+	case openaidualattempt.FieldActualCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActualCost(v)
+		return nil
+	case openaidualattempt.FieldBilledCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddBilledCost(v)
+		return nil
+	}
+	return fmt.Errorf("unknown OpenAIDualAttempt numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *OpenAIDualAttemptMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(openaidualattempt.FieldAccountID) {
+		fields = append(fields, openaidualattempt.FieldAccountID)
+	}
+	if m.FieldCleared(openaidualattempt.FieldServiceTier) {
+		fields = append(fields, openaidualattempt.FieldServiceTier)
+	}
+	if m.FieldCleared(openaidualattempt.FieldBillingBasis) {
+		fields = append(fields, openaidualattempt.FieldBillingBasis)
+	}
+	if m.FieldCleared(openaidualattempt.FieldUpstreamDispatchedAt) {
+		fields = append(fields, openaidualattempt.FieldUpstreamDispatchedAt)
+	}
+	if m.FieldCleared(openaidualattempt.FieldCancelReason) {
+		fields = append(fields, openaidualattempt.FieldCancelReason)
+	}
+	if m.FieldCleared(openaidualattempt.FieldMetadata) {
+		fields = append(fields, openaidualattempt.FieldMetadata)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *OpenAIDualAttemptMutation) ClearField(name string) error {
+	switch name {
+	case openaidualattempt.FieldAccountID:
+		m.ClearAccountID()
+		return nil
+	case openaidualattempt.FieldServiceTier:
+		m.ClearServiceTier()
+		return nil
+	case openaidualattempt.FieldBillingBasis:
+		m.ClearBillingBasis()
+		return nil
+	case openaidualattempt.FieldUpstreamDispatchedAt:
+		m.ClearUpstreamDispatchedAt()
+		return nil
+	case openaidualattempt.FieldCancelReason:
+		m.ClearCancelReason()
+		return nil
+	case openaidualattempt.FieldMetadata:
+		m.ClearMetadata()
+		return nil
+	}
+	return fmt.Errorf("unknown OpenAIDualAttempt nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *OpenAIDualAttemptMutation) ResetField(name string) error {
+	switch name {
+	case openaidualattempt.FieldRequestID:
+		m.ResetRequestID()
+		return nil
+	case openaidualattempt.FieldAttemptID:
+		m.ResetAttemptID()
+		return nil
+	case openaidualattempt.FieldAPIKeyID:
+		m.ResetAPIKeyID()
+		return nil
+	case openaidualattempt.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case openaidualattempt.FieldAccountID:
+		m.ResetAccountID()
+		return nil
+	case openaidualattempt.FieldEndpoint:
+		m.ResetEndpoint()
+		return nil
+	case openaidualattempt.FieldMethod:
+		m.ResetMethod()
+		return nil
+	case openaidualattempt.FieldRole:
+		m.ResetRole()
+		return nil
+	case openaidualattempt.FieldOutcome:
+		m.ResetOutcome()
+		return nil
+	case openaidualattempt.FieldServiceTier:
+		m.ResetServiceTier()
+		return nil
+	case openaidualattempt.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case openaidualattempt.FieldBillingBasis:
+		m.ResetBillingBasis()
+		return nil
+	case openaidualattempt.FieldEstimatedCost:
+		m.ResetEstimatedCost()
+		return nil
+	case openaidualattempt.FieldActualCost:
+		m.ResetActualCost()
+		return nil
+	case openaidualattempt.FieldBilledCost:
+		m.ResetBilledCost()
+		return nil
+	case openaidualattempt.FieldUpstreamDispatchedAt:
+		m.ResetUpstreamDispatchedAt()
+		return nil
+	case openaidualattempt.FieldCancelReason:
+		m.ResetCancelReason()
+		return nil
+	case openaidualattempt.FieldMetadata:
+		m.ResetMetadata()
+		return nil
+	case openaidualattempt.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case openaidualattempt.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown OpenAIDualAttempt field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *OpenAIDualAttemptMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *OpenAIDualAttemptMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *OpenAIDualAttemptMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *OpenAIDualAttemptMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *OpenAIDualAttemptMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown OpenAIDualAttempt unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *OpenAIDualAttemptMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown OpenAIDualAttempt edge %s", name)
+}
+
 // PaymentAuditLogMutation represents an operation that mutates the PaymentAuditLog nodes in the graph.
 type PaymentAuditLogMutation struct {
 	config
@@ -35438,6 +37184,12 @@ type UsageLogMutation struct {
 	addvip_pre_discount_cost    *float64
 	vip_savings_usd             *float64
 	addvip_savings_usd          *float64
+	dual_protection_enabled     *bool
+	dual_attempt_count          *int
+	adddual_attempt_count       *int
+	dual_extra_cost             *float64
+	adddual_extra_cost          *float64
+	cost_breakdown              *map[string]interface{}
 	account_rate_multiplier     *float64
 	addaccount_rate_multiplier  *float64
 	billing_type                *int8
@@ -37140,6 +38892,203 @@ func (m *UsageLogMutation) ResetVipSavingsUsd() {
 	m.addvip_savings_usd = nil
 }
 
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (m *UsageLogMutation) SetDualProtectionEnabled(b bool) {
+	m.dual_protection_enabled = &b
+}
+
+// DualProtectionEnabled returns the value of the "dual_protection_enabled" field in the mutation.
+func (m *UsageLogMutation) DualProtectionEnabled() (r bool, exists bool) {
+	v := m.dual_protection_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDualProtectionEnabled returns the old "dual_protection_enabled" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldDualProtectionEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDualProtectionEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDualProtectionEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDualProtectionEnabled: %w", err)
+	}
+	return oldValue.DualProtectionEnabled, nil
+}
+
+// ResetDualProtectionEnabled resets all changes to the "dual_protection_enabled" field.
+func (m *UsageLogMutation) ResetDualProtectionEnabled() {
+	m.dual_protection_enabled = nil
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (m *UsageLogMutation) SetDualAttemptCount(i int) {
+	m.dual_attempt_count = &i
+	m.adddual_attempt_count = nil
+}
+
+// DualAttemptCount returns the value of the "dual_attempt_count" field in the mutation.
+func (m *UsageLogMutation) DualAttemptCount() (r int, exists bool) {
+	v := m.dual_attempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDualAttemptCount returns the old "dual_attempt_count" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldDualAttemptCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDualAttemptCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDualAttemptCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDualAttemptCount: %w", err)
+	}
+	return oldValue.DualAttemptCount, nil
+}
+
+// AddDualAttemptCount adds i to the "dual_attempt_count" field.
+func (m *UsageLogMutation) AddDualAttemptCount(i int) {
+	if m.adddual_attempt_count != nil {
+		*m.adddual_attempt_count += i
+	} else {
+		m.adddual_attempt_count = &i
+	}
+}
+
+// AddedDualAttemptCount returns the value that was added to the "dual_attempt_count" field in this mutation.
+func (m *UsageLogMutation) AddedDualAttemptCount() (r int, exists bool) {
+	v := m.adddual_attempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDualAttemptCount resets all changes to the "dual_attempt_count" field.
+func (m *UsageLogMutation) ResetDualAttemptCount() {
+	m.dual_attempt_count = nil
+	m.adddual_attempt_count = nil
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (m *UsageLogMutation) SetDualExtraCost(f float64) {
+	m.dual_extra_cost = &f
+	m.adddual_extra_cost = nil
+}
+
+// DualExtraCost returns the value of the "dual_extra_cost" field in the mutation.
+func (m *UsageLogMutation) DualExtraCost() (r float64, exists bool) {
+	v := m.dual_extra_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDualExtraCost returns the old "dual_extra_cost" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldDualExtraCost(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDualExtraCost is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDualExtraCost requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDualExtraCost: %w", err)
+	}
+	return oldValue.DualExtraCost, nil
+}
+
+// AddDualExtraCost adds f to the "dual_extra_cost" field.
+func (m *UsageLogMutation) AddDualExtraCost(f float64) {
+	if m.adddual_extra_cost != nil {
+		*m.adddual_extra_cost += f
+	} else {
+		m.adddual_extra_cost = &f
+	}
+}
+
+// AddedDualExtraCost returns the value that was added to the "dual_extra_cost" field in this mutation.
+func (m *UsageLogMutation) AddedDualExtraCost() (r float64, exists bool) {
+	v := m.adddual_extra_cost
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDualExtraCost resets all changes to the "dual_extra_cost" field.
+func (m *UsageLogMutation) ResetDualExtraCost() {
+	m.dual_extra_cost = nil
+	m.adddual_extra_cost = nil
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (m *UsageLogMutation) SetCostBreakdown(value map[string]interface{}) {
+	m.cost_breakdown = &value
+}
+
+// CostBreakdown returns the value of the "cost_breakdown" field in the mutation.
+func (m *UsageLogMutation) CostBreakdown() (r map[string]interface{}, exists bool) {
+	v := m.cost_breakdown
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCostBreakdown returns the old "cost_breakdown" field's value of the UsageLog entity.
+// If the UsageLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageLogMutation) OldCostBreakdown(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCostBreakdown is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCostBreakdown requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCostBreakdown: %w", err)
+	}
+	return oldValue.CostBreakdown, nil
+}
+
+// ClearCostBreakdown clears the value of the "cost_breakdown" field.
+func (m *UsageLogMutation) ClearCostBreakdown() {
+	m.cost_breakdown = nil
+	m.clearedFields[usagelog.FieldCostBreakdown] = struct{}{}
+}
+
+// CostBreakdownCleared returns if the "cost_breakdown" field was cleared in this mutation.
+func (m *UsageLogMutation) CostBreakdownCleared() bool {
+	_, ok := m.clearedFields[usagelog.FieldCostBreakdown]
+	return ok
+}
+
+// ResetCostBreakdown resets all changes to the "cost_breakdown" field.
+func (m *UsageLogMutation) ResetCostBreakdown() {
+	m.cost_breakdown = nil
+	delete(m.clearedFields, usagelog.FieldCostBreakdown)
+}
+
 // SetAccountRateMultiplier sets the "account_rate_multiplier" field.
 func (m *UsageLogMutation) SetAccountRateMultiplier(f float64) {
 	m.account_rate_multiplier = &f
@@ -38109,7 +40058,7 @@ func (m *UsageLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageLogMutation) Fields() []string {
-	fields := make([]string, 0, 45)
+	fields := make([]string, 0, 49)
 	if m.user != nil {
 		fields = append(fields, usagelog.FieldUserID)
 	}
@@ -38199,6 +40148,18 @@ func (m *UsageLogMutation) Fields() []string {
 	}
 	if m.vip_savings_usd != nil {
 		fields = append(fields, usagelog.FieldVipSavingsUsd)
+	}
+	if m.dual_protection_enabled != nil {
+		fields = append(fields, usagelog.FieldDualProtectionEnabled)
+	}
+	if m.dual_attempt_count != nil {
+		fields = append(fields, usagelog.FieldDualAttemptCount)
+	}
+	if m.dual_extra_cost != nil {
+		fields = append(fields, usagelog.FieldDualExtraCost)
+	}
+	if m.cost_breakdown != nil {
+		fields = append(fields, usagelog.FieldCostBreakdown)
 	}
 	if m.account_rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
@@ -38313,6 +40274,14 @@ func (m *UsageLogMutation) Field(name string) (ent.Value, bool) {
 		return m.VipPreDiscountCost()
 	case usagelog.FieldVipSavingsUsd:
 		return m.VipSavingsUsd()
+	case usagelog.FieldDualProtectionEnabled:
+		return m.DualProtectionEnabled()
+	case usagelog.FieldDualAttemptCount:
+		return m.DualAttemptCount()
+	case usagelog.FieldDualExtraCost:
+		return m.DualExtraCost()
+	case usagelog.FieldCostBreakdown:
+		return m.CostBreakdown()
 	case usagelog.FieldAccountRateMultiplier:
 		return m.AccountRateMultiplier()
 	case usagelog.FieldBillingType:
@@ -38412,6 +40381,14 @@ func (m *UsageLogMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldVipPreDiscountCost(ctx)
 	case usagelog.FieldVipSavingsUsd:
 		return m.OldVipSavingsUsd(ctx)
+	case usagelog.FieldDualProtectionEnabled:
+		return m.OldDualProtectionEnabled(ctx)
+	case usagelog.FieldDualAttemptCount:
+		return m.OldDualAttemptCount(ctx)
+	case usagelog.FieldDualExtraCost:
+		return m.OldDualExtraCost(ctx)
+	case usagelog.FieldCostBreakdown:
+		return m.OldCostBreakdown(ctx)
 	case usagelog.FieldAccountRateMultiplier:
 		return m.OldAccountRateMultiplier(ctx)
 	case usagelog.FieldBillingType:
@@ -38661,6 +40638,34 @@ func (m *UsageLogMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetVipSavingsUsd(v)
 		return nil
+	case usagelog.FieldDualProtectionEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDualProtectionEnabled(v)
+		return nil
+	case usagelog.FieldDualAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDualAttemptCount(v)
+		return nil
+	case usagelog.FieldDualExtraCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDualExtraCost(v)
+		return nil
+	case usagelog.FieldCostBreakdown:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCostBreakdown(v)
+		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		v, ok := value.(float64)
 		if !ok {
@@ -38825,6 +40830,12 @@ func (m *UsageLogMutation) AddedFields() []string {
 	if m.addvip_savings_usd != nil {
 		fields = append(fields, usagelog.FieldVipSavingsUsd)
 	}
+	if m.adddual_attempt_count != nil {
+		fields = append(fields, usagelog.FieldDualAttemptCount)
+	}
+	if m.adddual_extra_cost != nil {
+		fields = append(fields, usagelog.FieldDualExtraCost)
+	}
 	if m.addaccount_rate_multiplier != nil {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
 	}
@@ -38882,6 +40893,10 @@ func (m *UsageLogMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedVipPreDiscountCost()
 	case usagelog.FieldVipSavingsUsd:
 		return m.AddedVipSavingsUsd()
+	case usagelog.FieldDualAttemptCount:
+		return m.AddedDualAttemptCount()
+	case usagelog.FieldDualExtraCost:
+		return m.AddedDualExtraCost()
 	case usagelog.FieldAccountRateMultiplier:
 		return m.AddedAccountRateMultiplier()
 	case usagelog.FieldBillingType:
@@ -39020,6 +41035,20 @@ func (m *UsageLogMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddVipSavingsUsd(v)
 		return nil
+	case usagelog.FieldDualAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDualAttemptCount(v)
+		return nil
+	case usagelog.FieldDualExtraCost:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDualExtraCost(v)
+		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		v, ok := value.(float64)
 		if !ok {
@@ -39095,6 +41124,9 @@ func (m *UsageLogMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(usagelog.FieldVipPreDiscountCost) {
 		fields = append(fields, usagelog.FieldVipPreDiscountCost)
+	}
+	if m.FieldCleared(usagelog.FieldCostBreakdown) {
+		fields = append(fields, usagelog.FieldCostBreakdown)
 	}
 	if m.FieldCleared(usagelog.FieldAccountRateMultiplier) {
 		fields = append(fields, usagelog.FieldAccountRateMultiplier)
@@ -39172,6 +41204,9 @@ func (m *UsageLogMutation) ClearField(name string) error {
 		return nil
 	case usagelog.FieldVipPreDiscountCost:
 		m.ClearVipPreDiscountCost()
+		return nil
+	case usagelog.FieldCostBreakdown:
+		m.ClearCostBreakdown()
 		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		m.ClearAccountRateMultiplier()
@@ -39300,6 +41335,18 @@ func (m *UsageLogMutation) ResetField(name string) error {
 		return nil
 	case usagelog.FieldVipSavingsUsd:
 		m.ResetVipSavingsUsd()
+		return nil
+	case usagelog.FieldDualProtectionEnabled:
+		m.ResetDualProtectionEnabled()
+		return nil
+	case usagelog.FieldDualAttemptCount:
+		m.ResetDualAttemptCount()
+		return nil
+	case usagelog.FieldDualExtraCost:
+		m.ResetDualExtraCost()
+		return nil
+	case usagelog.FieldCostBreakdown:
+		m.ResetCostBreakdown()
 		return nil
 	case usagelog.FieldAccountRateMultiplier:
 		m.ResetAccountRateMultiplier()

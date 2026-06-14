@@ -138,6 +138,7 @@ func newOpenAIRecordUsageServiceForTest(usageRepo UsageLogRepository, userRepo U
 		nil,
 		usageRepo,
 		nil,
+		nil,
 		userRepo,
 		subRepo,
 		rateRepo,

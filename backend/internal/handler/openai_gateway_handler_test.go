@@ -348,6 +348,212 @@ func TestOpenAIMissingResponsesDependencies(t *testing.T) {
 	})
 }
 
+func TestOpenAIDualFinishWinner_ReplaysOnlyValid2xxWinner(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	apiKey := &service.APIKey{
+		ID: 7,
+		AccelerationSettings: service.APIKeyAccelerationSettings{
+			DualProtectionEnabled: true,
+		},
+	}
+	user := &service.User{ID: 9}
+	plan := service.NewOpenAIDualAttemptPlan(apiKey, "req-dual-finish", time.Now())
+	h := &OpenAIGatewayHandler{}
+
+	t.Run("2xx winner is replayed with exact attempt id", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses", nil)
+		winner := &openAIDualAttemptExecution{
+			role:       service.OpenAIDualAttemptRolePrimary,
+			attemptID:  "primary-11-test",
+			account:    &service.Account{ID: 11},
+			result:     &service.OpenAIForwardResult{Model: "gpt-5.1"},
+			dispatched: true,
+			startedAt:  time.Now(),
+			captured: &service.CapturedOpenAIResponse{
+				Status: http.StatusOK,
+				Header: http.Header{"Content-Type": []string{"application/json"}},
+				Body:   []byte(`{"id":"resp_ok"}`),
+			},
+		}
+
+		got := h.finishOpenAIDualWinner(c, openAIDualRunOptions{
+			Endpoint: "/v1/responses",
+			Method:   http.MethodPost,
+			APIKey:   apiKey,
+			User:     user,
+		}, plan, winner, nil)
+
+		require.True(t, got.Handled)
+		require.Equal(t, http.StatusOK, w.Code)
+		require.JSONEq(t, `{"id":"resp_ok"}`, w.Body.String())
+		require.Equal(t, "req-dual-finish", winner.result.RequestID)
+		require.Equal(t, "primary-11-test", winner.result.AttemptID)
+		require.NotNil(t, winner.result.DualProtection)
+		require.Equal(t, "req-dual-finish", winner.result.DualProtection.Attempts[0].RequestID)
+		require.Equal(t, service.OpenAIDualAttemptOutcomeWinner, winner.result.DualProtection.Attempts[0].Outcome)
+	})
+
+	t.Run("empty 2xx winner is handled", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/v1/moderations", nil)
+		winner := &openAIDualAttemptExecution{
+			role:       service.OpenAIDualAttemptRolePrimary,
+			attemptID:  "primary-13-empty",
+			account:    &service.Account{ID: 13},
+			result:     &service.OpenAIForwardResult{Model: "omni-moderation-latest"},
+			dispatched: true,
+			startedAt:  time.Now(),
+			captured: &service.CapturedOpenAIResponse{
+				Status: http.StatusNoContent,
+				Header: http.Header{"X-Upstream": []string{"empty-ok"}},
+			},
+		}
+
+		got := h.finishOpenAIDualWinner(c, openAIDualRunOptions{
+			Endpoint: "/v1/moderations",
+			Method:   http.MethodPost,
+			APIKey:   apiKey,
+			User:     user,
+		}, plan, winner, nil)
+
+		require.True(t, got.Handled)
+		require.True(t, c.Writer.Written())
+		require.Equal(t, http.StatusNoContent, w.Code)
+		require.Empty(t, w.Body.String())
+		require.Equal(t, "empty-ok", w.Header().Get("X-Upstream"))
+		require.NotNil(t, winner.result.DualProtection)
+		require.Equal(t, service.OpenAIDualAttemptOutcomeWinner, winner.result.DualProtection.Attempts[0].Outcome)
+	})
+
+	t.Run("non 2xx capture is not replayed as a winner", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses", nil)
+		winner := &openAIDualAttemptExecution{
+			role:       service.OpenAIDualAttemptRolePrimary,
+			attemptID:  "primary-12-test",
+			account:    &service.Account{ID: 12},
+			result:     &service.OpenAIForwardResult{Model: "gpt-5.1"},
+			dispatched: true,
+			startedAt:  time.Now(),
+			captured: &service.CapturedOpenAIResponse{
+				Status: http.StatusBadGateway,
+				Header: http.Header{"Content-Type": []string{"application/json"}},
+				Body:   []byte(`{"error":"bad upstream"}`),
+			},
+		}
+
+		got := h.finishOpenAIDualWinner(c, openAIDualRunOptions{
+			Endpoint: "/v1/responses",
+			Method:   http.MethodPost,
+			APIKey:   apiKey,
+			User:     user,
+		}, plan, winner, nil)
+
+		require.False(t, got.Handled)
+		require.False(t, c.Writer.Written())
+		require.Empty(t, w.Body.String())
+		require.Error(t, winner.err)
+		require.Contains(t, winner.err.Error(), "non-success status 502")
+		require.NotNil(t, winner.result.DualProtection)
+		require.Equal(t, service.OpenAIDualAttemptOutcomeLoser, winner.result.DualProtection.Attempts[0].Outcome)
+	})
+}
+
+func TestOpenAIDualFinishWinner_IncludesSkippedSecondary(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	apiKey := &service.APIKey{
+		ID: 7,
+		AccelerationSettings: service.APIKeyAccelerationSettings{
+			DualProtectionEnabled: true,
+		},
+	}
+	user := &service.User{ID: 9}
+	plan := service.NewOpenAIDualAttemptPlan(apiKey, "req-dual-skip", time.Now())
+	h := &OpenAIGatewayHandler{}
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses", nil)
+	winner := &openAIDualAttemptExecution{
+		role:       service.OpenAIDualAttemptRolePrimary,
+		attemptID:  "primary-11-test",
+		account:    &service.Account{ID: 11},
+		result:     &service.OpenAIForwardResult{Model: "gpt-5.1"},
+		dispatched: true,
+		startedAt:  time.Now(),
+		captured: &service.CapturedOpenAIResponse{
+			Status: http.StatusOK,
+			Body:   []byte(`{"id":"resp_ok"}`),
+		},
+	}
+	skipped := h.openAIDualSkippedExecution(service.OpenAIDualAttemptRoleSecondary, "secondary-skip-test", "billing_eligibility_failed")
+
+	got := h.finishOpenAIDualWinner(c, openAIDualRunOptions{
+		Endpoint: "/v1/responses",
+		Method:   http.MethodPost,
+		APIKey:   apiKey,
+		User:     user,
+	}, plan, winner, skipped)
+
+	require.True(t, got.Handled)
+	require.NotNil(t, winner.result.DualProtection)
+	require.Equal(t, 2, winner.result.DualProtection.AttemptCount)
+	require.Equal(t, service.OpenAIDualAttemptOutcomeWinner, winner.result.DualProtection.Attempts[0].Outcome)
+	require.Equal(t, service.OpenAIDualAttemptOutcomeSkipped, winner.result.DualProtection.Attempts[1].Outcome)
+	require.Equal(t, service.OpenAIDualBillingBasisNotDispatched, *winner.result.DualProtection.Attempts[1].BillingBasis)
+	require.Equal(t, "billing_eligibility_failed", *winner.result.DualProtection.Attempts[1].CancelReason)
+	require.InDelta(t, 0, winner.result.DualProtection.ExtraCost, 1e-12)
+}
+
+func TestOpenAIDualFinishWinner_IncludesCanceledDispatchedLoser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	apiKey := &service.APIKey{
+		ID: 7,
+		AccelerationSettings: service.APIKeyAccelerationSettings{
+			DualProtectionEnabled: true,
+		},
+	}
+	user := &service.User{ID: 9}
+	plan := service.NewOpenAIDualAttemptPlan(apiKey, "req-dual-canceled-loser", time.Now())
+	h := &OpenAIGatewayHandler{}
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses", nil)
+	winner := &openAIDualAttemptExecution{
+		role:       service.OpenAIDualAttemptRolePrimary,
+		attemptID:  "primary-11-test",
+		account:    &service.Account{ID: 11},
+		result:     &service.OpenAIForwardResult{Model: "gpt-5.1"},
+		dispatched: true,
+		startedAt:  time.Now(),
+		captured: &service.CapturedOpenAIResponse{
+			Status: http.StatusOK,
+			Body:   []byte(`{"id":"resp_ok"}`),
+		},
+	}
+	loser := h.openAIDualCanceledExecution(service.OpenAIDualAttemptRoleSecondary, "secondary-12-canceled", &service.Account{ID: 12})
+
+	got := h.finishOpenAIDualWinner(c, openAIDualRunOptions{
+		Endpoint: "/v1/responses",
+		Method:   http.MethodPost,
+		APIKey:   apiKey,
+		User:     user,
+	}, plan, winner, loser)
+
+	require.True(t, got.Handled)
+	require.NotNil(t, winner.result.DualProtection)
+	require.Equal(t, 2, winner.result.DualProtection.AttemptCount)
+	loserAttempt := winner.result.DualProtection.Attempts[1]
+	require.Equal(t, service.OpenAIDualAttemptOutcomeLoser, loserAttempt.Outcome)
+	require.Equal(t, service.OpenAIDualAttemptStatusCanceled, loserAttempt.Status)
+	require.Equal(t, service.OpenAIDualBillingBasisNoUsage, *loserAttempt.BillingBasis)
+	require.NotNil(t, loserAttempt.UpstreamDispatchedAt)
+	require.Equal(t, "context canceled", *loserAttempt.CancelReason)
+}
+
 func TestOpenAIEnsureResponsesDependencies(t *testing.T) {
 	t.Run("missing_dependencies_returns_503", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
@@ -1323,6 +1529,7 @@ func TestOpenAIResponsesWebSocket_FailoverOnUpstreamUsageLimitEvent(t *testing.T
 		nil,
 		nil,
 		nil,
+		nil,
 		cfg,
 		nil,
 		nil,
@@ -1504,6 +1711,7 @@ func runOpenAIResponsesWebSocketUsageLogCase(t *testing.T, tc openAIResponsesWSU
 	gatewaySvc := service.NewOpenAIGatewayService(
 		accountRepo,
 		usageRepo,
+		nil,
 		nil,
 		nil,
 		nil,

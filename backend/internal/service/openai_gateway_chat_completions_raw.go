@@ -111,7 +111,7 @@ func (s *OpenAIGatewayService) forwardAsRawChatCompletions(
 	}
 
 	// 4. Apply OpenAI fast policy on the CC body
-	updatedBody, policyErr := s.applyOpenAIFastPolicyToBody(ctx, account, upstreamModel, upstreamBody)
+	updatedBody, policyErr := s.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(ctx, getAPIKeyFromContext(c), account, upstreamModel, upstreamBody)
 	if policyErr != nil {
 		var blocked *OpenAIFastBlockedError
 		if errors.As(policyErr, &blocked) {
@@ -121,6 +121,7 @@ func (s *OpenAIGatewayService) forwardAsRawChatCompletions(
 		return nil, policyErr
 	}
 	upstreamBody = updatedBody
+	serviceTier = extractOpenAIServiceTierFromBody(upstreamBody)
 	if clientStream {
 		var usageErr error
 		upstreamBody, usageErr = ensureOpenAIChatStreamUsage(upstreamBody)

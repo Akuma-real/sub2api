@@ -154,6 +154,12 @@ type CostBreakdown struct {
 	CacheReadCost     float64
 	TotalCost         float64
 	ActualCost        float64 // 应用倍率后的实际费用
+	// VIPDiscountableActualCost is the part of ActualCost eligible for VIP
+	// discounting. Zero means the whole ActualCost is discountable.
+	VIPDiscountableActualCost float64
+	// VIPProtectedActualCost is the part of ActualCost that must never be
+	// discounted below upstream/attempt cost, such as dual-request loser billing.
+	VIPProtectedActualCost float64
 	BillingMode       string  // 计费模式（"token"/"per_request"/"image"），由 CalculateCostUnified 填充
 }
 

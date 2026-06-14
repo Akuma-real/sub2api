@@ -57,6 +57,15 @@ func (APIKey) Fields() []ent.Field {
 		field.JSON("ip_blacklist", []string{}).
 			Optional().
 			Comment("Blocked IPs/CIDRs"),
+		field.JSON("acceleration_settings", map[string]any{}).
+			Optional().
+			Default(map[string]any{
+				"fast_mode":                      "off",
+				"dual_protection_enabled":        false,
+				"dual_first_response_timeout_ms": 8000,
+			}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Comment("Per-key OpenAI acceleration settings, e.g. fast mode and dual-request protection"),
 
 		// ========== Quota fields ==========
 		// Quota limit in USD (0 = unlimited)

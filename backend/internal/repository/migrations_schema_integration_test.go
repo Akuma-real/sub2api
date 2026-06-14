@@ -76,15 +76,17 @@ func TestMigrationsRunner_IsIdempotent_AndSchemaIsUpToDate(t *testing.T) {
 	var usageBillingDedupRegclass sql.NullString
 	require.NoError(t, tx.QueryRowContext(context.Background(), "SELECT to_regclass('public.usage_billing_dedup')").Scan(&usageBillingDedupRegclass))
 	require.True(t, usageBillingDedupRegclass.Valid, "expected usage_billing_dedup table to exist")
+	requireColumn(t, tx, "usage_billing_dedup", "attempt_id", "character varying", 64, false)
 	requireColumn(t, tx, "usage_billing_dedup", "request_fingerprint", "character varying", 64, false)
-	requireIndex(t, tx, "usage_billing_dedup", "idx_usage_billing_dedup_request_api_key")
+	requireIndex(t, tx, "usage_billing_dedup", "idx_usage_billing_dedup_request_api_key_attempt")
 	requireIndex(t, tx, "usage_billing_dedup", "idx_usage_billing_dedup_created_at_brin")
 
 	var usageBillingDedupArchiveRegclass sql.NullString
 	require.NoError(t, tx.QueryRowContext(context.Background(), "SELECT to_regclass('public.usage_billing_dedup_archive')").Scan(&usageBillingDedupArchiveRegclass))
 	require.True(t, usageBillingDedupArchiveRegclass.Valid, "expected usage_billing_dedup_archive table to exist")
+	requireColumn(t, tx, "usage_billing_dedup_archive", "attempt_id", "character varying", 64, false)
 	requireColumn(t, tx, "usage_billing_dedup_archive", "request_fingerprint", "character varying", 64, false)
-	requireIndex(t, tx, "usage_billing_dedup_archive", "usage_billing_dedup_archive_pkey")
+	requireIndex(t, tx, "usage_billing_dedup_archive", "usage_billing_dedup_archive_request_api_key_attempt_idx")
 
 	// settings table should exist
 	var settingsRegclass sql.NullString

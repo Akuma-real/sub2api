@@ -48,21 +48,28 @@ type AdminUser struct {
 	GroupRates map[int64]float64 `json:"group_rates,omitempty"`
 }
 
+type APIKeyAccelerationSettings struct {
+	FastMode                   string `json:"fast_mode"`
+	DualProtectionEnabled      bool   `json:"dual_protection_enabled"`
+	DualFirstResponseTimeoutMS int    `json:"dual_first_response_timeout_ms"`
+}
+
 type APIKey struct {
-	ID          int64      `json:"id"`
-	UserID      int64      `json:"user_id"`
-	Key         string     `json:"key"`
-	Name        string     `json:"name"`
-	GroupID     *int64     `json:"group_id"`
-	Status      string     `json:"status"`
-	IPWhitelist []string   `json:"ip_whitelist"`
-	IPBlacklist []string   `json:"ip_blacklist"`
-	LastUsedAt  *time.Time `json:"last_used_at"`
-	Quota       float64    `json:"quota"`      // Quota limit in USD (0 = unlimited)
-	QuotaUsed   float64    `json:"quota_used"` // Used quota amount in USD
-	ExpiresAt   *time.Time `json:"expires_at"` // Expiration time (nil = never expires)
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID                   int64                      `json:"id"`
+	UserID               int64                      `json:"user_id"`
+	Key                  string                     `json:"key"`
+	Name                 string                     `json:"name"`
+	GroupID              *int64                     `json:"group_id"`
+	Status               string                     `json:"status"`
+	IPWhitelist          []string                   `json:"ip_whitelist"`
+	IPBlacklist          []string                   `json:"ip_blacklist"`
+	LastUsedAt           *time.Time                 `json:"last_used_at"`
+	Quota                float64                    `json:"quota"`      // Quota limit in USD (0 = unlimited)
+	QuotaUsed            float64                    `json:"quota_used"` // Used quota amount in USD
+	ExpiresAt            *time.Time                 `json:"expires_at"` // Expiration time (nil = never expires)
+	AccelerationSettings APIKeyAccelerationSettings `json:"acceleration_settings"`
+	CreatedAt            time.Time                  `json:"created_at"`
+	UpdatedAt            time.Time                  `json:"updated_at"`
 
 	// Rate limit fields
 	RateLimit5h   float64    `json:"rate_limit_5h"`
@@ -472,13 +479,21 @@ type UsageLog struct {
 	CacheCreation5mTokens int `json:"cache_creation_5m_tokens"`
 	CacheCreation1hTokens int `json:"cache_creation_1h_tokens"`
 
-	InputCost         float64 `json:"input_cost"`
-	OutputCost        float64 `json:"output_cost"`
-	CacheCreationCost float64 `json:"cache_creation_cost"`
-	CacheReadCost     float64 `json:"cache_read_cost"`
-	TotalCost         float64 `json:"total_cost"`
-	ActualCost        float64 `json:"actual_cost"`
-	RateMultiplier    float64 `json:"rate_multiplier"`
+	InputCost             float64        `json:"input_cost"`
+	OutputCost            float64        `json:"output_cost"`
+	CacheCreationCost     float64        `json:"cache_creation_cost"`
+	CacheReadCost         float64        `json:"cache_read_cost"`
+	TotalCost             float64        `json:"total_cost"`
+	ActualCost            float64        `json:"actual_cost"`
+	RateMultiplier        float64        `json:"rate_multiplier"`
+	VIPLevelID            *int64         `json:"vip_level_id,omitempty"`
+	VIPDiscountMultiplier *float64       `json:"vip_discount_multiplier,omitempty"`
+	VIPPreDiscountCost    *float64       `json:"vip_pre_discount_cost,omitempty"`
+	VIPSavingsUSD         float64        `json:"vip_savings_usd"`
+	DualProtectionEnabled bool           `json:"dual_protection_enabled"`
+	DualAttemptCount      int            `json:"dual_attempt_count"`
+	DualExtraCost         float64        `json:"dual_extra_cost"`
+	CostBreakdown         map[string]any `json:"cost_breakdown"`
 
 	BillingType  int8   `json:"billing_type"`
 	RequestType  string `json:"request_type"`

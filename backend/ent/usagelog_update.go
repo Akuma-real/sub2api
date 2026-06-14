@@ -638,6 +638,74 @@ func (_u *UsageLogUpdate) AddVipSavingsUsd(v float64) *UsageLogUpdate {
 	return _u
 }
 
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (_u *UsageLogUpdate) SetDualProtectionEnabled(v bool) *UsageLogUpdate {
+	_u.mutation.SetDualProtectionEnabled(v)
+	return _u
+}
+
+// SetNillableDualProtectionEnabled sets the "dual_protection_enabled" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableDualProtectionEnabled(v *bool) *UsageLogUpdate {
+	if v != nil {
+		_u.SetDualProtectionEnabled(*v)
+	}
+	return _u
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (_u *UsageLogUpdate) SetDualAttemptCount(v int) *UsageLogUpdate {
+	_u.mutation.ResetDualAttemptCount()
+	_u.mutation.SetDualAttemptCount(v)
+	return _u
+}
+
+// SetNillableDualAttemptCount sets the "dual_attempt_count" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableDualAttemptCount(v *int) *UsageLogUpdate {
+	if v != nil {
+		_u.SetDualAttemptCount(*v)
+	}
+	return _u
+}
+
+// AddDualAttemptCount adds value to the "dual_attempt_count" field.
+func (_u *UsageLogUpdate) AddDualAttemptCount(v int) *UsageLogUpdate {
+	_u.mutation.AddDualAttemptCount(v)
+	return _u
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (_u *UsageLogUpdate) SetDualExtraCost(v float64) *UsageLogUpdate {
+	_u.mutation.ResetDualExtraCost()
+	_u.mutation.SetDualExtraCost(v)
+	return _u
+}
+
+// SetNillableDualExtraCost sets the "dual_extra_cost" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableDualExtraCost(v *float64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetDualExtraCost(*v)
+	}
+	return _u
+}
+
+// AddDualExtraCost adds value to the "dual_extra_cost" field.
+func (_u *UsageLogUpdate) AddDualExtraCost(v float64) *UsageLogUpdate {
+	_u.mutation.AddDualExtraCost(v)
+	return _u
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (_u *UsageLogUpdate) SetCostBreakdown(v map[string]interface{}) *UsageLogUpdate {
+	_u.mutation.SetCostBreakdown(v)
+	return _u
+}
+
+// ClearCostBreakdown clears the value of the "cost_breakdown" field.
+func (_u *UsageLogUpdate) ClearCostBreakdown() *UsageLogUpdate {
+	_u.mutation.ClearCostBreakdown()
+	return _u
+}
+
 // SetAccountRateMultiplier sets the "account_rate_multiplier" field.
 func (_u *UsageLogUpdate) SetAccountRateMultiplier(v float64) *UsageLogUpdate {
 	_u.mutation.ResetAccountRateMultiplier()
@@ -1256,6 +1324,27 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedVipSavingsUsd(); ok {
 		_spec.AddField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.DualProtectionEnabled(); ok {
+		_spec.SetField(usagelog.FieldDualProtectionEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.DualAttemptCount(); ok {
+		_spec.SetField(usagelog.FieldDualAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDualAttemptCount(); ok {
+		_spec.AddField(usagelog.FieldDualAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.DualExtraCost(); ok {
+		_spec.SetField(usagelog.FieldDualExtraCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedDualExtraCost(); ok {
+		_spec.AddField(usagelog.FieldDualExtraCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.CostBreakdown(); ok {
+		_spec.SetField(usagelog.FieldCostBreakdown, field.TypeJSON, value)
+	}
+	if _u.mutation.CostBreakdownCleared() {
+		_spec.ClearField(usagelog.FieldCostBreakdown, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)
@@ -2143,6 +2232,74 @@ func (_u *UsageLogUpdateOne) AddVipSavingsUsd(v float64) *UsageLogUpdateOne {
 	return _u
 }
 
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (_u *UsageLogUpdateOne) SetDualProtectionEnabled(v bool) *UsageLogUpdateOne {
+	_u.mutation.SetDualProtectionEnabled(v)
+	return _u
+}
+
+// SetNillableDualProtectionEnabled sets the "dual_protection_enabled" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableDualProtectionEnabled(v *bool) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetDualProtectionEnabled(*v)
+	}
+	return _u
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (_u *UsageLogUpdateOne) SetDualAttemptCount(v int) *UsageLogUpdateOne {
+	_u.mutation.ResetDualAttemptCount()
+	_u.mutation.SetDualAttemptCount(v)
+	return _u
+}
+
+// SetNillableDualAttemptCount sets the "dual_attempt_count" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableDualAttemptCount(v *int) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetDualAttemptCount(*v)
+	}
+	return _u
+}
+
+// AddDualAttemptCount adds value to the "dual_attempt_count" field.
+func (_u *UsageLogUpdateOne) AddDualAttemptCount(v int) *UsageLogUpdateOne {
+	_u.mutation.AddDualAttemptCount(v)
+	return _u
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (_u *UsageLogUpdateOne) SetDualExtraCost(v float64) *UsageLogUpdateOne {
+	_u.mutation.ResetDualExtraCost()
+	_u.mutation.SetDualExtraCost(v)
+	return _u
+}
+
+// SetNillableDualExtraCost sets the "dual_extra_cost" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableDualExtraCost(v *float64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetDualExtraCost(*v)
+	}
+	return _u
+}
+
+// AddDualExtraCost adds value to the "dual_extra_cost" field.
+func (_u *UsageLogUpdateOne) AddDualExtraCost(v float64) *UsageLogUpdateOne {
+	_u.mutation.AddDualExtraCost(v)
+	return _u
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (_u *UsageLogUpdateOne) SetCostBreakdown(v map[string]interface{}) *UsageLogUpdateOne {
+	_u.mutation.SetCostBreakdown(v)
+	return _u
+}
+
+// ClearCostBreakdown clears the value of the "cost_breakdown" field.
+func (_u *UsageLogUpdateOne) ClearCostBreakdown() *UsageLogUpdateOne {
+	_u.mutation.ClearCostBreakdown()
+	return _u
+}
+
 // SetAccountRateMultiplier sets the "account_rate_multiplier" field.
 func (_u *UsageLogUpdateOne) SetAccountRateMultiplier(v float64) *UsageLogUpdateOne {
 	_u.mutation.ResetAccountRateMultiplier()
@@ -2791,6 +2948,27 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if value, ok := _u.mutation.AddedVipSavingsUsd(); ok {
 		_spec.AddField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.DualProtectionEnabled(); ok {
+		_spec.SetField(usagelog.FieldDualProtectionEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.DualAttemptCount(); ok {
+		_spec.SetField(usagelog.FieldDualAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDualAttemptCount(); ok {
+		_spec.AddField(usagelog.FieldDualAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.DualExtraCost(); ok {
+		_spec.SetField(usagelog.FieldDualExtraCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedDualExtraCost(); ok {
+		_spec.AddField(usagelog.FieldDualExtraCost, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.CostBreakdown(); ok {
+		_spec.SetField(usagelog.FieldCostBreakdown, field.TypeJSON, value)
+	}
+	if _u.mutation.CostBreakdownCleared() {
+		_spec.ClearField(usagelog.FieldCostBreakdown, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)

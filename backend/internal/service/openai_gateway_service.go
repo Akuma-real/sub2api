@@ -244,6 +244,8 @@ type OpenAIForwardResult struct {
 	Duration           time.Duration
 	FirstTokenMs       *int
 	ClientDisconnect   bool
+	DualProtection     *OpenAIDualProtectionResult
+	AttemptID          string
 	ImageCount         int
 	ImageSize          string
 	ImageInputSize     string
@@ -254,6 +256,13 @@ type OpenAIForwardResult struct {
 
 	wsReplayInput       []json.RawMessage
 	wsReplayInputExists bool
+}
+
+type OpenAIDualProtectionResult struct {
+	Enabled      bool
+	AttemptCount int
+	ExtraCost    float64
+	Attempts     []OpenAIDualAttempt
 }
 
 type OpenAIWSRetryMetricsSnapshot struct {
@@ -334,6 +343,7 @@ type OpenAIGatewayService struct {
 	accountRepo           AccountRepository
 	usageLogRepo          UsageLogRepository
 	usageBillingRepo      UsageBillingRepository
+	openAIDualAttemptRepo OpenAIDualAttemptRepository
 	userRepo              UserRepository
 	userSubRepo           UserSubscriptionRepository
 	cache                 GatewayCache
@@ -382,6 +392,7 @@ func NewOpenAIGatewayService(
 	accountRepo AccountRepository,
 	usageLogRepo UsageLogRepository,
 	usageBillingRepo UsageBillingRepository,
+	openAIDualAttemptRepo OpenAIDualAttemptRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
 	userGroupRateRepo UserGroupRateRepository,
@@ -402,19 +413,20 @@ func NewOpenAIGatewayService(
 	userPlatformQuotaRepo UserPlatformQuotaRepository,
 ) *OpenAIGatewayService {
 	svc := &OpenAIGatewayService{
-		accountRepo:         accountRepo,
-		usageLogRepo:        usageLogRepo,
-		usageBillingRepo:    usageBillingRepo,
-		userRepo:            userRepo,
-		userSubRepo:         userSubRepo,
-		cache:               cache,
-		cfg:                 cfg,
-		codexDetector:       NewOpenAICodexClientRestrictionDetector(cfg),
-		schedulerSnapshot:   schedulerSnapshot,
-		concurrencyService:  concurrencyService,
-		billingService:      billingService,
-		rateLimitService:    rateLimitService,
-		billingCacheService: billingCacheService,
+		accountRepo:           accountRepo,
+		usageLogRepo:          usageLogRepo,
+		usageBillingRepo:      usageBillingRepo,
+		openAIDualAttemptRepo: openAIDualAttemptRepo,
+		userRepo:              userRepo,
+		userSubRepo:           userSubRepo,
+		cache:                 cache,
+		cfg:                   cfg,
+		codexDetector:         NewOpenAICodexClientRestrictionDetector(cfg),
+		schedulerSnapshot:     schedulerSnapshot,
+		concurrencyService:    concurrencyService,
+		billingService:        billingService,
+		rateLimitService:      rateLimitService,
+		billingCacheService:   billingCacheService,
 		userGroupRateResolver: newUserGroupRateResolver(
 			userGroupRateRepo,
 			nil,
@@ -2700,6 +2712,21 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		}
 	}
 
+	if requestView.ServiceTier == "" {
+		apiKeyAcceleration := DefaultAPIKeyAccelerationSettings()
+		if apiKey != nil {
+			apiKeyAcceleration = apiKey.AccelerationSettings.Normalize()
+		}
+		if apiKeyAcceleration.FastMode == AccelerationFastModeForcePriority {
+			rawTierBefore := requestView.ServiceTier
+			markPatchSet("service_tier", OpenAIFastTierPriority)
+			requestView.ServiceTier = OpenAIFastTierPriority
+			if rawTierBefore == "" {
+				logger.LegacyPrintf("service.openai_gateway", "[OpenAI] API key acceleration injected service_tier=priority")
+			}
+		}
+	}
+
 	if rawTier := requestView.ServiceTier; rawTier != "" {
 		if normTier := normalizedOpenAIServiceTierValue(rawTier); normTier != "" {
 			action, errMsg := s.evaluateOpenAIFastPolicy(ctx, account, upstreamModel, normTier)
@@ -3201,7 +3228,7 @@ func (s *OpenAIGatewayService) forwardOpenAIPassthrough(
 	if policyModel == "" {
 		policyModel = reqModel
 	}
-	updatedBody, policyErr := s.applyOpenAIFastPolicyToBody(ctx, account, policyModel, body)
+	updatedBody, policyErr := s.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(ctx, getAPIKeyFromContext(c), account, policyModel, body)
 	if policyErr != nil {
 		var blocked *OpenAIFastBlockedError
 		if errors.As(policyErr, &blocked) {
@@ -5845,6 +5872,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		).Warn("openai_usage.pricing_missing_record_zero_cost", zap.Error(err))
 		cost = &CostBreakdown{BillingMode: string(BillingModeToken)}
 	}
+	ApplyOpenAIDualExtraCostToUsageCost(cost, result.DualProtection)
 
 	// Determine billing type
 	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
@@ -5902,6 +5930,12 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		usageLog.TotalCost = cost.TotalCost
 		usageLog.ActualCost = cost.ActualCost
 	}
+	if result.DualProtection != nil {
+		usageLog.DualProtectionEnabled = result.DualProtection.Enabled
+		usageLog.DualAttemptCount = result.DualProtection.AttemptCount
+		usageLog.DualExtraCost = result.DualProtection.ExtraCost
+	}
+	usageLog.CostBreakdown = BuildOpenAICostBreakdownSnapshot(result, cost, apiKey, account, isSubscriptionBilling)
 	if result.ImageCount > 0 && (cost == nil || cost.BillingMode != string(BillingModeToken)) {
 		usageLog.RateMultiplier = imageMultiplier
 	} else {
@@ -5967,6 +6001,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 			APIKey:                apiKey,
 			Account:               account,
 			Subscription:          subscription,
+			AttemptID:             result.AttemptID,
 			RequestPayloadHash:    resolveUsageBillingPayloadFingerprint(ctx, input.RequestPayloadHash),
 			IsSubscriptionBill:    isSubscriptionBilling,
 			AccountRateMultiplier: accountRateMultiplier,
@@ -5979,9 +6014,28 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	if billingErr != nil {
 		return billingErr
 	}
+	usageLog.CostBreakdown = EnrichOpenAICostBreakdownSnapshotFromUsageLog(usageLog.CostBreakdown, usageLog)
+	s.recordOpenAIDualAttemptsBestEffort(ctx, requestID, apiKey, user, account, result, usageLog)
 	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
 
 	return nil
+}
+
+func (s *OpenAIGatewayService) recordOpenAIDualAttemptsBestEffort(ctx context.Context, requestID string, apiKey *APIKey, user *User, account *Account, result *OpenAIForwardResult, usageLog *UsageLog) {
+	if s == nil || s.openAIDualAttemptRepo == nil || apiKey == nil || user == nil || result == nil {
+		return
+	}
+	attempts := result.DualProtectionAttempts(requestID, apiKey, user, account, usageLog)
+	for i := range attempts {
+		attempt := attempts[i]
+		if err := s.openAIDualAttemptRepo.Upsert(ctx, &attempt); err != nil {
+			logger.L().With(
+				zap.String("component", "service.openai_gateway"),
+				zap.String("request_id", requestID),
+				zap.Int64("api_key_id", apiKey.ID),
+			).Warn("openai_dual_attempt.upsert_failed", zap.Error(err))
+		}
+	}
 }
 
 func (s *OpenAIGatewayService) calculateOpenAIRecordUsageCost(
@@ -6796,6 +6850,29 @@ func (s *OpenAIGatewayService) applyOpenAIFastPolicyToBody(ctx context.Context, 
 		}
 		return updated, nil
 	}
+}
+
+func (s *OpenAIGatewayService) applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(ctx context.Context, apiKey *APIKey, account *Account, model string, body []byte) ([]byte, error) {
+	body = applyAPIKeyFastModeToOpenAIBody(apiKey, body)
+	return s.applyOpenAIFastPolicyToBody(ctx, account, model, body)
+}
+
+func applyAPIKeyFastModeToOpenAIBody(apiKey *APIKey, body []byte) []byte {
+	if len(body) == 0 || gjson.GetBytes(body, "service_tier").Exists() {
+		return body
+	}
+	settings := DefaultAPIKeyAccelerationSettings()
+	if apiKey != nil {
+		settings = apiKey.AccelerationSettings.Normalize()
+	}
+	if settings.FastMode != AccelerationFastModeForcePriority {
+		return body
+	}
+	updated, err := sjson.SetBytes(body, "service_tier", OpenAIFastTierPriority)
+	if err != nil {
+		return body
+	}
+	return updated
 }
 
 // writeOpenAIFastPolicyBlockedResponse writes a 403 JSON response for a

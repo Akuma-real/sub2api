@@ -665,6 +665,75 @@
           </div>
         </div>
 
+        <!-- OpenAI Acceleration Section -->
+        <div class="space-y-4 rounded-lg border border-hairline bg-surface-soft/60 p-4">
+          <div>
+            <label class="input-label">{{ t("keys.acceleration.title") }}</label>
+            <p class="input-hint">{{ t("keys.acceleration.description") }}</p>
+          </div>
+
+          <div>
+            <label class="input-label">{{ t("keys.acceleration.fastMode") }}</label>
+            <Select
+              v-model="formData.acceleration_fast_mode"
+              :options="accelerationFastModeOptions"
+            />
+            <p class="input-hint">{{ t("keys.acceleration.fastModeHint") }}</p>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <label class="input-label mb-0">{{ t("keys.acceleration.dualProtection") }}</label>
+                <p class="input-hint mt-1">{{ t("keys.acceleration.dualProtectionHint") }}</p>
+              </div>
+              <button
+                type="button"
+                @click="
+                  formData.acceleration_dual_protection =
+                    !formData.acceleration_dual_protection
+                "
+                :class="[
+                  'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                  formData.acceleration_dual_protection
+                    ? 'bg-primary-600'
+                    : 'bg-hairline ',
+                ]"
+              >
+                <span
+                  :class="[
+                    'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out',
+                    formData.acceleration_dual_protection
+                      ? 'translate-x-4'
+                      : 'translate-x-0',
+                  ]"
+                />
+              </button>
+            </div>
+
+            <div
+              v-if="formData.acceleration_dual_protection"
+              class="space-y-2 rounded-md border border-accent-amber/30 bg-accent-amber/10 p-3"
+            >
+              <p class="text-xs leading-relaxed text-body">
+                {{ t("keys.acceleration.dualCostWarning") }}
+              </p>
+              <div>
+                <label class="input-label">{{ t("keys.acceleration.dualTimeout") }}</label>
+                <input
+                  v-model.number="formData.acceleration_dual_timeout_ms"
+                  type="number"
+                  min="1000"
+                  max="60000"
+                  step="500"
+                  class="input"
+                />
+                <p class="input-hint">{{ t("keys.acceleration.dualTimeoutHint") }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Quota Limit Section -->
         <div class="space-y-3">
           <label class="input-label">{{ t("keys.quotaLimit") }}</label>
@@ -1542,6 +1611,7 @@ import SupportedModelChip from "@/components/channels/SupportedModelChip.vue";
 import GroupBadge from "@/components/common/GroupBadge.vue";
 import GroupOptionItem from "@/components/common/GroupOptionItem.vue";
 import type {
+  APIKeyAccelerationSettings,
   ApiKey,
   Group,
   PublicSettings,
@@ -1673,6 +1743,27 @@ const dropdownPosition = ref<{
 const groupButtonRefs = ref<Map<number, HTMLElement>>(new Map());
 let abortController: AbortController | null = null;
 let runtimeModelsAbortController: AbortController | null = null;
+
+const defaultAccelerationSettings = (): APIKeyAccelerationSettings => ({
+  fast_mode: "off",
+  dual_protection_enabled: false,
+  dual_first_response_timeout_ms: 8000,
+});
+
+const normalizeAccelerationSettings = (
+  settings?: Partial<APIKeyAccelerationSettings> | null,
+): APIKeyAccelerationSettings => {
+  const defaults = defaultAccelerationSettings();
+  return {
+    fast_mode: settings?.fast_mode === "force_priority" ? "force_priority" : "off",
+    dual_protection_enabled: Boolean(settings?.dual_protection_enabled),
+    dual_first_response_timeout_ms:
+      typeof settings?.dual_first_response_timeout_ms === "number" &&
+      settings.dual_first_response_timeout_ms > 0
+        ? Math.round(settings.dual_first_response_timeout_ms)
+        : defaults.dual_first_response_timeout_ms,
+  };
+};
 
 const groupModelSummaries = computed<Record<number, GroupModelSummary>>(() => {
   const summaries = new Map<
@@ -1855,6 +1946,9 @@ const formData = ref({
   enable_ip_restriction: false,
   ip_whitelist: "",
   ip_blacklist: "",
+  acceleration_fast_mode: "off" as APIKeyAccelerationSettings["fast_mode"],
+  acceleration_dual_protection: false,
+  acceleration_dual_timeout_ms: 8000,
   // Quota settings (empty = unlimited)
   enable_quota: false,
   quota: null as number | null,
@@ -1888,6 +1982,18 @@ const statusOptions = computed(() => [
   { value: "active", label: t("common.active") },
   { value: "inactive", label: t("common.inactive") },
 ]);
+
+const accelerationFastModeOptions = computed(() => [
+  { value: "off", label: t("keys.acceleration.fastModeOff") },
+  { value: "force_priority", label: t("keys.acceleration.fastModeForcePriority") },
+]);
+
+const formAccelerationSettings = (): APIKeyAccelerationSettings =>
+  normalizeAccelerationSettings({
+    fast_mode: formData.value.acceleration_fast_mode,
+    dual_protection_enabled: formData.value.acceleration_dual_protection,
+    dual_first_response_timeout_ms: formData.value.acceleration_dual_timeout_ms,
+  });
 
 // Filter dropdown options
 const groupFilterOptions = computed(() => [
@@ -2210,6 +2316,7 @@ const editKey = (key: ApiKey) => {
   const hasIPRestriction =
     key.ip_whitelist?.length > 0 || key.ip_blacklist?.length > 0;
   const hasExpiration = !!key.expires_at;
+  const acceleration = normalizeAccelerationSettings(key.acceleration_settings);
   formData.value = {
     name: key.name,
     group_id: key.group_id,
@@ -2222,6 +2329,9 @@ const editKey = (key: ApiKey) => {
     enable_ip_restriction: hasIPRestriction,
     ip_whitelist: (key.ip_whitelist || []).join("\n"),
     ip_blacklist: (key.ip_blacklist || []).join("\n"),
+    acceleration_fast_mode: acceleration.fast_mode,
+    acceleration_dual_protection: acceleration.dual_protection_enabled,
+    acceleration_dual_timeout_ms: acceleration.dual_first_response_timeout_ms,
     enable_quota: key.quota > 0,
     quota: key.quota > 0 ? key.quota : null,
     enable_rate_limit:
@@ -2387,6 +2497,7 @@ const handleSubmit = async () => {
             : 0,
       }
     : { rate_limit_5h: 0, rate_limit_1d: 0, rate_limit_7d: 0 };
+  const accelerationSettings = formAccelerationSettings();
 
   submitting.value = true;
   try {
@@ -2397,6 +2508,7 @@ const handleSubmit = async () => {
         status: formData.value.status,
         ip_whitelist: ipWhitelist,
         ip_blacklist: ipBlacklist,
+        acceleration_settings: accelerationSettings,
         quota: quota,
         expires_at: expiresAt,
         rate_limit_5h: rateLimitData.rate_limit_5h,
@@ -2417,6 +2529,7 @@ const handleSubmit = async () => {
         quota,
         expiresInDays,
         rateLimitData,
+        accelerationSettings,
       );
       appStore.showSuccess(t("keys.keyCreatedSuccess"));
       // Only advance tour if active, on submit step, and creation succeeded
@@ -2468,6 +2581,9 @@ const closeModals = () => {
     enable_ip_restriction: false,
     ip_whitelist: "",
     ip_blacklist: "",
+    acceleration_fast_mode: "off",
+    acceleration_dual_protection: false,
+    acceleration_dual_timeout_ms: 8000,
     enable_quota: false,
     quota: null,
     enable_rate_limit: false,

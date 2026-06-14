@@ -122,6 +122,11 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 
 	sessionHash := h.gatewayService.GenerateSessionHash(c, body)
 	promptCacheKey := h.gatewayService.ExtractSessionID(c, body)
+	dualSupported, dualUnsupportedReason := service.OpenAIDualProtectionSupportedForRequest(apiKey, reqStream, GetInboundEndpoint(c))
+	var unsupportedDualProtection *service.OpenAIDualProtectionResult
+	if service.EffectiveOpenAIDualProtectionEnabled(apiKey) && !dualSupported {
+		unsupportedDualProtection = service.NewOpenAIDualUnsupportedResult(apiKey, requestIDFromGinContext(c), GetInboundEndpoint(c), http.MethodPost, dualUnsupportedReason)
+	}
 
 	maxAccountSwitches := h.maxAccountSwitches
 	switchCount := 0
@@ -184,14 +189,74 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
 		writerSizeBeforeForward := c.Writer.Size()
-		result, err := func() (*service.OpenAIForwardResult, error) {
-			defer func() {
-				if accountReleaseFunc != nil {
-					accountReleaseFunc()
-				}
+		var result *service.OpenAIForwardResult
+		dualAttempted := false
+		if dualSupported {
+			dualRun := h.runOpenAIDualIfEnabled(c, openAIDualRunOptions{
+				Endpoint:           GetInboundEndpoint(c),
+				Method:             http.MethodPost,
+				Stream:             reqStream,
+				RequestPayloadHash: service.HashUsageRequestPayload(body),
+				RequestModel:       reqModel,
+				BillingModels:      []string{reqModel, channelMapping.MappedModel},
+				APIKey:             apiKey,
+				User:               apiKey.User,
+				Subscription:       subscription,
+				PrimarySelection: &service.AccountSelectionResult{
+					Account:     account,
+					Acquired:    true,
+					ReleaseFunc: accountReleaseFunc,
+				},
+				GroupID:           apiKey.GroupID,
+				SessionHash:       sessionHash,
+				AccountSlotStream: reqStream,
+				BillingEligibility: func(ctx context.Context) error {
+					return h.billingCacheService.CheckBillingEligibility(ctx, apiKey.User, apiKey, apiKey.Group, subscription, service.QuotaPlatform(c.Request.Context(), apiKey))
+				},
+				SelectSecondary: func(ctx context.Context, excluded map[int64]struct{}) (*service.AccountSelectionResult, error) {
+					mergedExcluded := mergeOpenAIDualExcludedAccounts(failedAccountIDs, excluded)
+					selection, _, selectErr := h.gatewayService.SelectAccountWithSchedulerForCapability(
+						ctx,
+						apiKey.GroupID,
+						"",
+						sessionHash,
+						reqModel,
+						mergedExcluded,
+						service.OpenAIUpstreamTransportAny,
+						service.OpenAIEndpointCapabilityChatCompletions,
+						false,
+					)
+					return selection, selectErr
+				},
+				Forward: func(ctx context.Context, attemptCtx *gin.Context, attemptAccount *service.Account) (*service.OpenAIForwardResult, error) {
+					return h.gatewayService.ForwardAsChatCompletions(ctx, attemptCtx, attemptAccount, forwardBody, promptCacheKey, "")
+				},
+				RequestContext: c.Request.Context(),
+				RequestID:      requestIDFromGinContext(c),
+				Log:            reqLog,
+				StreamStarted:  &streamStarted,
+			})
+			if dualRun.Winner != nil {
+				dualAttempted = true
+				accountReleaseFunc = nil
+				account = dualRun.Winner.account
+				result = dualRun.Winner.result
+				err = dualRun.Winner.err
+			}
+		}
+		if !dualAttempted {
+			result, err = func() (*service.OpenAIForwardResult, error) {
+				defer func() {
+					if accountReleaseFunc != nil {
+						accountReleaseFunc()
+					}
+				}()
+				return h.gatewayService.ForwardAsChatCompletions(c.Request.Context(), c, account, forwardBody, promptCacheKey, "")
 			}()
-			return h.gatewayService.ForwardAsChatCompletions(c.Request.Context(), c, account, forwardBody, promptCacheKey, "")
-		}()
+			if result != nil && result.DualProtection == nil && unsupportedDualProtection != nil {
+				result.DualProtection = unsupportedDualProtection
+			}
+		}
 
 		forwardDurationMs := time.Since(forwardStart).Milliseconds()
 		upstreamLatencyMs, _ := getContextInt64(c, service.OpsUpstreamLatencyMsKey)

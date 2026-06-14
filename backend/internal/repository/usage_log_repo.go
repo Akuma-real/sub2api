@@ -30,7 +30,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const usageLogSelectColumns = "id, user_id, api_key_id, account_id, request_id, model, requested_model, upstream_model, group_id, subscription_id, vip_level_id, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, cache_creation_5m_tokens, cache_creation_1h_tokens, image_output_tokens, image_output_cost, input_cost, output_cost, cache_creation_cost, cache_read_cost, total_cost, actual_cost, rate_multiplier, vip_discount_multiplier, vip_pre_discount_cost, vip_savings_usd, account_rate_multiplier, billing_type, request_type, stream, openai_ws_mode, duration_ms, first_token_ms, user_agent, ip_address, image_count, image_size, image_input_size, image_output_size, image_size_source, image_size_breakdown, service_tier, reasoning_effort, inbound_endpoint, upstream_endpoint, cache_ttl_overridden, channel_id, model_mapping_chain, billing_tier, billing_mode, account_stats_cost, created_at"
+const usageLogSelectColumns = "id, user_id, api_key_id, account_id, request_id, model, requested_model, upstream_model, group_id, subscription_id, vip_level_id, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, cache_creation_5m_tokens, cache_creation_1h_tokens, image_output_tokens, image_output_cost, input_cost, output_cost, cache_creation_cost, cache_read_cost, total_cost, actual_cost, rate_multiplier, vip_discount_multiplier, vip_pre_discount_cost, vip_savings_usd, dual_protection_enabled, dual_attempt_count, dual_extra_cost, cost_breakdown, account_rate_multiplier, billing_type, request_type, stream, openai_ws_mode, duration_ms, first_token_ms, user_agent, ip_address, image_count, image_size, image_input_size, image_output_size, image_size_source, image_size_breakdown, service_tier, reasoning_effort, inbound_endpoint, upstream_endpoint, cache_ttl_overridden, channel_id, model_mapping_chain, billing_tier, billing_mode, account_stats_cost, created_at"
 
 const usageLogInsertColumns = `
 			user_id,
@@ -61,6 +61,10 @@ const usageLogInsertColumns = `
 			vip_discount_multiplier,
 			vip_pre_discount_cost,
 			vip_savings_usd,
+			dual_protection_enabled,
+			dual_attempt_count,
+			dual_extra_cost,
+			cost_breakdown,
 			account_rate_multiplier,
 			billing_type,
 			request_type,
@@ -124,6 +128,10 @@ var usageLogInsertArgTypes = [...]string{
 	"numeric",     // vip_discount_multiplier
 	"numeric",     // vip_pre_discount_cost
 	"numeric",     // vip_savings_usd
+	"boolean",     // dual_protection_enabled
+	"integer",     // dual_attempt_count
+	"numeric",     // dual_extra_cost
+	"jsonb",       // cost_breakdown
 	"numeric",     // account_rate_multiplier
 	"smallint",    // billing_type
 	"smallint",    // request_type
@@ -993,6 +1001,7 @@ func prepareUsageLogInsert(log *service.UsageLog) usageLogInsertPrepared {
 	modelMappingChain := nullString(log.ModelMappingChain)
 	billingTier := nullString(log.BillingTier)
 	billingMode := nullString(log.BillingMode)
+	costBreakdown := nullStringAnyMapJSON(log.CostBreakdown)
 	requestedModel := strings.TrimSpace(log.RequestedModel)
 	if requestedModel == "" {
 		requestedModel = strings.TrimSpace(log.Model)
@@ -1038,6 +1047,10 @@ func prepareUsageLogInsert(log *service.UsageLog) usageLogInsertPrepared {
 			log.VIPDiscountMultiplier,
 			log.VIPPreDiscountCost,
 			log.VIPSavingsUSD,
+			log.DualProtectionEnabled,
+			log.DualAttemptCount,
+			log.DualExtraCost,
+			costBreakdown,
 			log.AccountRateMultiplier,
 			log.BillingType,
 			requestType,
@@ -3966,6 +3979,10 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		vipDiscountMultiplier sql.NullFloat64
 		vipPreDiscountCost    sql.NullFloat64
 		vipSavingsUSD         float64
+		dualProtectionEnabled bool
+		dualAttemptCount      int
+		dualExtraCost         float64
+		costBreakdown         sql.NullString
 		accountRateMultiplier sql.NullFloat64
 		billingType           int16
 		requestTypeRaw        int16
@@ -4024,6 +4041,10 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		&vipDiscountMultiplier,
 		&vipPreDiscountCost,
 		&vipSavingsUSD,
+		&dualProtectionEnabled,
+		&dualAttemptCount,
+		&dualExtraCost,
+		&costBreakdown,
 		&accountRateMultiplier,
 		&billingType,
 		&requestTypeRaw,
@@ -4079,6 +4100,10 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		VIPDiscountMultiplier: nullFloat64Ptr(vipDiscountMultiplier),
 		VIPPreDiscountCost:    nullFloat64Ptr(vipPreDiscountCost),
 		VIPSavingsUSD:         vipSavingsUSD,
+		DualProtectionEnabled: dualProtectionEnabled,
+		DualAttemptCount:      dualAttemptCount,
+		DualExtraCost:         dualExtraCost,
+		CostBreakdown:         anyMapFromNullJSON(costBreakdown),
 		AccountRateMultiplier: nullFloat64Ptr(accountRateMultiplier),
 		BillingType:           int8(billingType),
 		RequestType:           service.RequestTypeFromInt16(requestTypeRaw),
@@ -4311,11 +4336,36 @@ func nullStringIntMapJSON(v map[string]int) any {
 	return string(payload)
 }
 
+func nullStringAnyMapJSON(v map[string]any) any {
+	if len(v) == 0 {
+		return "{}"
+	}
+	payload, err := json.Marshal(v)
+	if err != nil {
+		return "{}"
+	}
+	return string(payload)
+}
+
 func stringIntMapFromNullJSON(v sql.NullString) map[string]int {
 	if !v.Valid || strings.TrimSpace(v.String) == "" {
 		return nil
 	}
 	var out map[string]int
+	if err := json.Unmarshal([]byte(v.String), &out); err != nil {
+		return nil
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func anyMapFromNullJSON(v sql.NullString) map[string]any {
+	if !v.Valid || strings.TrimSpace(v.String) == "" {
+		return nil
+	}
+	var out map[string]any
 	if err := json.Unmarshal([]byte(v.String), &out); err != nil {
 		return nil
 	}

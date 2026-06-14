@@ -30,6 +30,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/idempotencyrecord"
 	"github.com/Wei-Shaw/sub2api/ent/identityadoptiondecision"
+	"github.com/Wei-Shaw/sub2api/ent/openaidualattempt"
 	"github.com/Wei-Shaw/sub2api/ent/paymentauditlog"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/paymentproviderinstance"
@@ -91,6 +92,8 @@ type Client struct {
 	IdempotencyRecord *IdempotencyRecordClient
 	// IdentityAdoptionDecision is the client for interacting with the IdentityAdoptionDecision builders.
 	IdentityAdoptionDecision *IdentityAdoptionDecisionClient
+	// OpenAIDualAttempt is the client for interacting with the OpenAIDualAttempt builders.
+	OpenAIDualAttempt *OpenAIDualAttemptClient
 	// PaymentAuditLog is the client for interacting with the PaymentAuditLog builders.
 	PaymentAuditLog *PaymentAuditLogClient
 	// PaymentOrder is the client for interacting with the PaymentOrder builders.
@@ -161,6 +164,7 @@ func (c *Client) init() {
 	c.Group = NewGroupClient(c.config)
 	c.IdempotencyRecord = NewIdempotencyRecordClient(c.config)
 	c.IdentityAdoptionDecision = NewIdentityAdoptionDecisionClient(c.config)
+	c.OpenAIDualAttempt = NewOpenAIDualAttemptClient(c.config)
 	c.PaymentAuditLog = NewPaymentAuditLogClient(c.config)
 	c.PaymentOrder = NewPaymentOrderClient(c.config)
 	c.PaymentProviderInstance = NewPaymentProviderInstanceClient(c.config)
@@ -290,6 +294,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Group:                         NewGroupClient(cfg),
 		IdempotencyRecord:             NewIdempotencyRecordClient(cfg),
 		IdentityAdoptionDecision:      NewIdentityAdoptionDecisionClient(cfg),
+		OpenAIDualAttempt:             NewOpenAIDualAttemptClient(cfg),
 		PaymentAuditLog:               NewPaymentAuditLogClient(cfg),
 		PaymentOrder:                  NewPaymentOrderClient(cfg),
 		PaymentProviderInstance:       NewPaymentProviderInstanceClient(cfg),
@@ -346,6 +351,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Group:                         NewGroupClient(cfg),
 		IdempotencyRecord:             NewIdempotencyRecordClient(cfg),
 		IdentityAdoptionDecision:      NewIdentityAdoptionDecisionClient(cfg),
+		OpenAIDualAttempt:             NewOpenAIDualAttemptClient(cfg),
 		PaymentAuditLog:               NewPaymentAuditLogClient(cfg),
 		PaymentOrder:                  NewPaymentOrderClient(cfg),
 		PaymentProviderInstance:       NewPaymentProviderInstanceClient(cfg),
@@ -401,12 +407,13 @@ func (c *Client) Use(hooks ...Hook) {
 		c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
 		c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
 		c.ChannelMonitorRequestTemplate, c.ErrorPassthroughRule, c.Group,
-		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PaymentAuditLog,
-		c.PaymentOrder, c.PaymentProviderInstance, c.PendingAuthSession, c.PromoCode,
-		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
-		c.SubscriptionPlan, c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog,
-		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserSubscription, c.UserVIPMembership, c.VIPLevel,
+		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.OpenAIDualAttempt,
+		c.PaymentAuditLog, c.PaymentOrder, c.PaymentProviderInstance,
+		c.PendingAuthSession, c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode,
+		c.SecuritySecret, c.Setting, c.SubscriptionPlan, c.TLSFingerprintProfile,
+		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
+		c.UserAttributeDefinition, c.UserAttributeValue, c.UserPlatformQuota,
+		c.UserSubscription, c.UserVIPMembership, c.VIPLevel,
 	} {
 		n.Use(hooks...)
 	}
@@ -420,12 +427,13 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.AuthIdentity, c.AuthIdentityChannel, c.ChannelMonitor,
 		c.ChannelMonitorDailyRollup, c.ChannelMonitorHistory,
 		c.ChannelMonitorRequestTemplate, c.ErrorPassthroughRule, c.Group,
-		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.PaymentAuditLog,
-		c.PaymentOrder, c.PaymentProviderInstance, c.PendingAuthSession, c.PromoCode,
-		c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.SecuritySecret, c.Setting,
-		c.SubscriptionPlan, c.TLSFingerprintProfile, c.UsageCleanupTask, c.UsageLog,
-		c.User, c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserPlatformQuota, c.UserSubscription, c.UserVIPMembership, c.VIPLevel,
+		c.IdempotencyRecord, c.IdentityAdoptionDecision, c.OpenAIDualAttempt,
+		c.PaymentAuditLog, c.PaymentOrder, c.PaymentProviderInstance,
+		c.PendingAuthSession, c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode,
+		c.SecuritySecret, c.Setting, c.SubscriptionPlan, c.TLSFingerprintProfile,
+		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
+		c.UserAttributeDefinition, c.UserAttributeValue, c.UserPlatformQuota,
+		c.UserSubscription, c.UserVIPMembership, c.VIPLevel,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -464,6 +472,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.IdempotencyRecord.mutate(ctx, m)
 	case *IdentityAdoptionDecisionMutation:
 		return c.IdentityAdoptionDecision.mutate(ctx, m)
+	case *OpenAIDualAttemptMutation:
+		return c.OpenAIDualAttempt.mutate(ctx, m)
 	case *PaymentAuditLogMutation:
 		return c.PaymentAuditLog.mutate(ctx, m)
 	case *PaymentOrderMutation:
@@ -2974,6 +2984,139 @@ func (c *IdentityAdoptionDecisionClient) mutate(ctx context.Context, m *Identity
 		return (&IdentityAdoptionDecisionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown IdentityAdoptionDecision mutation op: %q", m.Op())
+	}
+}
+
+// OpenAIDualAttemptClient is a client for the OpenAIDualAttempt schema.
+type OpenAIDualAttemptClient struct {
+	config
+}
+
+// NewOpenAIDualAttemptClient returns a client for the OpenAIDualAttempt from the given config.
+func NewOpenAIDualAttemptClient(c config) *OpenAIDualAttemptClient {
+	return &OpenAIDualAttemptClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `openaidualattempt.Hooks(f(g(h())))`.
+func (c *OpenAIDualAttemptClient) Use(hooks ...Hook) {
+	c.hooks.OpenAIDualAttempt = append(c.hooks.OpenAIDualAttempt, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `openaidualattempt.Intercept(f(g(h())))`.
+func (c *OpenAIDualAttemptClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OpenAIDualAttempt = append(c.inters.OpenAIDualAttempt, interceptors...)
+}
+
+// Create returns a builder for creating a OpenAIDualAttempt entity.
+func (c *OpenAIDualAttemptClient) Create() *OpenAIDualAttemptCreate {
+	mutation := newOpenAIDualAttemptMutation(c.config, OpCreate)
+	return &OpenAIDualAttemptCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OpenAIDualAttempt entities.
+func (c *OpenAIDualAttemptClient) CreateBulk(builders ...*OpenAIDualAttemptCreate) *OpenAIDualAttemptCreateBulk {
+	return &OpenAIDualAttemptCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OpenAIDualAttemptClient) MapCreateBulk(slice any, setFunc func(*OpenAIDualAttemptCreate, int)) *OpenAIDualAttemptCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OpenAIDualAttemptCreateBulk{err: fmt.Errorf("calling to OpenAIDualAttemptClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OpenAIDualAttemptCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OpenAIDualAttemptCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OpenAIDualAttempt.
+func (c *OpenAIDualAttemptClient) Update() *OpenAIDualAttemptUpdate {
+	mutation := newOpenAIDualAttemptMutation(c.config, OpUpdate)
+	return &OpenAIDualAttemptUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OpenAIDualAttemptClient) UpdateOne(_m *OpenAIDualAttempt) *OpenAIDualAttemptUpdateOne {
+	mutation := newOpenAIDualAttemptMutation(c.config, OpUpdateOne, withOpenAIDualAttempt(_m))
+	return &OpenAIDualAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OpenAIDualAttemptClient) UpdateOneID(id int64) *OpenAIDualAttemptUpdateOne {
+	mutation := newOpenAIDualAttemptMutation(c.config, OpUpdateOne, withOpenAIDualAttemptID(id))
+	return &OpenAIDualAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OpenAIDualAttempt.
+func (c *OpenAIDualAttemptClient) Delete() *OpenAIDualAttemptDelete {
+	mutation := newOpenAIDualAttemptMutation(c.config, OpDelete)
+	return &OpenAIDualAttemptDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OpenAIDualAttemptClient) DeleteOne(_m *OpenAIDualAttempt) *OpenAIDualAttemptDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OpenAIDualAttemptClient) DeleteOneID(id int64) *OpenAIDualAttemptDeleteOne {
+	builder := c.Delete().Where(openaidualattempt.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OpenAIDualAttemptDeleteOne{builder}
+}
+
+// Query returns a query builder for OpenAIDualAttempt.
+func (c *OpenAIDualAttemptClient) Query() *OpenAIDualAttemptQuery {
+	return &OpenAIDualAttemptQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOpenAIDualAttempt},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OpenAIDualAttempt entity by its id.
+func (c *OpenAIDualAttemptClient) Get(ctx context.Context, id int64) (*OpenAIDualAttempt, error) {
+	return c.Query().Where(openaidualattempt.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OpenAIDualAttemptClient) GetX(ctx context.Context, id int64) *OpenAIDualAttempt {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *OpenAIDualAttemptClient) Hooks() []Hook {
+	return c.hooks.OpenAIDualAttempt
+}
+
+// Interceptors returns the client interceptors.
+func (c *OpenAIDualAttemptClient) Interceptors() []Interceptor {
+	return c.inters.OpenAIDualAttempt
+}
+
+func (c *OpenAIDualAttemptClient) mutate(ctx context.Context, m *OpenAIDualAttemptMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OpenAIDualAttemptCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OpenAIDualAttemptUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OpenAIDualAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OpenAIDualAttemptDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OpenAIDualAttempt mutation op: %q", m.Op())
 	}
 }
 
@@ -6654,23 +6797,24 @@ type (
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
 		AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
 		ChannelMonitorHistory, ChannelMonitorRequestTemplate, ErrorPassthroughRule,
-		Group, IdempotencyRecord, IdentityAdoptionDecision, PaymentAuditLog,
-		PaymentOrder, PaymentProviderInstance, PendingAuthSession, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SubscriptionPlan,
-		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota,
-		UserSubscription, UserVIPMembership, VIPLevel []ent.Hook
+		Group, IdempotencyRecord, IdentityAdoptionDecision, OpenAIDualAttempt,
+		PaymentAuditLog, PaymentOrder, PaymentProviderInstance, PendingAuthSession,
+		PromoCode, PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting,
+		SubscriptionPlan, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
+		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserPlatformQuota, UserSubscription, UserVIPMembership, VIPLevel []ent.Hook
 	}
 	inters struct {
 		APIKey, Account, AccountGroup, Announcement, AnnouncementRead, AuthIdentity,
 		AuthIdentityChannel, ChannelMonitor, ChannelMonitorDailyRollup,
 		ChannelMonitorHistory, ChannelMonitorRequestTemplate, ErrorPassthroughRule,
-		Group, IdempotencyRecord, IdentityAdoptionDecision, PaymentAuditLog,
-		PaymentOrder, PaymentProviderInstance, PendingAuthSession, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting, SubscriptionPlan,
-		TLSFingerprintProfile, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserPlatformQuota,
-		UserSubscription, UserVIPMembership, VIPLevel []ent.Interceptor
+		Group, IdempotencyRecord, IdentityAdoptionDecision, OpenAIDualAttempt,
+		PaymentAuditLog, PaymentOrder, PaymentProviderInstance, PendingAuthSession,
+		PromoCode, PromoCodeUsage, Proxy, RedeemCode, SecuritySecret, Setting,
+		SubscriptionPlan, TLSFingerprintProfile, UsageCleanupTask, UsageLog, User,
+		UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserPlatformQuota, UserSubscription, UserVIPMembership,
+		VIPLevel []ent.Interceptor
 	}
 )
 

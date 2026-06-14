@@ -105,6 +105,11 @@ func (h *OpenAIGatewayHandler) Embeddings(c *gin.Context) {
 		maxAccountSwitches = 3
 	}
 	routingStart := time.Now()
+	dualSupported, dualUnsupportedReason := service.OpenAIDualProtectionSupportedForRequest(apiKey, false, GetInboundEndpoint(c))
+	var unsupportedDualProtection *service.OpenAIDualProtectionResult
+	if service.EffectiveOpenAIDualProtectionEnabled(apiKey) && !dualSupported {
+		unsupportedDualProtection = service.NewOpenAIDualUnsupportedResult(apiKey, requestIDFromGinContext(c), GetInboundEndpoint(c), http.MethodPost, dualUnsupportedReason)
+	}
 
 	for {
 		selection, _, err := h.gatewayService.SelectAccountWithSchedulerForCapability(
@@ -156,14 +161,74 @@ func (h *OpenAIGatewayHandler) Embeddings(c *gin.Context) {
 			forwardBody = h.gatewayService.ReplaceModelInBody(body, channelMapping.MappedModel)
 		}
 		writerSizeBeforeForward := c.Writer.Size()
-		result, err := func() (*service.OpenAIForwardResult, error) {
-			defer func() {
-				if accountReleaseFunc != nil {
-					accountReleaseFunc()
-				}
+		var result *service.OpenAIForwardResult
+		dualAttempted := false
+		if dualSupported {
+			dualRun := h.runOpenAIDualIfEnabled(c, openAIDualRunOptions{
+				Endpoint:           GetInboundEndpoint(c),
+				Method:             http.MethodPost,
+				Stream:             false,
+				RequestPayloadHash: service.HashUsageRequestPayload(body),
+				RequestModel:       reqModel,
+				BillingModels:      []string{reqModel, channelMapping.MappedModel},
+				APIKey:             apiKey,
+				User:               apiKey.User,
+				Subscription:       subscription,
+				PrimarySelection: &service.AccountSelectionResult{
+					Account:     account,
+					Acquired:    true,
+					ReleaseFunc: accountReleaseFunc,
+				},
+				GroupID:           apiKey.GroupID,
+				SessionHash:       "",
+				AccountSlotStream: false,
+				BillingEligibility: func(ctx context.Context) error {
+					return h.billingCacheService.CheckBillingEligibility(ctx, apiKey.User, apiKey, apiKey.Group, subscription, service.QuotaPlatform(c.Request.Context(), apiKey))
+				},
+				SelectSecondary: func(ctx context.Context, excluded map[int64]struct{}) (*service.AccountSelectionResult, error) {
+					mergedExcluded := mergeOpenAIDualExcludedAccounts(failedAccountIDs, excluded)
+					selection, _, selectErr := h.gatewayService.SelectAccountWithSchedulerForCapability(
+						ctx,
+						apiKey.GroupID,
+						"",
+						"",
+						reqModel,
+						mergedExcluded,
+						service.OpenAIUpstreamTransportHTTPSSE,
+						service.OpenAIEndpointCapabilityEmbeddings,
+						false,
+					)
+					return selection, selectErr
+				},
+				Forward: func(ctx context.Context, attemptCtx *gin.Context, attemptAccount *service.Account) (*service.OpenAIForwardResult, error) {
+					return h.gatewayService.ForwardEmbeddings(ctx, attemptCtx, attemptAccount, forwardBody, "")
+				},
+				RequestContext: c.Request.Context(),
+				RequestID:      requestIDFromGinContext(c),
+				Log:            reqLog,
+				StreamStarted:  &streamStarted,
+			})
+			if dualRun.Winner != nil {
+				dualAttempted = true
+				accountReleaseFunc = nil
+				account = dualRun.Winner.account
+				result = dualRun.Winner.result
+				err = dualRun.Winner.err
+			}
+		}
+		if !dualAttempted {
+			result, err = func() (*service.OpenAIForwardResult, error) {
+				defer func() {
+					if accountReleaseFunc != nil {
+						accountReleaseFunc()
+					}
+				}()
+				return h.gatewayService.ForwardEmbeddings(c.Request.Context(), c, account, forwardBody, "")
 			}()
-			return h.gatewayService.ForwardEmbeddings(c.Request.Context(), c, account, forwardBody, "")
-		}()
+			if result != nil && result.DualProtection == nil && unsupportedDualProtection != nil {
+				result.DualProtection = unsupportedDualProtection
+			}
+		}
 
 		forwardDurationMs := time.Since(forwardStart).Milliseconds()
 		upstreamLatencyMs, _ := getContextInt64(c, service.OpsUpstreamLatencyMsKey)

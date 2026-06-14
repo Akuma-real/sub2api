@@ -69,6 +69,10 @@ func TestUsageLogRepositoryCreateSyncRequestTypeAndLegacyFields(t *testing.T) {
 			sqlmock.AnyArg(), // vip_discount_multiplier
 			sqlmock.AnyArg(), // vip_pre_discount_cost
 			log.VIPSavingsUSD,
+			log.DualProtectionEnabled,
+			log.DualAttemptCount,
+			log.DualExtraCost,
+			sqlmock.AnyArg(), // cost_breakdown
 			log.AccountRateMultiplier,
 			log.BillingType,
 			int16(service.RequestTypeWSV2),
@@ -156,6 +160,10 @@ func TestUsageLogRepositoryCreate_PersistsServiceTier(t *testing.T) {
 			sqlmock.AnyArg(), // vip_discount_multiplier
 			sqlmock.AnyArg(), // vip_pre_discount_cost
 			log.VIPSavingsUSD,
+			log.DualProtectionEnabled,
+			log.DualAttemptCount,
+			log.DualExtraCost,
+			sqlmock.AnyArg(), // cost_breakdown
 			log.AccountRateMultiplier,
 			log.BillingType,
 			int16(service.RequestTypeSync),
@@ -267,11 +275,11 @@ func TestPrepareUsageLogInsert_PersistsImageSizeMetadata(t *testing.T) {
 		CreatedAt:          time.Date(2025, 1, 6, 12, 0, 0, 0, time.UTC),
 	})
 
-	require.Equal(t, sql.NullString{String: imageSize, Valid: true}, prepared.args[38])
-	require.Equal(t, sql.NullString{String: inputSize, Valid: true}, prepared.args[39])
-	require.Equal(t, sql.NullString{String: outputSize, Valid: true}, prepared.args[40])
-	require.Equal(t, sql.NullString{String: source, Valid: true}, prepared.args[41])
-	breakdownJSON, ok := prepared.args[42].(string)
+	require.Equal(t, sql.NullString{String: imageSize, Valid: true}, prepared.args[42])
+	require.Equal(t, sql.NullString{String: inputSize, Valid: true}, prepared.args[43])
+	require.Equal(t, sql.NullString{String: outputSize, Valid: true}, prepared.args[44])
+	require.Equal(t, sql.NullString{String: source, Valid: true}, prepared.args[45])
+	breakdownJSON, ok := prepared.args[46].(string)
 	require.True(t, ok)
 	require.JSONEq(t, `{"1K":1,"4K":1}`, breakdownJSON)
 }
@@ -627,6 +635,10 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullFloat64{},
 			sql.NullFloat64{},
 			0.0,
+			false,
+			0,
+			0.0,
+			sql.NullString{},
 			sql.NullFloat64{},
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeSync),
@@ -699,6 +711,10 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullFloat64{}, // vip_discount_multiplier
 			sql.NullFloat64{}, // vip_pre_discount_cost
 			0.0,               // vip_savings_usd
+			false,             // dual_protection_enabled
+			0,                 // dual_attempt_count
+			0.0,               // dual_extra_cost
+			sql.NullString{},  // cost_breakdown
 			sql.NullFloat64{}, // account_rate_multiplier
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeWSV2),
@@ -755,6 +771,10 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullFloat64{},
 			sql.NullFloat64{},
 			0.0,
+			false,
+			0,
+			0.0,
+			sql.NullString{},
 			sql.NullFloat64{},
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeUnknown),
@@ -811,6 +831,10 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			sql.NullFloat64{},
 			sql.NullFloat64{},
 			0.0,
+			false,
+			0,
+			0.0,
+			sql.NullString{},
 			sql.NullFloat64{},
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeSync),

@@ -568,6 +568,14 @@ export interface ModelsListConfig {
   models: string[]
 }
 
+export type APIKeyFastMode = 'off' | 'force_priority'
+
+export interface APIKeyAccelerationSettings {
+  fast_mode: APIKeyFastMode
+  dual_protection_enabled: boolean
+  dual_first_response_timeout_ms: number
+}
+
 export interface ApiKey {
   id: number
   user_id: number
@@ -581,6 +589,7 @@ export interface ApiKey {
   quota: number // Quota limit in USD (0 = unlimited)
   quota_used: number // Used quota amount in USD
   expires_at: string | null // Expiration time (null = never expires)
+  acceleration_settings: APIKeyAccelerationSettings
   created_at: string
   updated_at: string
   group?: Group
@@ -604,6 +613,7 @@ export interface CreateApiKeyRequest {
   custom_key?: string // Optional custom API Key
   ip_whitelist?: string[]
   ip_blacklist?: string[]
+  acceleration_settings?: APIKeyAccelerationSettings
   quota?: number // Quota limit in USD (0 = unlimited)
   expires_in_days?: number // Days until expiry (null = never expires)
   rate_limit_5h?: number
@@ -617,6 +627,7 @@ export interface UpdateApiKeyRequest {
   status?: 'active' | 'inactive'
   ip_whitelist?: string[]
   ip_blacklist?: string[]
+  acceleration_settings?: APIKeyAccelerationSettings
   quota?: number // Quota limit in USD (null = no change, 0 = unlimited)
   expires_at?: string | null // Expiration time (null = no change)
   reset_quota?: boolean // Reset quota_used to 0
@@ -1213,6 +1224,65 @@ export type UsageRequestType = 'unknown' | 'sync' | 'stream' | 'ws_v2'
 export type ImageSizeSource = 'output' | 'input' | 'default' | 'legacy'
 export type ImageSizeBreakdown = Record<string, number>
 
+export interface UsageCostBreakdownAttempt {
+  attempt_id?: string
+  role?: 'primary' | 'secondary' | string
+  outcome?: 'winner' | 'loser' | 'skipped' | 'pending' | string
+  status?: string
+  billing_basis?: string | null
+  estimated_cost?: number
+  actual_cost?: number
+  billed_cost?: number
+  cancel_reason?: string
+}
+
+export interface UsageCostBreakdownSnapshot {
+  base?: {
+    input_cost?: number
+    output_cost?: number
+    cache_creation_cost?: number
+    cache_read_cost?: number
+    image_output_cost?: number
+    total_cost?: number
+    rate_multiplier_applied?: number
+    billing_mode?: string
+  }
+  fast?: {
+    mode?: APIKeyFastMode | string
+    service_tier?: string | null
+  }
+  dual?: {
+    configured?: boolean
+    enabled?: boolean
+    first_timeout_ms?: number
+    attempt_count?: number
+    primary_cost?: number
+    secondary_cost?: number
+    extra_cost?: number
+    unsupported_reason?: string
+    billing_disclaimer?: string
+    attempts?: UsageCostBreakdownAttempt[]
+  }
+  vip?: {
+    level_id?: number
+    discount_multiplier?: number | null
+    pre_discount_cost?: number
+    savings_usd?: number
+    discountable_cost?: number
+    protected_cost?: number
+  }
+  final?: {
+    billing_type?: string
+    actual_cost?: number
+  }
+  account?: {
+    id?: number
+    type?: string
+    rate_multiplier?: number
+  }
+  [key: string]: unknown
+}
+
 export interface UsageLog {
   id: number
   user_id: number
@@ -1242,6 +1312,14 @@ export interface UsageLog {
   total_cost: number
   actual_cost: number
   rate_multiplier: number
+  vip_level_id?: number | null
+  vip_discount_multiplier?: number | null
+  vip_pre_discount_cost?: number | null
+  vip_savings_usd?: number
+  dual_protection_enabled?: boolean
+  dual_attempt_count?: number
+  dual_extra_cost?: number
+  cost_breakdown?: UsageCostBreakdownSnapshot | null
   billing_type: number
 
   request_type?: UsageRequestType

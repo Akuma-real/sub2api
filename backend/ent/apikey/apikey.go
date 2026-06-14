@@ -37,6 +37,8 @@ const (
 	FieldIPWhitelist = "ip_whitelist"
 	// FieldIPBlacklist holds the string denoting the ip_blacklist field in the database.
 	FieldIPBlacklist = "ip_blacklist"
+	// FieldAccelerationSettings holds the string denoting the acceleration_settings field in the database.
+	FieldAccelerationSettings = "acceleration_settings"
 	// FieldQuota holds the string denoting the quota field in the database.
 	FieldQuota = "quota"
 	// FieldQuotaUsed holds the string denoting the quota_used field in the database.
@@ -106,6 +108,7 @@ var Columns = []string{
 	FieldLastUsedAt,
 	FieldIPWhitelist,
 	FieldIPBlacklist,
+	FieldAccelerationSettings,
 	FieldQuota,
 	FieldQuotaUsed,
 	FieldExpiresAt,
@@ -152,6 +155,8 @@ var (
 	DefaultStatus string
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	StatusValidator func(string) error
+	// DefaultAccelerationSettings holds the default value on creation for the "acceleration_settings" field.
+	DefaultAccelerationSettings map[string]interface{}
 	// DefaultQuota holds the default value on creation for the "quota" field.
 	DefaultQuota float64
 	// DefaultQuotaUsed holds the default value on creation for the "quota_used" field.

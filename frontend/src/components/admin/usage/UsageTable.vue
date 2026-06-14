@@ -368,8 +368,65 @@
           <!-- Rate and Summary -->
           <div class="flex items-center justify-between gap-6">
             <span class="text-muted-soft">{{ t('usage.serviceTier') }}</span>
-            <span class="font-semibold text-accent-teal">{{ getUsageServiceTierLabel(tooltipData?.service_tier, t) }}</span>
+            <span class="font-semibold text-accent-teal">{{ getUsageServiceTierLabel(usageServiceTier(tooltipData), t) }}</span>
           </div>
+          <div v-if="usageFastMode(tooltipData) !== 'off'" class="flex items-center justify-between gap-6">
+            <span class="text-muted-soft">{{ t('usage.fastMode') }}</span>
+            <span class="font-semibold text-accent-teal">{{ formatFastMode(usageFastMode(tooltipData)) }}</span>
+          </div>
+          <template v-if="usageDualEnabled(tooltipData)">
+            <div class="mt-1.5 border-t border-hairline-soft pt-1.5">
+              <div class="mb-1 text-xs font-semibold text-on-dark-soft">{{ t('usage.dualProtection') }}</div>
+              <div class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.dualAttempts') }}</span>
+                <span class="font-medium text-on-dark">{{ usageDualAttemptCount(tooltipData) }}</span>
+              </div>
+              <div v-if="usageDualPrimaryCost(tooltipData) > 0" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.dualPrimaryCost') }}</span>
+                <span class="font-medium text-on-dark">{{ formatUsageCostUSD(usageDualPrimaryCost(tooltipData)) }}</span>
+              </div>
+              <div v-if="usageDualSecondaryCost(tooltipData) > 0" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.dualSecondaryCost') }}</span>
+                <span class="font-medium text-on-dark">{{ formatUsageCostUSD(usageDualSecondaryCost(tooltipData)) }}</span>
+              </div>
+              <div v-if="usageDualExtraCost(tooltipData) > 0" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.dualExtraCost') }}</span>
+                <span class="font-semibold text-accent-amber">{{ formatUsageCostUSD(usageDualExtraCost(tooltipData)) }}</span>
+              </div>
+              <div v-if="usageDualBillingBasis(tooltipData)" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.billingBasis') }}</span>
+                <span class="font-medium text-on-dark">{{ usageDualBillingBasis(tooltipData) }}</span>
+              </div>
+              <div v-if="usageDualUnsupportedReason(tooltipData)" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.dualUnsupported') }}</span>
+                <span class="font-medium text-warning">{{ usageDualUnsupportedReason(tooltipData) }}</span>
+              </div>
+              <p class="mt-1.5 max-w-[320px] whitespace-normal text-[11px] leading-snug text-accent-amber">
+                {{ usageDualDisclaimer(tooltipData) || t('usage.dualWarning') }}
+              </p>
+            </div>
+          </template>
+          <template v-if="usageVIPDiscountMultiplier(tooltipData) !== null || usageVIPSavings(tooltipData) > 0">
+            <div class="mt-1.5 border-t border-hairline-soft pt-1.5">
+              <div class="mb-1 text-xs font-semibold text-on-dark-soft">{{ t('usage.vipDiscount') }}</div>
+              <div v-if="usageVIPPreDiscountCost(tooltipData) !== null" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.vipPreDiscount') }}</span>
+                <span class="font-medium text-on-dark">{{ formatUsageCostUSD(usageVIPPreDiscountCost(tooltipData)) }}</span>
+              </div>
+              <div v-if="usageVIPDiscountMultiplier(tooltipData) !== null" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.vipDiscount') }}</span>
+                <span class="font-semibold text-primary-600">{{ formatMultiplier(usageVIPDiscountMultiplier(tooltipData) || 1) }}x</span>
+              </div>
+              <div v-if="usageVIPProtectedCost(tooltipData) > 0" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.vipProtectedCost') }}</span>
+                <span class="font-medium text-on-dark">{{ formatUsageCostUSD(usageVIPProtectedCost(tooltipData)) }}</span>
+              </div>
+              <div v-if="usageVIPSavings(tooltipData) > 0" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.vipSavings') }}</span>
+                <span class="font-semibold text-success">-{{ formatUsageCostUSD(usageVIPSavings(tooltipData)) }}</span>
+              </div>
+            </div>
+          </template>
           <div class="flex items-center justify-between gap-6">
             <span class="text-muted-soft">{{ t('usage.rate') }}</span>
             <span class="font-semibold text-primary-600">{{ formatMultiplier(tooltipData?.rate_multiplier || 1) }}x</span>
@@ -380,7 +437,7 @@
           </div>
           <div class="flex items-center justify-between gap-6">
             <span class="text-muted-soft">{{ t('usage.userBilled') }}</span>
-            <span class="font-semibold text-success">${{ tooltipData?.actual_cost?.toFixed(6) || '0.000000' }}</span>
+            <span class="font-semibold text-success">{{ formatUsageCostUSD(usageFinalCost(tooltipData)) }}</span>
           </div>
           <!-- Account billing (separated from user billing) -->
           <div class="flex items-center justify-between gap-6 border-t border-hairline-soft pt-1.5">
@@ -412,6 +469,24 @@ import { formatCacheTokens, formatMultiplier } from '@/utils/formatters'
 import { formatTokenPricePerMillion } from '@/utils/usagePricing'
 import { getUsageServiceTierLabel } from '@/utils/usageServiceTier'
 import { resolveUsageRequestType } from '@/utils/usageRequestType'
+import {
+  formatUsageCostUSD,
+  usageDualAttemptCount,
+  usageDualBillingBasis,
+  usageDualDisclaimer,
+  usageDualEnabled,
+  usageDualExtraCost,
+  usageDualPrimaryCost,
+  usageDualSecondaryCost,
+  usageDualUnsupportedReason,
+  usageFastMode,
+  usageFinalCost,
+  usageServiceTier,
+  usageVIPDiscountMultiplier,
+  usageVIPPreDiscountCost,
+  usageVIPProtectedCost,
+  usageVIPSavings,
+} from '@/utils/usageCostBreakdown'
 import {
   BILLING_MODE_TOKEN,
   getBillingModeLabel,
@@ -490,6 +565,12 @@ const getRequestTypeBadgeClass = (row: AdminUsageLog): string => {
   if (requestType === 'stream') return 'bg-surface-card text-primary-600'
   if (requestType === 'sync') return 'bg-surface-card text-ink'
   return 'bg-surface-card text-warning'
+}
+
+const formatFastMode = (mode: string): string => {
+  if (mode === 'force_priority') return t('usage.fastModeForcePriority')
+  if (mode === 'off') return t('usage.fastModeOff')
+  return mode
 }
 
 

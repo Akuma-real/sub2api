@@ -8444,6 +8444,7 @@ type postUsageBillingParams struct {
 	APIKey                *APIKey
 	Account               *Account
 	Subscription          *UserSubscription
+	AttemptID             string
 	RequestPayloadHash    string
 	IsSubscriptionBill    bool
 	AccountRateMultiplier float64
@@ -8594,6 +8595,7 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 
 	cmd := &UsageBillingCommand{
 		RequestID:          requestID,
+		AttemptID:          strings.TrimSpace(p.AttemptID),
 		APIKeyID:           p.APIKey.ID,
 		UserID:             p.User.ID,
 		AccountID:          p.Account.ID,
@@ -8628,6 +8630,8 @@ func buildUsageBillingCommand(requestID string, usageLog *UsageLog, p *postUsage
 		cmd.SubscriptionCost = p.Cost.ActualCost
 	} else if p.Cost.ActualCost > 0 {
 		cmd.BalanceCost = p.Cost.ActualCost
+		cmd.VIPDiscountableBalanceCost = p.Cost.VIPDiscountableActualCost
+		cmd.VIPProtectedBalanceCost = p.Cost.VIPProtectedActualCost
 	}
 
 	if p.shouldDeductAPIKeyQuota() {
@@ -8684,19 +8688,22 @@ func applyVIPUsageBillingResult(usageLog *UsageLog, cost *CostBreakdown, result 
 	if result == nil || result.VIPLevelID == nil || result.VIPDiscountMultiplier == nil || result.VIPPreDiscountCost == nil {
 		return
 	}
-	discounted := *result.VIPPreDiscountCost - result.VIPSavingsUSD
-	if discounted < 0 {
-		discounted = 0
+	finalCost := result.FinalBalanceCost
+	if finalCost <= 0 {
+		finalCost = *result.VIPPreDiscountCost - result.VIPSavingsUSD
+		if finalCost < 0 {
+			finalCost = 0
+		}
 	}
 	if usageLog != nil {
 		usageLog.VIPLevelID = result.VIPLevelID
 		usageLog.VIPDiscountMultiplier = result.VIPDiscountMultiplier
 		usageLog.VIPPreDiscountCost = result.VIPPreDiscountCost
 		usageLog.VIPSavingsUSD = result.VIPSavingsUSD
-		usageLog.ActualCost = discounted
+		usageLog.ActualCost = finalCost
 	}
 	if cost != nil {
-		cost.ActualCost = discounted
+		cost.ActualCost = finalCost
 	}
 }
 

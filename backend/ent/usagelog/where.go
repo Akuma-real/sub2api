@@ -205,6 +205,21 @@ func VipSavingsUsd(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldVipSavingsUsd, v))
 }
 
+// DualProtectionEnabled applies equality check predicate on the "dual_protection_enabled" field. It's identical to DualProtectionEnabledEQ.
+func DualProtectionEnabled(v bool) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldDualProtectionEnabled, v))
+}
+
+// DualAttemptCount applies equality check predicate on the "dual_attempt_count" field. It's identical to DualAttemptCountEQ.
+func DualAttemptCount(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldDualAttemptCount, v))
+}
+
+// DualExtraCost applies equality check predicate on the "dual_extra_cost" field. It's identical to DualExtraCostEQ.
+func DualExtraCost(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldDualExtraCost, v))
+}
+
 // AccountRateMultiplier applies equality check predicate on the "account_rate_multiplier" field. It's identical to AccountRateMultiplierEQ.
 func AccountRateMultiplier(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldAccountRateMultiplier, v))
@@ -1638,6 +1653,106 @@ func VipSavingsUsdLT(v float64) predicate.UsageLog {
 // VipSavingsUsdLTE applies the LTE predicate on the "vip_savings_usd" field.
 func VipSavingsUsdLTE(v float64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldLTE(FieldVipSavingsUsd, v))
+}
+
+// DualProtectionEnabledEQ applies the EQ predicate on the "dual_protection_enabled" field.
+func DualProtectionEnabledEQ(v bool) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldDualProtectionEnabled, v))
+}
+
+// DualProtectionEnabledNEQ applies the NEQ predicate on the "dual_protection_enabled" field.
+func DualProtectionEnabledNEQ(v bool) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldDualProtectionEnabled, v))
+}
+
+// DualAttemptCountEQ applies the EQ predicate on the "dual_attempt_count" field.
+func DualAttemptCountEQ(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldDualAttemptCount, v))
+}
+
+// DualAttemptCountNEQ applies the NEQ predicate on the "dual_attempt_count" field.
+func DualAttemptCountNEQ(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldDualAttemptCount, v))
+}
+
+// DualAttemptCountIn applies the In predicate on the "dual_attempt_count" field.
+func DualAttemptCountIn(vs ...int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldDualAttemptCount, vs...))
+}
+
+// DualAttemptCountNotIn applies the NotIn predicate on the "dual_attempt_count" field.
+func DualAttemptCountNotIn(vs ...int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldDualAttemptCount, vs...))
+}
+
+// DualAttemptCountGT applies the GT predicate on the "dual_attempt_count" field.
+func DualAttemptCountGT(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldDualAttemptCount, v))
+}
+
+// DualAttemptCountGTE applies the GTE predicate on the "dual_attempt_count" field.
+func DualAttemptCountGTE(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldDualAttemptCount, v))
+}
+
+// DualAttemptCountLT applies the LT predicate on the "dual_attempt_count" field.
+func DualAttemptCountLT(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldDualAttemptCount, v))
+}
+
+// DualAttemptCountLTE applies the LTE predicate on the "dual_attempt_count" field.
+func DualAttemptCountLTE(v int) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldDualAttemptCount, v))
+}
+
+// DualExtraCostEQ applies the EQ predicate on the "dual_extra_cost" field.
+func DualExtraCostEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldDualExtraCost, v))
+}
+
+// DualExtraCostNEQ applies the NEQ predicate on the "dual_extra_cost" field.
+func DualExtraCostNEQ(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldDualExtraCost, v))
+}
+
+// DualExtraCostIn applies the In predicate on the "dual_extra_cost" field.
+func DualExtraCostIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldDualExtraCost, vs...))
+}
+
+// DualExtraCostNotIn applies the NotIn predicate on the "dual_extra_cost" field.
+func DualExtraCostNotIn(vs ...float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldDualExtraCost, vs...))
+}
+
+// DualExtraCostGT applies the GT predicate on the "dual_extra_cost" field.
+func DualExtraCostGT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldDualExtraCost, v))
+}
+
+// DualExtraCostGTE applies the GTE predicate on the "dual_extra_cost" field.
+func DualExtraCostGTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldDualExtraCost, v))
+}
+
+// DualExtraCostLT applies the LT predicate on the "dual_extra_cost" field.
+func DualExtraCostLT(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldDualExtraCost, v))
+}
+
+// DualExtraCostLTE applies the LTE predicate on the "dual_extra_cost" field.
+func DualExtraCostLTE(v float64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldDualExtraCost, v))
+}
+
+// CostBreakdownIsNil applies the IsNil predicate on the "cost_breakdown" field.
+func CostBreakdownIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldCostBreakdown))
+}
+
+// CostBreakdownNotNil applies the NotNil predicate on the "cost_breakdown" field.
+func CostBreakdownNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldCostBreakdown))
 }
 
 // AccountRateMultiplierEQ applies the EQ predicate on the "account_rate_multiplier" field.

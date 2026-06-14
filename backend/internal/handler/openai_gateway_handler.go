@@ -96,6 +96,52 @@ func wrapUsageRecordTaskContext(parent context.Context, task service.UsageRecord
 	}
 }
 
+type openAIDualForwardFunc func(ctx context.Context, c *gin.Context, account *service.Account) (*service.OpenAIForwardResult, error)
+
+type openAIDualSelectFunc func(ctx context.Context, excluded map[int64]struct{}) (*service.AccountSelectionResult, error)
+
+type openAIDualAttemptExecution struct {
+	role       string
+	attemptID  string
+	account    *service.Account
+	result     *service.OpenAIForwardResult
+	err        error
+	dispatched bool
+	startedAt  time.Time
+	captured   *service.CapturedOpenAIResponse
+}
+
+type openAIDualRunOptions struct {
+	Endpoint           string
+	Method             string
+	Stream             bool
+	RequestPayloadHash string
+	RequestModel       string
+	BillingModels      []string
+	APIKey             *service.APIKey
+	User               *service.User
+	Subscription       *service.UserSubscription
+	PrimarySelection   *service.AccountSelectionResult
+	GroupID            *int64
+	SessionHash        string
+	AccountSlotStream  bool
+	BillingEligibility func(context.Context) error
+	SelectSecondary    openAIDualSelectFunc
+	Forward            openAIDualForwardFunc
+	RequestContext     context.Context
+	RequestID          string
+	Log                *zap.Logger
+	StreamStarted      *bool
+}
+
+type openAIDualRunResult struct {
+	Handled           bool
+	Winner            *openAIDualAttemptExecution
+	Loser             *openAIDualAttemptExecution
+	Protection        *service.OpenAIDualProtectionResult
+	UnsupportedReason string
+}
+
 // NewOpenAIGatewayHandler creates a new OpenAIGatewayHandler
 func NewOpenAIGatewayHandler(
 	gatewayService *service.OpenAIGatewayService,
@@ -127,6 +173,537 @@ func NewOpenAIGatewayHandler(
 		maxAccountSwitches:       maxAccountSwitches,
 		cfg:                      cfg,
 	}
+}
+
+func (h *OpenAIGatewayHandler) runOpenAIDualIfEnabled(c *gin.Context, opts openAIDualRunOptions) openAIDualRunResult {
+	if h == nil || h.gatewayService == nil || c == nil || opts.APIKey == nil || opts.User == nil || opts.PrimarySelection == nil || opts.PrimarySelection.Account == nil {
+		return openAIDualRunResult{}
+	}
+	supported, reason := service.OpenAIDualProtectionSupportedForRequest(opts.APIKey, opts.Stream, opts.Endpoint)
+	if !service.EffectiveOpenAIDualProtectionEnabled(opts.APIKey) {
+		return openAIDualRunResult{}
+	}
+	requestID := strings.TrimSpace(opts.RequestID)
+	if requestID == "" {
+		requestID = requestIDFromGinContext(c)
+	}
+	if requestID == "" {
+		requestID = "generated:" + uuid.NewString()
+	}
+	opts.RequestID = requestID
+	if !supported {
+		return openAIDualRunResult{
+			Handled:           false,
+			Protection:        service.NewOpenAIDualUnsupportedResult(opts.APIKey, requestID, opts.Endpoint, opts.Method, reason),
+			UnsupportedReason: reason,
+		}
+	}
+	if opts.Forward == nil || opts.SelectSecondary == nil {
+		return openAIDualRunResult{}
+	}
+
+	log := opts.Log
+	if log == nil {
+		log = logger.FromContext(c.Request.Context())
+	}
+	reqCtx := opts.RequestContext
+	if reqCtx == nil && c.Request != nil {
+		reqCtx = c.Request.Context()
+	}
+	if reqCtx == nil {
+		reqCtx = context.Background()
+	}
+	plan := service.NewOpenAIDualAttemptPlan(opts.APIKey, requestID, time.Now())
+	if plan == nil || !plan.Enabled {
+		return openAIDualRunResult{}
+	}
+	timeout := plan.FirstTimeout
+	if timeout <= 0 {
+		timeout = time.Duration(service.OpenAIDualFirstResponseTimeout(opts.APIKey)) * time.Millisecond
+	}
+
+	primaryAttemptID := h.openAIDualAttemptID(service.OpenAIDualAttemptRolePrimary, opts, opts.PrimarySelection.Account)
+	primaryCtx, primaryCancel := context.WithCancel(reqCtx)
+	defer primaryCancel()
+	primaryDone := make(chan *openAIDualAttemptExecution, 1)
+	go func() {
+		primaryDone <- h.runOpenAIDualCapturedAttempt(c, openAIDualCapturedAttemptOptions{
+			Role:        service.OpenAIDualAttemptRolePrimary,
+			AttemptID:   primaryAttemptID,
+			Ctx:         primaryCtx,
+			Account:     opts.PrimarySelection.Account,
+			ReleaseFunc: opts.PrimarySelection.ReleaseFunc,
+			Forward:     opts.Forward,
+		})
+	}()
+
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	var primary *openAIDualAttemptExecution
+	var secondary *openAIDualAttemptExecution
+	var secondaryDone chan *openAIDualAttemptExecution
+	var secondaryCancel context.CancelFunc
+	var secondaryAccount *service.Account
+	secondaryAttemptID := ""
+	secondaryStarted := false
+	secondarySkippedReason := ""
+
+	for {
+		select {
+		case primary = <-primaryDone:
+			if !secondaryStarted {
+				return h.finishOpenAIDualWinner(c, opts, plan, primary, nil)
+			}
+			if secondaryDone == nil && secondarySkippedReason != "" {
+				skipped := h.openAIDualSkippedExecution(service.OpenAIDualAttemptRoleSecondary, h.openAIDualAttemptID(service.OpenAIDualAttemptRoleSecondary, opts, nil), secondarySkippedReason)
+				return h.finishOpenAIDualWinner(c, opts, plan, primary, skipped)
+			}
+			if h.openAIDualExecutionIsValidWinner(primary) {
+				if secondaryDone != nil {
+					select {
+					case secondary = <-secondaryDone:
+					default:
+						if secondaryCancel != nil {
+							secondaryCancel()
+						}
+						secondary = h.openAIDualCanceledExecution(service.OpenAIDualAttemptRoleSecondary, secondaryAttemptID, secondaryAccount)
+					}
+				}
+				return h.finishOpenAIDualWinner(c, opts, plan, primary, secondary)
+			}
+			if secondaryDone != nil {
+				secondary = <-secondaryDone
+				if h.openAIDualExecutionIsValidWinner(secondary) {
+					return h.finishOpenAIDualWinner(c, opts, plan, secondary, primary)
+				}
+			}
+			return h.finishOpenAIDualWinner(c, opts, plan, primary, secondary)
+		case <-timer.C:
+			if secondaryStarted {
+				continue
+			}
+			secondaryStarted = true
+			if opts.BillingEligibility != nil {
+				if err := opts.BillingEligibility(reqCtx); err != nil {
+					secondarySkippedReason = "billing_eligibility_failed"
+					log.Info("openai.dual.secondary_skipped_billing",
+						zap.Error(err),
+						zap.String("endpoint", opts.Endpoint),
+						zap.Int64("api_key_id", opts.APIKey.ID),
+					)
+					continue
+				}
+			}
+			excluded := map[int64]struct{}{
+				opts.PrimarySelection.Account.ID: {},
+			}
+			selection, err := opts.SelectSecondary(reqCtx, excluded)
+			if err != nil || selection == nil || selection.Account == nil {
+				secondarySkippedReason = "secondary_account_unavailable"
+				log.Info("openai.dual.secondary_skipped_select",
+					zap.Error(err),
+					zap.String("endpoint", opts.Endpoint),
+					zap.Int64("api_key_id", opts.APIKey.ID),
+				)
+				continue
+			}
+			release, acquired := h.tryAcquireOpenAIDualSecondarySlot(reqCtx, opts, selection, log)
+			if !acquired {
+				secondarySkippedReason = "secondary_account_slot_unavailable"
+				continue
+			}
+			secondaryCtx, cancel := context.WithCancel(reqCtx)
+			secondaryCancel = cancel
+			secondaryAccount = selection.Account
+			secondaryAttemptID = h.openAIDualAttemptID(service.OpenAIDualAttemptRoleSecondary, opts, selection.Account)
+			secondaryDone = make(chan *openAIDualAttemptExecution, 1)
+			go func(account *service.Account, releaseFunc func()) {
+				secondaryDone <- h.runOpenAIDualCapturedAttempt(c, openAIDualCapturedAttemptOptions{
+					Role:        service.OpenAIDualAttemptRoleSecondary,
+					AttemptID:   secondaryAttemptID,
+					Ctx:         secondaryCtx,
+					Account:     account,
+					ReleaseFunc: releaseFunc,
+					Forward:     opts.Forward,
+				})
+			}(selection.Account, release)
+		case secondary = <-secondaryDone:
+			if h.openAIDualExecutionIsValidWinner(secondary) {
+				if primary == nil {
+					select {
+					case primary = <-primaryDone:
+					default:
+						primaryCancel()
+						primary = h.openAIDualCanceledExecution(service.OpenAIDualAttemptRolePrimary, primaryAttemptID, opts.PrimarySelection.Account)
+					}
+				}
+				return h.finishOpenAIDualWinner(c, opts, plan, secondary, primary)
+			}
+			if primary == nil {
+				primary = <-primaryDone
+			}
+			return h.finishOpenAIDualWinner(c, opts, plan, primary, secondary)
+		case <-reqCtx.Done():
+			primaryCancel()
+			if secondaryCancel != nil {
+				secondaryCancel()
+			}
+			return openAIDualRunResult{Handled: true}
+		default:
+			if secondaryStarted && secondaryDone == nil && secondarySkippedReason != "" {
+				primary = <-primaryDone
+				skipped := h.openAIDualSkippedExecution(service.OpenAIDualAttemptRoleSecondary, h.openAIDualAttemptID(service.OpenAIDualAttemptRoleSecondary, opts, nil), secondarySkippedReason)
+				return h.finishOpenAIDualWinner(c, opts, plan, primary, skipped)
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
+	}
+}
+
+type openAIDualCapturedAttemptOptions struct {
+	Role        string
+	AttemptID   string
+	Ctx         context.Context
+	Account     *service.Account
+	ReleaseFunc func()
+	Forward     openAIDualForwardFunc
+}
+
+func (h *OpenAIGatewayHandler) runOpenAIDualCapturedAttempt(c *gin.Context, opts openAIDualCapturedAttemptOptions) *openAIDualAttemptExecution {
+	exec := &openAIDualAttemptExecution{
+		role:      opts.Role,
+		attemptID: strings.TrimSpace(opts.AttemptID),
+		account:   opts.Account,
+		startedAt: time.Now(),
+	}
+	if exec.attemptID == "" {
+		exec.attemptID = exec.role
+	}
+	if opts.Forward == nil || opts.Account == nil {
+		exec.err = errors.New("openai dual attempt missing forward function or account")
+		return exec
+	}
+	defer func() {
+		if opts.ReleaseFunc != nil {
+			opts.ReleaseFunc()
+		}
+	}()
+	capturedContext, capturedWriter := service.NewOpenAIDualCaptureContext(c)
+	if capturedContext == nil {
+		exec.err = errors.New("openai dual attempt missing gin context")
+		return exec
+	}
+	exec.dispatched = true
+	result, err := opts.Forward(opts.Ctx, capturedContext, opts.Account)
+	exec.result = result
+	exec.err = err
+	exec.captured = capturedWriter.CapturedResponse()
+	return exec
+}
+
+func (h *OpenAIGatewayHandler) finishOpenAIDualWinner(c *gin.Context, opts openAIDualRunOptions, plan *service.OpenAIDualAttemptPlan, winner, loser *openAIDualAttemptExecution) openAIDualRunResult {
+	if winner == nil {
+		return openAIDualRunResult{Handled: true}
+	}
+	requestID := strings.TrimSpace(opts.RequestID)
+	if requestID == "" && plan != nil {
+		requestID = strings.TrimSpace(plan.RequestID)
+	}
+	if requestID == "" && winner.result != nil {
+		requestID = strings.TrimSpace(winner.result.RequestID)
+	}
+	if requestID == "" {
+		requestID = requestIDFromGinContext(c)
+	}
+	opts.RequestID = requestID
+	handled := false
+	winnerValid := h.openAIDualExecutionIsValidWinner(winner)
+	if winnerValid && winner.captured != nil {
+		winner.captured.Replay(c)
+		handled = c.Writer != nil && c.Writer.Written()
+	}
+	if !winnerValid && winner.err == nil {
+		winner.err = h.openAIDualInvalidWinnerError(winner)
+	}
+	if winner.result != nil {
+		if requestID != "" {
+			winner.result.RequestID = requestID
+		}
+		winner.result.AttemptID = strings.TrimSpace(winner.attemptID)
+		if winner.result.AttemptID == "" {
+			winner.result.AttemptID = winner.role
+		}
+	}
+	attempts := h.buildOpenAIDualAttemptRecords(c.Request.Context(), opts, winner, loser)
+	winnerAttemptID := ""
+	if winnerValid {
+		winnerAttemptID = strings.TrimSpace(winner.attemptID)
+		if winnerAttemptID == "" {
+			winnerAttemptID = winner.role
+		}
+	}
+	protection := plan.ResultForSuccess(attempts, winnerAttemptID)
+	if winner.result != nil {
+		winner.result.DualProtection = protection
+	}
+	return openAIDualRunResult{
+		Handled:    handled,
+		Winner:     winner,
+		Loser:      loser,
+		Protection: protection,
+	}
+}
+
+func (h *OpenAIGatewayHandler) openAIDualExecutionIsValidWinner(exec *openAIDualAttemptExecution) bool {
+	if exec == nil || exec.err != nil || exec.result == nil || exec.captured == nil {
+		return false
+	}
+	status := exec.captured.Status
+	if status <= 0 {
+		status = http.StatusOK
+	}
+	return status >= http.StatusOK && status < http.StatusMultipleChoices
+}
+
+func (h *OpenAIGatewayHandler) openAIDualInvalidWinnerError(exec *openAIDualAttemptExecution) error {
+	if exec == nil || exec.captured == nil {
+		return errors.New("openai dual attempt did not produce a valid response")
+	}
+	status := exec.captured.Status
+	if status <= 0 {
+		status = http.StatusOK
+	}
+	return fmt.Errorf("openai dual attempt returned non-success status %d", status)
+}
+
+func (h *OpenAIGatewayHandler) openAIDualSkippedExecution(role, attemptID, reason string) *openAIDualAttemptExecution {
+	if strings.TrimSpace(attemptID) == "" {
+		attemptID = role
+	}
+	return &openAIDualAttemptExecution{
+		role:      role,
+		attemptID: attemptID,
+		err:       errors.New(reason),
+		startedAt: time.Now(),
+	}
+}
+
+func (h *OpenAIGatewayHandler) openAIDualCanceledExecution(role, attemptID string, account *service.Account) *openAIDualAttemptExecution {
+	if strings.TrimSpace(attemptID) == "" {
+		attemptID = role
+	}
+	return &openAIDualAttemptExecution{
+		role:       role,
+		attemptID:  attemptID,
+		account:    account,
+		err:        context.Canceled,
+		dispatched: true,
+		startedAt:  time.Now(),
+	}
+}
+
+func (h *OpenAIGatewayHandler) buildOpenAIDualAttemptRecords(ctx context.Context, opts openAIDualRunOptions, executions ...*openAIDualAttemptExecution) []service.OpenAIDualAttempt {
+	attempts := make([]service.OpenAIDualAttempt, 0, len(executions))
+	for _, exec := range executions {
+		if exec == nil {
+			continue
+		}
+		accountID := (*int64)(nil)
+		if exec.account != nil {
+			id := exec.account.ID
+			accountID = &id
+		}
+		attemptID := strings.TrimSpace(exec.attemptID)
+		if attemptID == "" {
+			attemptID = exec.role
+		}
+		actualCost := 0.0
+		estimatedCost := 0.0
+		estimatedInputCostFromWinner := 0.0
+		hasTerminalUsage := false
+		hasPartialUsage := false
+		partialObservedCost := 0.0
+		if exec.result != nil {
+			hasUsage := service.OpenAIUsageHasAnyUsage(exec.result.Usage) || exec.result.ImageCount > 0
+			hasTerminalUsage = hasUsage && exec.err == nil
+			hasPartialUsage = hasUsage && exec.err != nil
+			if cost, err := h.openAIAttemptCost(ctx, opts, exec); err == nil && cost != nil {
+				actualCost = cost.ActualCost
+				estimatedCost = service.EstimateOpenAIInputCost(cost)
+				if hasPartialUsage && actualCost > estimatedCost {
+					partialObservedCost = actualCost - estimatedCost
+				}
+			}
+		}
+		if estimatedCost <= 0 && exec.dispatched && exec.result == nil {
+			estimatedInputCostFromWinner = estimateOpenAIDualInputCostFromExecutions(ctx, h, opts, executions)
+			estimatedCost = estimatedInputCostFromWinner
+		}
+		cancelReason := (*string)(nil)
+		if exec.err != nil {
+			reason := strings.TrimSpace(exec.err.Error())
+			if !exec.dispatched || errors.Is(exec.err, context.Canceled) || strings.Contains(strings.ToLower(reason), "context canceled") {
+				cancelReason = &reason
+			}
+		}
+		serviceTier := (*string)(nil)
+		if exec.result != nil {
+			serviceTier = exec.result.ServiceTier
+		}
+		upstreamDispatchedAt := (*time.Time)(nil)
+		if exec.dispatched {
+			upstreamDispatchedAt = &exec.startedAt
+		}
+		attempt := service.BuildOpenAIDualAttemptRecord(service.OpenAIDualAttemptRecordInput{
+			RequestID:            opts.RequestID,
+			AttemptID:            attemptID,
+			APIKeyID:             opts.APIKey.ID,
+			UserID:               opts.User.ID,
+			AccountID:            accountID,
+			Endpoint:             opts.Endpoint,
+			Method:               opts.Method,
+			Role:                 exec.role,
+			ServiceTier:          serviceTier,
+			Dispatched:           exec.dispatched,
+			Winner:               exec == executions[0] && h.openAIDualExecutionIsValidWinner(exec),
+			HasTerminalUsage:     hasTerminalUsage,
+			HasPartialUsage:      hasPartialUsage,
+			EstimatedInputCost:   estimatedCost,
+			PartialObservedCost:  partialObservedCost,
+			ActualAttemptCost:    actualCost,
+			ProviderCostFloor:    0,
+			MinAttemptFee:        0,
+			UpstreamDispatchedAt: upstreamDispatchedAt,
+			CancelReason:         cancelReason,
+			Err:                  exec.err,
+			Metadata: map[string]any{
+				"request_model":               opts.RequestModel,
+				"estimated_input_from_winner": estimatedInputCostFromWinner > 0,
+			},
+		})
+		attempts = append(attempts, attempt)
+	}
+	return attempts
+}
+
+func (h *OpenAIGatewayHandler) openAIAttemptCost(ctx context.Context, opts openAIDualRunOptions, exec *openAIDualAttemptExecution) (*service.CostBreakdown, error) {
+	if h == nil || h.gatewayService == nil || exec == nil || exec.result == nil || opts.APIKey == nil {
+		return nil, nil
+	}
+	multiplier := 1.0
+	if h.cfg != nil {
+		multiplier = h.cfg.Default.RateMultiplier
+	}
+	if opts.APIKey.GroupID != nil && opts.APIKey.Group != nil {
+		multiplier = opts.APIKey.Group.RateMultiplier
+	}
+	return h.gatewayService.CalculateOpenAIAttemptCostForDual(ctx, service.OpenAIDualAttemptCostInput{
+		Result:          exec.result,
+		APIKey:          opts.APIKey,
+		BillingModels:   opts.BillingModels,
+		Multiplier:      multiplier,
+		ImageMultiplier: multiplier,
+	})
+}
+
+func estimateOpenAIDualInputCostFromExecutions(ctx context.Context, h *OpenAIGatewayHandler, opts openAIDualRunOptions, executions []*openAIDualAttemptExecution) float64 {
+	for _, exec := range executions {
+		if exec == nil || exec.result == nil {
+			continue
+		}
+		cost, err := h.openAIAttemptCost(ctx, opts, exec)
+		if err != nil || cost == nil {
+			continue
+		}
+		if estimated := service.EstimateOpenAIInputCost(cost); estimated > 0 {
+			return estimated
+		}
+	}
+	return 0
+}
+
+func (h *OpenAIGatewayHandler) openAIDualAttemptID(role string, opts openAIDualRunOptions, account *service.Account) string {
+	normalizedRole := strings.TrimSpace(role)
+	if normalizedRole == "" {
+		normalizedRole = service.OpenAIDualAttemptRolePrimary
+	}
+	accountID := int64(0)
+	if account != nil {
+		accountID = account.ID
+	}
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")
+	if len(suffix) > 12 {
+		suffix = suffix[:12]
+	}
+	if accountID <= 0 {
+		return normalizedRole + "-" + suffix
+	}
+	return normalizedRole + "-" + strconv.FormatInt(accountID, 10) + "-" + suffix
+}
+
+func requestIDFromGinContext(c *gin.Context) string {
+	if c == nil {
+		return ""
+	}
+	if c.Request != nil && c.Request.Context() != nil {
+		if clientRequestID, _ := c.Request.Context().Value(ctxkey.ClientRequestID).(string); strings.TrimSpace(clientRequestID) != "" {
+			return "client:" + strings.TrimSpace(clientRequestID)
+		}
+		if requestID, _ := c.Request.Context().Value(ctxkey.RequestID).(string); strings.TrimSpace(requestID) != "" {
+			return "local:" + strings.TrimSpace(requestID)
+		}
+	}
+	if reqID := strings.TrimSpace(c.GetHeader("X-Request-ID")); reqID != "" {
+		return "client:" + reqID
+	}
+	if c.Request != nil {
+		if reqID := strings.TrimSpace(c.Request.Header.Get("X-Request-ID")); reqID != "" {
+			return "client:" + reqID
+		}
+	}
+	return ""
+}
+
+func (h *OpenAIGatewayHandler) tryAcquireOpenAIDualSecondarySlot(ctx context.Context, opts openAIDualRunOptions, selection *service.AccountSelectionResult, log *zap.Logger) (func(), bool) {
+	if h == nil || h.concurrencyHelper == nil || h.gatewayService == nil || selection == nil || selection.Account == nil {
+		return nil, false
+	}
+	account := selection.Account
+	if selection.Acquired {
+		return wrapReleaseOnDone(ctx, selection.ReleaseFunc), true
+	}
+	maxConcurrency := account.Concurrency
+	if selection.WaitPlan != nil && selection.WaitPlan.MaxConcurrency > 0 {
+		maxConcurrency = selection.WaitPlan.MaxConcurrency
+	}
+	release, acquired, err := h.concurrencyHelper.TryAcquireAccountSlot(ctx, account.ID, maxConcurrency)
+	if err != nil {
+		if log != nil {
+			log.Warn("openai.dual.secondary_slot_acquire_failed", zap.Int64("account_id", account.ID), zap.Error(err))
+		}
+		return nil, false
+	}
+	if !acquired {
+		return nil, false
+	}
+	if err := h.gatewayService.BindStickySession(ctx, opts.GroupID, opts.SessionHash, account.ID); err != nil && log != nil {
+		log.Warn("openai.dual.secondary_bind_sticky_session_failed", zap.Int64("account_id", account.ID), zap.Error(err))
+	}
+	return wrapReleaseOnDone(ctx, release), true
+}
+
+func mergeOpenAIDualExcludedAccounts(base map[int64]struct{}, extra map[int64]struct{}) map[int64]struct{} {
+	if len(base) == 0 && len(extra) == 0 {
+		return nil
+	}
+	merged := make(map[int64]struct{}, len(base)+len(extra))
+	for id := range base {
+		merged[id] = struct{}{}
+	}
+	for id := range extra {
+		merged[id] = struct{}{}
+	}
+	return merged
 }
 
 // Responses handles OpenAI Responses API endpoint
@@ -306,6 +883,11 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 	// Generate session hash (header first; fallback to prompt_cache_key)
 	sessionHash := h.gatewayService.GenerateSessionHash(c, sessionHashBody)
 	requireCompact := isOpenAIRemoteCompactPath(c)
+	dualSupported, dualUnsupportedReason := service.OpenAIDualProtectionSupportedForRequest(apiKey, reqStream, GetInboundEndpoint(c))
+	var unsupportedDualProtection *service.OpenAIDualProtectionResult
+	if service.EffectiveOpenAIDualProtectionEnabled(apiKey) && !dualSupported {
+		unsupportedDualProtection = service.NewOpenAIDualUnsupportedResult(apiKey, requestIDFromGinContext(c), GetInboundEndpoint(c), http.MethodPost, dualUnsupportedReason)
+	}
 
 	maxAccountSwitches := h.maxAccountSwitches
 	switchCount := 0
@@ -379,14 +961,77 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 		service.SetOpsLatencyMs(c, service.OpsRoutingLatencyMsKey, time.Since(routingStart).Milliseconds())
 		forwardStart := time.Now()
 		writerSizeBeforeForward := c.Writer.Size()
-		result, err := func() (*service.OpenAIForwardResult, error) {
-			defer func() {
-				if accountReleaseFunc != nil {
-					accountReleaseFunc()
-				}
+		var result *service.OpenAIForwardResult
+		dualAttempted := false
+		if dualSupported {
+			dualRun := h.runOpenAIDualIfEnabled(c, openAIDualRunOptions{
+				Endpoint:           GetInboundEndpoint(c),
+				Method:             http.MethodPost,
+				Stream:             reqStream,
+				RequestPayloadHash: service.HashUsageRequestPayload(body),
+				RequestModel:       reqModel,
+				BillingModels:      []string{reqModel, channelMapping.MappedModel},
+				APIKey:             apiKey,
+				User:               apiKey.User,
+				Subscription:       subscription,
+				PrimarySelection: &service.AccountSelectionResult{
+					Account:     account,
+					Acquired:    true,
+					ReleaseFunc: accountReleaseFunc,
+				},
+				GroupID:           apiKey.GroupID,
+				SessionHash:       sessionHash,
+				AccountSlotStream: reqStream,
+				BillingEligibility: func(ctx context.Context) error {
+					return h.billingCacheService.CheckBillingEligibility(ctx, apiKey.User, apiKey, apiKey.Group, subscription, service.QuotaPlatform(c.Request.Context(), apiKey))
+				},
+				SelectSecondary: func(ctx context.Context, excluded map[int64]struct{}) (*service.AccountSelectionResult, error) {
+					mergedExcluded := mergeOpenAIDualExcludedAccounts(failedAccountIDs, excluded)
+					selection, _, selectErr := h.gatewayService.SelectAccountWithSchedulerForCapability(
+						ctx,
+						apiKey.GroupID,
+						previousResponseID,
+						sessionHash,
+						reqModel,
+						mergedExcluded,
+						service.OpenAIUpstreamTransportAny,
+						service.OpenAIEndpointCapabilityChatCompletions,
+						requireCompact,
+					)
+					return selection, selectErr
+				},
+				Forward: func(ctx context.Context, attemptCtx *gin.Context, attemptAccount *service.Account) (*service.OpenAIForwardResult, error) {
+					return h.gatewayService.Forward(ctx, attemptCtx, attemptAccount, forwardBody)
+				},
+				RequestContext: c.Request.Context(),
+				RequestID:      requestIDFromGinContext(c),
+				Log:            reqLog,
+				StreamStarted:  &streamStarted,
+			})
+			if dualRun.Winner != nil {
+				dualAttempted = true
+				accountReleaseFunc = nil
+				account = dualRun.Winner.account
+				result = dualRun.Winner.result
+				err = dualRun.Winner.err
+			}
+			if dualRun.Handled && err == nil {
+				// Captured winner response has already been replayed to the real writer.
+			}
+		}
+		if !dualAttempted {
+			result, err = func() (*service.OpenAIForwardResult, error) {
+				defer func() {
+					if accountReleaseFunc != nil {
+						accountReleaseFunc()
+					}
+				}()
+				return h.gatewayService.Forward(c.Request.Context(), c, account, forwardBody)
 			}()
-			return h.gatewayService.Forward(c.Request.Context(), c, account, forwardBody)
-		}()
+			if result != nil && result.DualProtection == nil && unsupportedDualProtection != nil {
+				result.DualProtection = unsupportedDualProtection
+			}
+		}
 		forwardDurationMs := time.Since(forwardStart).Milliseconds()
 		upstreamLatencyMs, _ := getContextInt64(c, service.OpsUpstreamLatencyMsKey)
 		responseLatencyMs := forwardDurationMs
@@ -1475,11 +2120,14 @@ func (h *OpenAIGatewayHandler) ResponsesWebSocket(c *gin.Context) {
 				if result == nil {
 					return
 				}
+				inboundEndpoint := GetInboundEndpoint(c)
+				if service.EffectiveOpenAIDualProtectionEnabled(apiKey) && result.DualProtection == nil {
+					result.DualProtection = service.NewOpenAIDualUnsupportedResult(apiKey, requestIDFromGinContext(c), inboundEndpoint, http.MethodGet, service.OpenAIDualBillingBasisUnsupportedWS)
+				}
 				if account.Type == service.AccountTypeOAuth {
 					h.gatewayService.UpdateCodexUsageSnapshotFromHeaders(ctx, account.ID, result.ResponseHeaders)
 				}
 				h.gatewayService.ReportOpenAIAccountScheduleResult(account.ID, true, result.FirstTokenMs)
-				inboundEndpoint := GetInboundEndpoint(c)
 				upstreamEndpoint := GetUpstreamEndpoint(c, account.Platform)
 				h.submitOpenAIUsageRecordTask(ctx, result, func(taskCtx context.Context) {
 					if err := h.gatewayService.RecordUsage(taskCtx, &service.OpenAIRecordUsageInput{

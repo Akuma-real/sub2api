@@ -408,6 +408,54 @@ func (_c *UsageLogCreate) SetNillableVipSavingsUsd(v *float64) *UsageLogCreate {
 	return _c
 }
 
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (_c *UsageLogCreate) SetDualProtectionEnabled(v bool) *UsageLogCreate {
+	_c.mutation.SetDualProtectionEnabled(v)
+	return _c
+}
+
+// SetNillableDualProtectionEnabled sets the "dual_protection_enabled" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableDualProtectionEnabled(v *bool) *UsageLogCreate {
+	if v != nil {
+		_c.SetDualProtectionEnabled(*v)
+	}
+	return _c
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (_c *UsageLogCreate) SetDualAttemptCount(v int) *UsageLogCreate {
+	_c.mutation.SetDualAttemptCount(v)
+	return _c
+}
+
+// SetNillableDualAttemptCount sets the "dual_attempt_count" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableDualAttemptCount(v *int) *UsageLogCreate {
+	if v != nil {
+		_c.SetDualAttemptCount(*v)
+	}
+	return _c
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (_c *UsageLogCreate) SetDualExtraCost(v float64) *UsageLogCreate {
+	_c.mutation.SetDualExtraCost(v)
+	return _c
+}
+
+// SetNillableDualExtraCost sets the "dual_extra_cost" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableDualExtraCost(v *float64) *UsageLogCreate {
+	if v != nil {
+		_c.SetDualExtraCost(*v)
+	}
+	return _c
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (_c *UsageLogCreate) SetCostBreakdown(v map[string]interface{}) *UsageLogCreate {
+	_c.mutation.SetCostBreakdown(v)
+	return _c
+}
+
 // SetAccountRateMultiplier sets the "account_rate_multiplier" field.
 func (_c *UsageLogCreate) SetAccountRateMultiplier(v float64) *UsageLogCreate {
 	_c.mutation.SetAccountRateMultiplier(v)
@@ -731,6 +779,18 @@ func (_c *UsageLogCreate) defaults() {
 		v := usagelog.DefaultVipSavingsUsd
 		_c.mutation.SetVipSavingsUsd(v)
 	}
+	if _, ok := _c.mutation.DualProtectionEnabled(); !ok {
+		v := usagelog.DefaultDualProtectionEnabled
+		_c.mutation.SetDualProtectionEnabled(v)
+	}
+	if _, ok := _c.mutation.DualAttemptCount(); !ok {
+		v := usagelog.DefaultDualAttemptCount
+		_c.mutation.SetDualAttemptCount(v)
+	}
+	if _, ok := _c.mutation.DualExtraCost(); !ok {
+		v := usagelog.DefaultDualExtraCost
+		_c.mutation.SetDualExtraCost(v)
+	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		v := usagelog.DefaultBillingType
 		_c.mutation.SetBillingType(v)
@@ -846,6 +906,15 @@ func (_c *UsageLogCreate) check() error {
 	}
 	if _, ok := _c.mutation.VipSavingsUsd(); !ok {
 		return &ValidationError{Name: "vip_savings_usd", err: errors.New(`ent: missing required field "UsageLog.vip_savings_usd"`)}
+	}
+	if _, ok := _c.mutation.DualProtectionEnabled(); !ok {
+		return &ValidationError{Name: "dual_protection_enabled", err: errors.New(`ent: missing required field "UsageLog.dual_protection_enabled"`)}
+	}
+	if _, ok := _c.mutation.DualAttemptCount(); !ok {
+		return &ValidationError{Name: "dual_attempt_count", err: errors.New(`ent: missing required field "UsageLog.dual_attempt_count"`)}
+	}
+	if _, ok := _c.mutation.DualExtraCost(); !ok {
+		return &ValidationError{Name: "dual_extra_cost", err: errors.New(`ent: missing required field "UsageLog.dual_extra_cost"`)}
 	}
 	if _, ok := _c.mutation.BillingType(); !ok {
 		return &ValidationError{Name: "billing_type", err: errors.New(`ent: missing required field "UsageLog.billing_type"`)}
@@ -1023,6 +1092,22 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.VipSavingsUsd(); ok {
 		_spec.SetField(usagelog.FieldVipSavingsUsd, field.TypeFloat64, value)
 		_node.VipSavingsUsd = value
+	}
+	if value, ok := _c.mutation.DualProtectionEnabled(); ok {
+		_spec.SetField(usagelog.FieldDualProtectionEnabled, field.TypeBool, value)
+		_node.DualProtectionEnabled = value
+	}
+	if value, ok := _c.mutation.DualAttemptCount(); ok {
+		_spec.SetField(usagelog.FieldDualAttemptCount, field.TypeInt, value)
+		_node.DualAttemptCount = value
+	}
+	if value, ok := _c.mutation.DualExtraCost(); ok {
+		_spec.SetField(usagelog.FieldDualExtraCost, field.TypeFloat64, value)
+		_node.DualExtraCost = value
+	}
+	if value, ok := _c.mutation.CostBreakdown(); ok {
+		_spec.SetField(usagelog.FieldCostBreakdown, field.TypeJSON, value)
+		_node.CostBreakdown = value
 	}
 	if value, ok := _c.mutation.AccountRateMultiplier(); ok {
 		_spec.SetField(usagelog.FieldAccountRateMultiplier, field.TypeFloat64, value)
@@ -1763,6 +1848,72 @@ func (u *UsageLogUpsert) UpdateVipSavingsUsd() *UsageLogUpsert {
 // AddVipSavingsUsd adds v to the "vip_savings_usd" field.
 func (u *UsageLogUpsert) AddVipSavingsUsd(v float64) *UsageLogUpsert {
 	u.Add(usagelog.FieldVipSavingsUsd, v)
+	return u
+}
+
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (u *UsageLogUpsert) SetDualProtectionEnabled(v bool) *UsageLogUpsert {
+	u.Set(usagelog.FieldDualProtectionEnabled, v)
+	return u
+}
+
+// UpdateDualProtectionEnabled sets the "dual_protection_enabled" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateDualProtectionEnabled() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldDualProtectionEnabled)
+	return u
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (u *UsageLogUpsert) SetDualAttemptCount(v int) *UsageLogUpsert {
+	u.Set(usagelog.FieldDualAttemptCount, v)
+	return u
+}
+
+// UpdateDualAttemptCount sets the "dual_attempt_count" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateDualAttemptCount() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldDualAttemptCount)
+	return u
+}
+
+// AddDualAttemptCount adds v to the "dual_attempt_count" field.
+func (u *UsageLogUpsert) AddDualAttemptCount(v int) *UsageLogUpsert {
+	u.Add(usagelog.FieldDualAttemptCount, v)
+	return u
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (u *UsageLogUpsert) SetDualExtraCost(v float64) *UsageLogUpsert {
+	u.Set(usagelog.FieldDualExtraCost, v)
+	return u
+}
+
+// UpdateDualExtraCost sets the "dual_extra_cost" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateDualExtraCost() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldDualExtraCost)
+	return u
+}
+
+// AddDualExtraCost adds v to the "dual_extra_cost" field.
+func (u *UsageLogUpsert) AddDualExtraCost(v float64) *UsageLogUpsert {
+	u.Add(usagelog.FieldDualExtraCost, v)
+	return u
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (u *UsageLogUpsert) SetCostBreakdown(v map[string]interface{}) *UsageLogUpsert {
+	u.Set(usagelog.FieldCostBreakdown, v)
+	return u
+}
+
+// UpdateCostBreakdown sets the "cost_breakdown" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateCostBreakdown() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldCostBreakdown)
+	return u
+}
+
+// ClearCostBreakdown clears the value of the "cost_breakdown" field.
+func (u *UsageLogUpsert) ClearCostBreakdown() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldCostBreakdown)
 	return u
 }
 
@@ -2682,6 +2833,83 @@ func (u *UsageLogUpsertOne) AddVipSavingsUsd(v float64) *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) UpdateVipSavingsUsd() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateVipSavingsUsd()
+	})
+}
+
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (u *UsageLogUpsertOne) SetDualProtectionEnabled(v bool) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetDualProtectionEnabled(v)
+	})
+}
+
+// UpdateDualProtectionEnabled sets the "dual_protection_enabled" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateDualProtectionEnabled() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateDualProtectionEnabled()
+	})
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (u *UsageLogUpsertOne) SetDualAttemptCount(v int) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetDualAttemptCount(v)
+	})
+}
+
+// AddDualAttemptCount adds v to the "dual_attempt_count" field.
+func (u *UsageLogUpsertOne) AddDualAttemptCount(v int) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddDualAttemptCount(v)
+	})
+}
+
+// UpdateDualAttemptCount sets the "dual_attempt_count" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateDualAttemptCount() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateDualAttemptCount()
+	})
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (u *UsageLogUpsertOne) SetDualExtraCost(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetDualExtraCost(v)
+	})
+}
+
+// AddDualExtraCost adds v to the "dual_extra_cost" field.
+func (u *UsageLogUpsertOne) AddDualExtraCost(v float64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddDualExtraCost(v)
+	})
+}
+
+// UpdateDualExtraCost sets the "dual_extra_cost" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateDualExtraCost() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateDualExtraCost()
+	})
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (u *UsageLogUpsertOne) SetCostBreakdown(v map[string]interface{}) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetCostBreakdown(v)
+	})
+}
+
+// UpdateCostBreakdown sets the "cost_breakdown" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateCostBreakdown() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateCostBreakdown()
+	})
+}
+
+// ClearCostBreakdown clears the value of the "cost_breakdown" field.
+func (u *UsageLogUpsertOne) ClearCostBreakdown() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearCostBreakdown()
 	})
 }
 
@@ -3810,6 +4038,83 @@ func (u *UsageLogUpsertBulk) AddVipSavingsUsd(v float64) *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) UpdateVipSavingsUsd() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.UpdateVipSavingsUsd()
+	})
+}
+
+// SetDualProtectionEnabled sets the "dual_protection_enabled" field.
+func (u *UsageLogUpsertBulk) SetDualProtectionEnabled(v bool) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetDualProtectionEnabled(v)
+	})
+}
+
+// UpdateDualProtectionEnabled sets the "dual_protection_enabled" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateDualProtectionEnabled() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateDualProtectionEnabled()
+	})
+}
+
+// SetDualAttemptCount sets the "dual_attempt_count" field.
+func (u *UsageLogUpsertBulk) SetDualAttemptCount(v int) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetDualAttemptCount(v)
+	})
+}
+
+// AddDualAttemptCount adds v to the "dual_attempt_count" field.
+func (u *UsageLogUpsertBulk) AddDualAttemptCount(v int) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddDualAttemptCount(v)
+	})
+}
+
+// UpdateDualAttemptCount sets the "dual_attempt_count" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateDualAttemptCount() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateDualAttemptCount()
+	})
+}
+
+// SetDualExtraCost sets the "dual_extra_cost" field.
+func (u *UsageLogUpsertBulk) SetDualExtraCost(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetDualExtraCost(v)
+	})
+}
+
+// AddDualExtraCost adds v to the "dual_extra_cost" field.
+func (u *UsageLogUpsertBulk) AddDualExtraCost(v float64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddDualExtraCost(v)
+	})
+}
+
+// UpdateDualExtraCost sets the "dual_extra_cost" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateDualExtraCost() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateDualExtraCost()
+	})
+}
+
+// SetCostBreakdown sets the "cost_breakdown" field.
+func (u *UsageLogUpsertBulk) SetCostBreakdown(v map[string]interface{}) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetCostBreakdown(v)
+	})
+}
+
+// UpdateCostBreakdown sets the "cost_breakdown" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateCostBreakdown() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateCostBreakdown()
+	})
+}
+
+// ClearCostBreakdown clears the value of the "cost_breakdown" field.
+func (u *UsageLogUpsertBulk) ClearCostBreakdown() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearCostBreakdown()
 	})
 }
 

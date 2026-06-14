@@ -139,6 +139,12 @@ func (_c *APIKeyCreate) SetIPBlacklist(v []string) *APIKeyCreate {
 	return _c
 }
 
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (_c *APIKeyCreate) SetAccelerationSettings(v map[string]interface{}) *APIKeyCreate {
+	_c.mutation.SetAccelerationSettings(v)
+	return _c
+}
+
 // SetQuota sets the "quota" field.
 func (_c *APIKeyCreate) SetQuota(v float64) *APIKeyCreate {
 	_c.mutation.SetQuota(v)
@@ -387,6 +393,10 @@ func (_c *APIKeyCreate) defaults() error {
 		v := apikey.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.AccelerationSettings(); !ok {
+		v := apikey.DefaultAccelerationSettings
+		_c.mutation.SetAccelerationSettings(v)
+	}
 	if _, ok := _c.mutation.Quota(); !ok {
 		v := apikey.DefaultQuota
 		_c.mutation.SetQuota(v)
@@ -546,6 +556,10 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IPBlacklist(); ok {
 		_spec.SetField(apikey.FieldIPBlacklist, field.TypeJSON, value)
 		_node.IPBlacklist = value
+	}
+	if value, ok := _c.mutation.AccelerationSettings(); ok {
+		_spec.SetField(apikey.FieldAccelerationSettings, field.TypeJSON, value)
+		_node.AccelerationSettings = value
 	}
 	if value, ok := _c.mutation.Quota(); ok {
 		_spec.SetField(apikey.FieldQuota, field.TypeFloat64, value)
@@ -844,6 +858,24 @@ func (u *APIKeyUpsert) UpdateIPBlacklist() *APIKeyUpsert {
 // ClearIPBlacklist clears the value of the "ip_blacklist" field.
 func (u *APIKeyUpsert) ClearIPBlacklist() *APIKeyUpsert {
 	u.SetNull(apikey.FieldIPBlacklist)
+	return u
+}
+
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (u *APIKeyUpsert) SetAccelerationSettings(v map[string]interface{}) *APIKeyUpsert {
+	u.Set(apikey.FieldAccelerationSettings, v)
+	return u
+}
+
+// UpdateAccelerationSettings sets the "acceleration_settings" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateAccelerationSettings() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldAccelerationSettings)
+	return u
+}
+
+// ClearAccelerationSettings clears the value of the "acceleration_settings" field.
+func (u *APIKeyUpsert) ClearAccelerationSettings() *APIKeyUpsert {
+	u.SetNull(apikey.FieldAccelerationSettings)
 	return u
 }
 
@@ -1280,6 +1312,27 @@ func (u *APIKeyUpsertOne) UpdateIPBlacklist() *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) ClearIPBlacklist() *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearIPBlacklist()
+	})
+}
+
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (u *APIKeyUpsertOne) SetAccelerationSettings(v map[string]interface{}) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetAccelerationSettings(v)
+	})
+}
+
+// UpdateAccelerationSettings sets the "acceleration_settings" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateAccelerationSettings() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateAccelerationSettings()
+	})
+}
+
+// ClearAccelerationSettings clears the value of the "acceleration_settings" field.
+func (u *APIKeyUpsertOne) ClearAccelerationSettings() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearAccelerationSettings()
 	})
 }
 
@@ -1918,6 +1971,27 @@ func (u *APIKeyUpsertBulk) UpdateIPBlacklist() *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) ClearIPBlacklist() *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearIPBlacklist()
+	})
+}
+
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (u *APIKeyUpsertBulk) SetAccelerationSettings(v map[string]interface{}) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetAccelerationSettings(v)
+	})
+}
+
+// UpdateAccelerationSettings sets the "acceleration_settings" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateAccelerationSettings() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateAccelerationSettings()
+	})
+}
+
+// ClearAccelerationSettings clears the value of the "acceleration_settings" field.
+func (u *APIKeyUpsertBulk) ClearAccelerationSettings() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearAccelerationSettings()
 	})
 }
 

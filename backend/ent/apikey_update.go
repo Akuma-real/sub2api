@@ -190,6 +190,18 @@ func (_u *APIKeyUpdate) ClearIPBlacklist() *APIKeyUpdate {
 	return _u
 }
 
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (_u *APIKeyUpdate) SetAccelerationSettings(v map[string]interface{}) *APIKeyUpdate {
+	_u.mutation.SetAccelerationSettings(v)
+	return _u
+}
+
+// ClearAccelerationSettings clears the value of the "acceleration_settings" field.
+func (_u *APIKeyUpdate) ClearAccelerationSettings() *APIKeyUpdate {
+	_u.mutation.ClearAccelerationSettings()
+	return _u
+}
+
 // SetQuota sets the "quota" field.
 func (_u *APIKeyUpdate) SetQuota(v float64) *APIKeyUpdate {
 	_u.mutation.ResetQuota()
@@ -624,6 +636,12 @@ func (_u *APIKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.IPBlacklistCleared() {
 		_spec.ClearField(apikey.FieldIPBlacklist, field.TypeJSON)
 	}
+	if value, ok := _u.mutation.AccelerationSettings(); ok {
+		_spec.SetField(apikey.FieldAccelerationSettings, field.TypeJSON, value)
+	}
+	if _u.mutation.AccelerationSettingsCleared() {
+		_spec.ClearField(apikey.FieldAccelerationSettings, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.Quota(); ok {
 		_spec.SetField(apikey.FieldQuota, field.TypeFloat64, value)
 	}
@@ -974,6 +992,18 @@ func (_u *APIKeyUpdateOne) AppendIPBlacklist(v []string) *APIKeyUpdateOne {
 // ClearIPBlacklist clears the value of the "ip_blacklist" field.
 func (_u *APIKeyUpdateOne) ClearIPBlacklist() *APIKeyUpdateOne {
 	_u.mutation.ClearIPBlacklist()
+	return _u
+}
+
+// SetAccelerationSettings sets the "acceleration_settings" field.
+func (_u *APIKeyUpdateOne) SetAccelerationSettings(v map[string]interface{}) *APIKeyUpdateOne {
+	_u.mutation.SetAccelerationSettings(v)
+	return _u
+}
+
+// ClearAccelerationSettings clears the value of the "acceleration_settings" field.
+func (_u *APIKeyUpdateOne) ClearAccelerationSettings() *APIKeyUpdateOne {
+	_u.mutation.ClearAccelerationSettings()
 	return _u
 }
 
@@ -1440,6 +1470,12 @@ func (_u *APIKeyUpdateOne) sqlSave(ctx context.Context) (_node *APIKey, err erro
 	}
 	if _u.mutation.IPBlacklistCleared() {
 		_spec.ClearField(apikey.FieldIPBlacklist, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.AccelerationSettings(); ok {
+		_spec.SetField(apikey.FieldAccelerationSettings, field.TypeJSON, value)
+	}
+	if _u.mutation.AccelerationSettingsCleared() {
+		_spec.ClearField(apikey.FieldAccelerationSettings, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.Quota(); ok {
 		_spec.SetField(apikey.FieldQuota, field.TypeFloat64, value)

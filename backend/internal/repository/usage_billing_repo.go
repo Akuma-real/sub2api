@@ -69,6 +69,14 @@ func (r *usageBillingRepository) applyUsageBillingVIPDiscount(ctx context.Contex
 	if cmd == nil || result == nil || cmd.BalanceCost <= 0 {
 		return nil
 	}
+	discountable := cmd.VIPDiscountableBalanceCost
+	protected := cmd.VIPProtectedBalanceCost
+	if discountable <= 0 && protected <= 0 {
+		discountable = cmd.BalanceCost
+	}
+	if discountable <= 0 {
+		return nil
+	}
 	var levelID int64
 	var multiplier float64
 	err := tx.QueryRowContext(ctx, `
@@ -92,12 +100,16 @@ func (r *usageBillingRepository) applyUsageBillingVIPDiscount(ctx context.Contex
 	if multiplier >= 1 {
 		return nil
 	}
-	preDiscount := cmd.BalanceCost
-	discounted := preDiscount * multiplier
+	preDiscount := discountable
+	discountedDiscountable := preDiscount * multiplier
+	if discountedDiscountable < 0 {
+		discountedDiscountable = 0
+	}
+	discounted := discountedDiscountable + protected
 	if discounted < 0 {
 		discounted = 0
 	}
-	savings := preDiscount - discounted
+	savings := preDiscount - discountedDiscountable
 	if savings < 0 {
 		savings = 0
 	}
@@ -118,18 +130,18 @@ func (r *usageBillingRepository) applyUsageBillingVIPDiscount(ctx context.Contex
 func (r *usageBillingRepository) claimUsageBillingKey(ctx context.Context, tx *sql.Tx, cmd *service.UsageBillingCommand) (bool, error) {
 	var id int64
 	err := tx.QueryRowContext(ctx, `
-		INSERT INTO usage_billing_dedup (request_id, api_key_id, request_fingerprint)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (request_id, api_key_id) DO NOTHING
+		INSERT INTO usage_billing_dedup (request_id, api_key_id, attempt_id, request_fingerprint)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (request_id, api_key_id, attempt_id) DO NOTHING
 		RETURNING id
-	`, cmd.RequestID, cmd.APIKeyID, cmd.RequestFingerprint).Scan(&id)
+	`, cmd.RequestID, cmd.APIKeyID, cmd.AttemptID, cmd.RequestFingerprint).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		var existingFingerprint string
 		if err := tx.QueryRowContext(ctx, `
 			SELECT request_fingerprint
 			FROM usage_billing_dedup
-			WHERE request_id = $1 AND api_key_id = $2
-		`, cmd.RequestID, cmd.APIKeyID).Scan(&existingFingerprint); err != nil {
+			WHERE request_id = $1 AND api_key_id = $2 AND attempt_id = $3
+		`, cmd.RequestID, cmd.APIKeyID, cmd.AttemptID).Scan(&existingFingerprint); err != nil {
 			return false, err
 		}
 		if strings.TrimSpace(existingFingerprint) != strings.TrimSpace(cmd.RequestFingerprint) {
@@ -144,8 +156,8 @@ func (r *usageBillingRepository) claimUsageBillingKey(ctx context.Context, tx *s
 	err = tx.QueryRowContext(ctx, `
 		SELECT request_fingerprint
 		FROM usage_billing_dedup_archive
-		WHERE request_id = $1 AND api_key_id = $2
-	`, cmd.RequestID, cmd.APIKeyID).Scan(&archivedFingerprint)
+		WHERE request_id = $1 AND api_key_id = $2 AND attempt_id = $3
+	`, cmd.RequestID, cmd.APIKeyID, cmd.AttemptID).Scan(&archivedFingerprint)
 	if err == nil {
 		if strings.TrimSpace(archivedFingerprint) != strings.TrimSpace(cmd.RequestFingerprint) {
 			return false, service.ErrUsageBillingRequestConflict
@@ -194,6 +206,7 @@ func (r *usageBillingRepository) applyUsageBillingEffects(ctx context.Context, t
 		}
 		result.QuotaState = quotaState
 	}
+	result.FinalBalanceCost = cmd.BalanceCost
 
 	return nil
 }

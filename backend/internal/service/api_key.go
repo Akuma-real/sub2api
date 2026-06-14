@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
@@ -21,6 +22,62 @@ const (
 	RateLimitWindow7d = 7 * 24 * time.Hour
 )
 
+const (
+	AccelerationFastModeOff           = "off"
+	AccelerationFastModeForcePriority = "force_priority"
+	AccelerationDualFirstTimeoutMS    = 8000
+	AccelerationDualFirstTimeoutMinMS = 1000
+	AccelerationDualFirstTimeoutMaxMS = 60000
+)
+
+type APIKeyAccelerationSettings struct {
+	FastMode                   string `json:"fast_mode"`
+	DualProtectionEnabled      bool   `json:"dual_protection_enabled"`
+	DualFirstResponseTimeoutMS int    `json:"dual_first_response_timeout_ms"`
+}
+
+func DefaultAPIKeyAccelerationSettings() APIKeyAccelerationSettings {
+	return APIKeyAccelerationSettings{
+		FastMode:                   AccelerationFastModeOff,
+		DualProtectionEnabled:      false,
+		DualFirstResponseTimeoutMS: AccelerationDualFirstTimeoutMS,
+	}
+}
+
+func NormalizeAPIKeyAccelerationSettings(in *APIKeyAccelerationSettings) APIKeyAccelerationSettings {
+	out := DefaultAPIKeyAccelerationSettings()
+	if in == nil {
+		return out
+	}
+	switch strings.ToLower(strings.TrimSpace(in.FastMode)) {
+	case AccelerationFastModeForcePriority:
+		out.FastMode = AccelerationFastModeForcePriority
+	case "", AccelerationFastModeOff:
+		out.FastMode = AccelerationFastModeOff
+	default:
+		out.FastMode = AccelerationFastModeOff
+	}
+	out.DualProtectionEnabled = in.DualProtectionEnabled
+	if in.DualFirstResponseTimeoutMS > 0 {
+		out.DualFirstResponseTimeoutMS = clampAPIKeyAccelerationDualTimeout(in.DualFirstResponseTimeoutMS)
+	}
+	return out
+}
+
+func (s APIKeyAccelerationSettings) Normalize() APIKeyAccelerationSettings {
+	return NormalizeAPIKeyAccelerationSettings(&s)
+}
+
+func clampAPIKeyAccelerationDualTimeout(value int) int {
+	if value < AccelerationDualFirstTimeoutMinMS {
+		return AccelerationDualFirstTimeoutMinMS
+	}
+	if value > AccelerationDualFirstTimeoutMaxMS {
+		return AccelerationDualFirstTimeoutMaxMS
+	}
+	return value
+}
+
 // IsWindowExpired returns true if the window starting at windowStart has exceeded the given duration.
 // A nil windowStart is treated as expired — no initialized window means any accumulated usage is stale.
 func IsWindowExpired(windowStart *time.Time, duration time.Duration) bool {
@@ -37,13 +94,14 @@ type APIKey struct {
 	IPWhitelist []string
 	IPBlacklist []string
 	// 预编译的 IP 规则，用于认证热路径避免重复 ParseIP/ParseCIDR。
-	CompiledIPWhitelist *ip.CompiledIPRules `json:"-"`
-	CompiledIPBlacklist *ip.CompiledIPRules `json:"-"`
-	LastUsedAt          *time.Time
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	User                *User
-	Group               *Group
+	CompiledIPWhitelist  *ip.CompiledIPRules `json:"-"`
+	CompiledIPBlacklist  *ip.CompiledIPRules `json:"-"`
+	LastUsedAt           *time.Time
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	User                 *User
+	Group                *Group
+	AccelerationSettings APIKeyAccelerationSettings
 
 	// Quota fields
 	Quota     float64    // Quota limit in USD (0 = unlimited)

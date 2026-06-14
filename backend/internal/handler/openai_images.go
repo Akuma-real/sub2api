@@ -136,6 +136,11 @@ func (h *OpenAIGatewayHandler) Images(c *gin.Context) {
 
 	sessionHash := h.gatewayService.GenerateExplicitSessionHash(c, body)
 	requestCtx := service.WithOpenAIImageGenerationIntent(c.Request.Context())
+	dualSupported, dualUnsupportedReason := service.OpenAIDualProtectionSupportedForRequest(apiKey, parsed.Stream, GetInboundEndpoint(c))
+	var unsupportedDualProtection *service.OpenAIDualProtectionResult
+	if service.EffectiveOpenAIDualProtectionEnabled(apiKey) && !dualSupported {
+		unsupportedDualProtection = service.NewOpenAIDualUnsupportedResult(apiKey, requestIDFromGinContext(c), GetInboundEndpoint(c), http.MethodPost, dualUnsupportedReason)
+	}
 
 	maxAccountSwitches := h.maxAccountSwitches
 	switchCount := 0
@@ -198,14 +203,71 @@ func (h *OpenAIGatewayHandler) Images(c *gin.Context) {
 		service.SetOpsLatencyMs(c, service.OpsRoutingLatencyMsKey, time.Since(routingStart).Milliseconds())
 		forwardStart := time.Now()
 		writerSizeBeforeForward := c.Writer.Size()
-		result, err := func() (*service.OpenAIForwardResult, error) {
-			defer func() {
-				if accountReleaseFunc != nil {
-					accountReleaseFunc()
-				}
+		var result *service.OpenAIForwardResult
+		dualAttempted := false
+		if dualSupported {
+			dualRun := h.runOpenAIDualIfEnabled(c, openAIDualRunOptions{
+				Endpoint:           GetInboundEndpoint(c),
+				Method:             http.MethodPost,
+				Stream:             parsed.Stream,
+				RequestPayloadHash: service.HashUsageRequestPayload(body),
+				RequestModel:       requestModel,
+				BillingModels:      []string{requestModel, channelMapping.MappedModel},
+				APIKey:             apiKey,
+				User:               apiKey.User,
+				Subscription:       subscription,
+				PrimarySelection: &service.AccountSelectionResult{
+					Account:     account,
+					Acquired:    true,
+					ReleaseFunc: accountReleaseFunc,
+				},
+				GroupID:           apiKey.GroupID,
+				SessionHash:       sessionHash,
+				AccountSlotStream: parsed.Stream,
+				BillingEligibility: func(ctx context.Context) error {
+					return h.billingCacheService.CheckBillingEligibility(ctx, apiKey.User, apiKey, apiKey.Group, subscription, service.QuotaPlatform(c.Request.Context(), apiKey))
+				},
+				SelectSecondary: func(ctx context.Context, excluded map[int64]struct{}) (*service.AccountSelectionResult, error) {
+					mergedExcluded := mergeOpenAIDualExcludedAccounts(failedAccountIDs, excluded)
+					selection, _, selectErr := h.gatewayService.SelectAccountWithSchedulerForImages(
+						ctx,
+						apiKey.GroupID,
+						sessionHash,
+						requestModel,
+						mergedExcluded,
+						parsed.RequiredCapability,
+					)
+					return selection, selectErr
+				},
+				Forward: func(ctx context.Context, attemptCtx *gin.Context, attemptAccount *service.Account) (*service.OpenAIForwardResult, error) {
+					return h.gatewayService.ForwardImages(ctx, attemptCtx, attemptAccount, body, parsed, channelMapping.MappedModel)
+				},
+				RequestContext: requestCtx,
+				RequestID:      requestIDFromGinContext(c),
+				Log:            reqLog,
+				StreamStarted:  &streamStarted,
+			})
+			if dualRun.Winner != nil {
+				dualAttempted = true
+				accountReleaseFunc = nil
+				account = dualRun.Winner.account
+				result = dualRun.Winner.result
+				err = dualRun.Winner.err
+			}
+		}
+		if !dualAttempted {
+			result, err = func() (*service.OpenAIForwardResult, error) {
+				defer func() {
+					if accountReleaseFunc != nil {
+						accountReleaseFunc()
+					}
+				}()
+				return h.gatewayService.ForwardImages(requestCtx, c, account, body, parsed, channelMapping.MappedModel)
 			}()
-			return h.gatewayService.ForwardImages(requestCtx, c, account, body, parsed, channelMapping.MappedModel)
-		}()
+			if result != nil && result.DualProtection == nil && unsupportedDualProtection != nil {
+				result.DualProtection = unsupportedDualProtection
+			}
+		}
 		forwardDurationMs := time.Since(forwardStart).Milliseconds()
 		upstreamLatencyMs, _ := getContextInt64(c, service.OpsUpstreamLatencyMsKey)
 		responseLatencyMs := forwardDurationMs

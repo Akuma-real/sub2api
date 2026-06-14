@@ -204,7 +204,7 @@ func (s *OpenAIGatewayService) ForwardAsChatCompletions(
 	}
 
 	// 4b. Apply OpenAI fast policy (may filter service_tier or block the request).
-	updatedBody, policyErr := s.applyOpenAIFastPolicyToBody(ctx, account, upstreamModel, responsesBody)
+	updatedBody, policyErr := s.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(ctx, getAPIKeyFromContext(c), account, upstreamModel, responsesBody)
 	if policyErr != nil {
 		var blocked *OpenAIFastBlockedError
 		if errors.As(policyErr, &blocked) {
@@ -214,6 +214,11 @@ func (s *OpenAIGatewayService) ForwardAsChatCompletions(
 		return nil, policyErr
 	}
 	responsesBody = updatedBody
+	if tier := extractOpenAIServiceTierFromBody(responsesBody); tier != nil {
+		responsesReq.ServiceTier = *tier
+	} else {
+		responsesReq.ServiceTier = ""
+	}
 
 	// 5. Get access token
 	token, _, err := s.GetAccessToken(ctx, account)

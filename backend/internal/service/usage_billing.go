@@ -15,6 +15,7 @@ var ErrUsageBillingRequestConflict = errors.New("usage billing request fingerpri
 // UsageBillingCommand describes one billable request that must be applied at most once.
 type UsageBillingCommand struct {
 	RequestID          string
+	AttemptID          string
 	APIKeyID           int64
 	RequestFingerprint string
 	RequestPayloadHash string
@@ -34,11 +35,13 @@ type UsageBillingCommand struct {
 	ImageCount          int
 	MediaType           string
 
-	BalanceCost         float64
-	SubscriptionCost    float64
-	APIKeyQuotaCost     float64
-	APIKeyRateLimitCost float64
-	AccountQuotaCost    float64
+	BalanceCost                float64
+	VIPDiscountableBalanceCost float64
+	VIPProtectedBalanceCost    float64
+	SubscriptionCost           float64
+	APIKeyQuotaCost            float64
+	APIKeyRateLimitCost        float64
+	AccountQuotaCost           float64
 }
 
 func (c *UsageBillingCommand) Normalize() {
@@ -46,6 +49,13 @@ func (c *UsageBillingCommand) Normalize() {
 		return
 	}
 	c.RequestID = strings.TrimSpace(c.RequestID)
+	c.AttemptID = strings.TrimSpace(c.AttemptID)
+	if c.AttemptID == "" {
+		c.AttemptID = "primary"
+	}
+	if c.BalanceCost <= 0 && (c.VIPDiscountableBalanceCost > 0 || c.VIPProtectedBalanceCost > 0) {
+		c.BalanceCost = c.VIPDiscountableBalanceCost + c.VIPProtectedBalanceCost
+	}
 	if strings.TrimSpace(c.RequestFingerprint) == "" {
 		c.RequestFingerprint = buildUsageBillingFingerprint(c)
 	}
@@ -56,7 +66,8 @@ func buildUsageBillingFingerprint(c *UsageBillingCommand) string {
 		return ""
 	}
 	raw := fmt.Sprintf(
-		"%d|%d|%d|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d|%s|%d|%0.10f|%0.10f|%0.10f|%0.10f|%0.10f",
+		"%s|%d|%d|%d|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d|%s|%d|%0.10f|%0.10f|%0.10f|%0.10f|%0.10f|%0.10f|%0.10f",
+		strings.TrimSpace(c.AttemptID),
 		c.UserID,
 		c.AccountID,
 		c.APIKeyID,
@@ -73,6 +84,8 @@ func buildUsageBillingFingerprint(c *UsageBillingCommand) string {
 		strings.TrimSpace(c.MediaType),
 		valueOrZero(c.SubscriptionID),
 		c.BalanceCost,
+		c.VIPDiscountableBalanceCost,
+		c.VIPProtectedBalanceCost,
 		c.SubscriptionCost,
 		c.APIKeyQuotaCost,
 		c.APIKeyRateLimitCost,
@@ -120,6 +133,7 @@ type UsageBillingApplyResult struct {
 	VIPDiscountMultiplier *float64
 	VIPPreDiscountCost    *float64
 	VIPSavingsUSD         float64
+	FinalBalanceCost      float64
 }
 
 type UsageBillingRepository interface {

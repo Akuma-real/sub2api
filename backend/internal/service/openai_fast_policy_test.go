@@ -179,6 +179,63 @@ func TestApplyOpenAIFastPolicyToBody_ExplicitFilterRemovesField(t *testing.T) {
 	require.NotContains(t, string(updated), `"service_tier"`)
 }
 
+func TestApplyAPIKeyAccelerationAndOpenAIFastPolicyToBody_DefaultOffDoesNotInjectPriority(t *testing.T) {
+	svc := newOpenAIGatewayServiceWithSettings(t, DefaultOpenAIFastPolicySettings())
+	account := &Account{Platform: PlatformOpenAI, Type: AccountTypeAPIKey}
+	apiKey := &APIKey{AccelerationSettings: DefaultAPIKeyAccelerationSettings()}
+
+	body := []byte(`{"model":"gpt-5.5","input":[]}`)
+	updated, err := svc.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(context.Background(), apiKey, account, "gpt-5.5", body)
+	require.NoError(t, err)
+	require.Equal(t, string(body), string(updated))
+	require.False(t, gjson.GetBytes(updated, "service_tier").Exists())
+}
+
+func TestApplyAPIKeyAccelerationAndOpenAIFastPolicyToBody_ForcePriorityInjectsPriority(t *testing.T) {
+	svc := newOpenAIGatewayServiceWithSettings(t, DefaultOpenAIFastPolicySettings())
+	account := &Account{Platform: PlatformOpenAI, Type: AccountTypeAPIKey}
+	apiKey := &APIKey{AccelerationSettings: APIKeyAccelerationSettings{FastMode: AccelerationFastModeForcePriority}}
+
+	body := []byte(`{"model":"gpt-5.5","input":[]}`)
+	updated, err := svc.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(context.Background(), apiKey, account, "gpt-5.5", body)
+	require.NoError(t, err)
+	require.Equal(t, "priority", gjson.GetBytes(updated, "service_tier").String())
+}
+
+func TestApplyAPIKeyAccelerationAndOpenAIFastPolicyToBody_AdminFilterOverridesKeyForcePriority(t *testing.T) {
+	svc := newOpenAIGatewayServiceWithSettings(t, openAIFastFilterPriorityPolicy())
+	account := &Account{Platform: PlatformOpenAI, Type: AccountTypeAPIKey}
+	apiKey := &APIKey{AccelerationSettings: APIKeyAccelerationSettings{FastMode: AccelerationFastModeForcePriority}}
+
+	body := []byte(`{"model":"gpt-5.5","input":[]}`)
+	updated, err := svc.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(context.Background(), apiKey, account, "gpt-5.5", body)
+	require.NoError(t, err)
+	require.False(t, gjson.GetBytes(updated, "service_tier").Exists())
+}
+
+func TestApplyAPIKeyAccelerationAndOpenAIFastPolicyToBody_AdminBlockOverridesKeyForcePriority(t *testing.T) {
+	settings := &OpenAIFastPolicySettings{
+		Rules: []OpenAIFastPolicyRule{{
+			ServiceTier:    OpenAIFastTierPriority,
+			Action:         BetaPolicyActionBlock,
+			Scope:          BetaPolicyScopeAll,
+			ErrorMessage:   "priority blocked",
+			ModelWhitelist: []string{"gpt-5.5"},
+			FallbackAction: BetaPolicyActionPass,
+		}},
+	}
+	svc := newOpenAIGatewayServiceWithSettings(t, settings)
+	account := &Account{Platform: PlatformOpenAI, Type: AccountTypeAPIKey}
+	apiKey := &APIKey{AccelerationSettings: APIKeyAccelerationSettings{FastMode: AccelerationFastModeForcePriority}}
+
+	body := []byte(`{"model":"gpt-5.5","input":[]}`)
+	_, err := svc.applyAPIKeyAccelerationAndOpenAIFastPolicyToBody(context.Background(), apiKey, account, "gpt-5.5", body)
+	require.Error(t, err)
+	var blocked *OpenAIFastBlockedError
+	require.True(t, errors.As(err, &blocked))
+	require.Equal(t, "priority blocked", blocked.Message)
+}
+
 // TestApplyOpenAIFastPolicyToBody_OfficialTiersBypassDefaultRule 验证默认配置
 // 下客户端显式发送的 OpenAI 官方合法 tier 能透传到上游而不被静默剥离。
 func TestApplyOpenAIFastPolicyToBody_OfficialTiersBypassDefaultRule(t *testing.T) {

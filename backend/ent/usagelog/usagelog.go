@@ -74,6 +74,14 @@ const (
 	FieldVipPreDiscountCost = "vip_pre_discount_cost"
 	// FieldVipSavingsUsd holds the string denoting the vip_savings_usd field in the database.
 	FieldVipSavingsUsd = "vip_savings_usd"
+	// FieldDualProtectionEnabled holds the string denoting the dual_protection_enabled field in the database.
+	FieldDualProtectionEnabled = "dual_protection_enabled"
+	// FieldDualAttemptCount holds the string denoting the dual_attempt_count field in the database.
+	FieldDualAttemptCount = "dual_attempt_count"
+	// FieldDualExtraCost holds the string denoting the dual_extra_cost field in the database.
+	FieldDualExtraCost = "dual_extra_cost"
+	// FieldCostBreakdown holds the string denoting the cost_breakdown field in the database.
+	FieldCostBreakdown = "cost_breakdown"
 	// FieldAccountRateMultiplier holds the string denoting the account_rate_multiplier field in the database.
 	FieldAccountRateMultiplier = "account_rate_multiplier"
 	// FieldBillingType holds the string denoting the billing_type field in the database.
@@ -195,6 +203,10 @@ var Columns = []string{
 	FieldVipDiscountMultiplier,
 	FieldVipPreDiscountCost,
 	FieldVipSavingsUsd,
+	FieldDualProtectionEnabled,
+	FieldDualAttemptCount,
+	FieldDualExtraCost,
+	FieldCostBreakdown,
 	FieldAccountRateMultiplier,
 	FieldBillingType,
 	FieldStream,
@@ -265,6 +277,12 @@ var (
 	DefaultRateMultiplier float64
 	// DefaultVipSavingsUsd holds the default value on creation for the "vip_savings_usd" field.
 	DefaultVipSavingsUsd float64
+	// DefaultDualProtectionEnabled holds the default value on creation for the "dual_protection_enabled" field.
+	DefaultDualProtectionEnabled bool
+	// DefaultDualAttemptCount holds the default value on creation for the "dual_attempt_count" field.
+	DefaultDualAttemptCount int
+	// DefaultDualExtraCost holds the default value on creation for the "dual_extra_cost" field.
+	DefaultDualExtraCost float64
 	// DefaultBillingType holds the default value on creation for the "billing_type" field.
 	DefaultBillingType int8
 	// DefaultStream holds the default value on creation for the "stream" field.
@@ -445,6 +463,21 @@ func ByVipPreDiscountCost(opts ...sql.OrderTermOption) OrderOption {
 // ByVipSavingsUsd orders the results by the vip_savings_usd field.
 func ByVipSavingsUsd(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVipSavingsUsd, opts...).ToFunc()
+}
+
+// ByDualProtectionEnabled orders the results by the dual_protection_enabled field.
+func ByDualProtectionEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDualProtectionEnabled, opts...).ToFunc()
+}
+
+// ByDualAttemptCount orders the results by the dual_attempt_count field.
+func ByDualAttemptCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDualAttemptCount, opts...).ToFunc()
+}
+
+// ByDualExtraCost orders the results by the dual_extra_cost field.
+func ByDualExtraCost(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDualExtraCost, opts...).ToFunc()
 }
 
 // ByAccountRateMultiplier orders the results by the account_rate_multiplier field.

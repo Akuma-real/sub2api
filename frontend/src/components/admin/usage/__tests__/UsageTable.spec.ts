@@ -18,6 +18,22 @@ const messages: Record<string, string> = {
   'usage.serviceTierPriority': 'Fast',
   'usage.serviceTierFlex': 'Flex',
   'usage.serviceTierStandard': 'Standard',
+  'usage.fastMode': 'Fast mode',
+  'usage.fastModeOff': 'Off',
+  'usage.fastModeForcePriority': 'Force priority',
+  'usage.dualProtection': 'Dual protection',
+  'usage.dualAttempts': 'Attempts',
+  'usage.dualExtraCost': 'Loser cost',
+  'usage.dualPrimaryCost': 'Primary cost',
+  'usage.dualSecondaryCost': 'Secondary cost',
+  'usage.dualUnsupported': 'Unsupported',
+  'usage.dualWarning': 'Dual warning',
+  'usage.billingBasis': 'Billing basis',
+  'usage.vipDiscount': 'VIP discount',
+  'usage.vipSavings': 'VIP savings',
+  'usage.vipPreDiscount': 'Before VIP',
+  'usage.vipProtectedCost': 'Protected cost',
+  'usage.finalCost': 'Final cost',
   'usage.rate': 'Rate',
   'usage.accountMultiplier': 'Account rate',
   'usage.original': 'Original',
@@ -160,6 +176,82 @@ describe('admin UsageTable tooltip', () => {
     expect(text).toContain('$5.0000 / 1M tokens')
     expect(text).toContain('$30.0000 / 1M tokens')
     expect(text).toContain('$0.069568')
+  })
+
+  it('shows dual protection and VIP cost snapshot details in admin tooltip', async () => {
+    const row = {
+      request_id: 'req-admin-dual-vip',
+      actual_cost: 0.012,
+      total_cost: 0.015,
+      account_rate_multiplier: 1,
+      rate_multiplier: 1,
+      service_tier: 'priority',
+      input_cost: 0.004,
+      output_cost: 0.008,
+      cache_creation_cost: 0,
+      cache_read_cost: 0,
+      input_tokens: 1000,
+      output_tokens: 2000,
+      cost_breakdown: {
+        fast: { mode: 'force_priority', service_tier: 'priority' },
+        dual: {
+          enabled: true,
+          attempt_count: 2,
+          primary_cost: 0.012,
+          secondary_cost: 0.003,
+          extra_cost: 0.003,
+          billing_disclaimer: 'Dual warning',
+          attempts: [{ role: 'secondary', billing_basis: 'terminal_usage', billed_cost: 0.003 }],
+        },
+        vip: {
+          discount_multiplier: 0.8,
+          pre_discount_cost: 0.015,
+          savings_usd: 0.003,
+          protected_cost: 0.003,
+        },
+        final: { actual_cost: 0.012 },
+      },
+    }
+
+    const wrapper = mount(UsageTable, {
+      props: {
+        data: [row],
+        loading: false,
+        columns: [],
+      },
+      global: {
+        stubs: {
+          DataTable: DataTableStub,
+          EmptyState: true,
+          Icon: true,
+          Teleport: true,
+        },
+      },
+    })
+
+    const tooltipTriggers = wrapper.findAll('.group.relative')
+    await tooltipTriggers[tooltipTriggers.length - 1].trigger('mouseenter')
+    await nextTick()
+
+    const text = wrapper.text()
+    expect(text).toContain('Fast mode')
+    expect(text).toContain('Force priority')
+    expect(text).toContain('Dual protection')
+    expect(text).toContain('Attempts')
+    expect(text).toContain('Secondary cost')
+    expect(text).toContain('$0.003000')
+    expect(text).toContain('Loser cost')
+    expect(text).toContain('Billing basis')
+    expect(text).toContain('terminal_usage')
+    expect(text).toContain('Dual warning')
+    expect(text).toContain('Before VIP')
+    expect(text).toContain('$0.015000')
+    expect(text).toContain('VIP discount')
+    expect(text).toContain('0.80x')
+    expect(text).toContain('VIP savings')
+    expect(text).toContain('-$0.003000')
+    expect(text).toContain('User billed')
+    expect(text).toContain('$0.012000')
   })
 
   it('shows requested and upstream models separately for admin rows', () => {

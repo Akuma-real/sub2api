@@ -84,6 +84,14 @@ type UsageLog struct {
 	VipPreDiscountCost *float64 `json:"vip_pre_discount_cost,omitempty"`
 	// VipSavingsUsd holds the value of the "vip_savings_usd" field.
 	VipSavingsUsd float64 `json:"vip_savings_usd,omitempty"`
+	// DualProtectionEnabled holds the value of the "dual_protection_enabled" field.
+	DualProtectionEnabled bool `json:"dual_protection_enabled,omitempty"`
+	// DualAttemptCount holds the value of the "dual_attempt_count" field.
+	DualAttemptCount int `json:"dual_attempt_count,omitempty"`
+	// DualExtraCost holds the value of the "dual_extra_cost" field.
+	DualExtraCost float64 `json:"dual_extra_cost,omitempty"`
+	// CostBreakdown holds the value of the "cost_breakdown" field.
+	CostBreakdown map[string]interface{} `json:"cost_breakdown,omitempty"`
 	// AccountRateMultiplier holds the value of the "account_rate_multiplier" field.
 	AccountRateMultiplier *float64 `json:"account_rate_multiplier,omitempty"`
 	// BillingType holds the value of the "billing_type" field.
@@ -210,13 +218,13 @@ func (*UsageLog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case usagelog.FieldImageSizeBreakdown:
+		case usagelog.FieldCostBreakdown, usagelog.FieldImageSizeBreakdown:
 			values[i] = new([]byte)
-		case usagelog.FieldStream, usagelog.FieldCacheTTLOverridden:
+		case usagelog.FieldDualProtectionEnabled, usagelog.FieldStream, usagelog.FieldCacheTTLOverridden:
 			values[i] = new(sql.NullBool)
-		case usagelog.FieldInputCost, usagelog.FieldOutputCost, usagelog.FieldCacheCreationCost, usagelog.FieldCacheReadCost, usagelog.FieldTotalCost, usagelog.FieldActualCost, usagelog.FieldRateMultiplier, usagelog.FieldVipDiscountMultiplier, usagelog.FieldVipPreDiscountCost, usagelog.FieldVipSavingsUsd, usagelog.FieldAccountRateMultiplier:
+		case usagelog.FieldInputCost, usagelog.FieldOutputCost, usagelog.FieldCacheCreationCost, usagelog.FieldCacheReadCost, usagelog.FieldTotalCost, usagelog.FieldActualCost, usagelog.FieldRateMultiplier, usagelog.FieldVipDiscountMultiplier, usagelog.FieldVipPreDiscountCost, usagelog.FieldVipSavingsUsd, usagelog.FieldDualExtraCost, usagelog.FieldAccountRateMultiplier:
 			values[i] = new(sql.NullFloat64)
-		case usagelog.FieldID, usagelog.FieldUserID, usagelog.FieldAPIKeyID, usagelog.FieldAccountID, usagelog.FieldChannelID, usagelog.FieldGroupID, usagelog.FieldSubscriptionID, usagelog.FieldVipLevelID, usagelog.FieldInputTokens, usagelog.FieldOutputTokens, usagelog.FieldCacheCreationTokens, usagelog.FieldCacheReadTokens, usagelog.FieldCacheCreation5mTokens, usagelog.FieldCacheCreation1hTokens, usagelog.FieldBillingType, usagelog.FieldDurationMs, usagelog.FieldFirstTokenMs, usagelog.FieldImageCount:
+		case usagelog.FieldID, usagelog.FieldUserID, usagelog.FieldAPIKeyID, usagelog.FieldAccountID, usagelog.FieldChannelID, usagelog.FieldGroupID, usagelog.FieldSubscriptionID, usagelog.FieldVipLevelID, usagelog.FieldInputTokens, usagelog.FieldOutputTokens, usagelog.FieldCacheCreationTokens, usagelog.FieldCacheReadTokens, usagelog.FieldCacheCreation5mTokens, usagelog.FieldCacheCreation1hTokens, usagelog.FieldDualAttemptCount, usagelog.FieldBillingType, usagelog.FieldDurationMs, usagelog.FieldFirstTokenMs, usagelog.FieldImageCount:
 			values[i] = new(sql.NullInt64)
 		case usagelog.FieldRequestID, usagelog.FieldModel, usagelog.FieldRequestedModel, usagelog.FieldUpstreamModel, usagelog.FieldModelMappingChain, usagelog.FieldBillingTier, usagelog.FieldBillingMode, usagelog.FieldUserAgent, usagelog.FieldIPAddress, usagelog.FieldImageSize, usagelog.FieldImageInputSize, usagelog.FieldImageOutputSize, usagelog.FieldImageSizeSource:
 			values[i] = new(sql.NullString)
@@ -433,6 +441,32 @@ func (_m *UsageLog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field vip_savings_usd", values[i])
 			} else if value.Valid {
 				_m.VipSavingsUsd = value.Float64
+			}
+		case usagelog.FieldDualProtectionEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field dual_protection_enabled", values[i])
+			} else if value.Valid {
+				_m.DualProtectionEnabled = value.Bool
+			}
+		case usagelog.FieldDualAttemptCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field dual_attempt_count", values[i])
+			} else if value.Valid {
+				_m.DualAttemptCount = int(value.Int64)
+			}
+		case usagelog.FieldDualExtraCost:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field dual_extra_cost", values[i])
+			} else if value.Valid {
+				_m.DualExtraCost = value.Float64
+			}
+		case usagelog.FieldCostBreakdown:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field cost_breakdown", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.CostBreakdown); err != nil {
+					return fmt.Errorf("unmarshal field cost_breakdown: %w", err)
+				}
 			}
 		case usagelog.FieldAccountRateMultiplier:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -712,6 +746,18 @@ func (_m *UsageLog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("vip_savings_usd=")
 	builder.WriteString(fmt.Sprintf("%v", _m.VipSavingsUsd))
+	builder.WriteString(", ")
+	builder.WriteString("dual_protection_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DualProtectionEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("dual_attempt_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DualAttemptCount))
+	builder.WriteString(", ")
+	builder.WriteString("dual_extra_cost=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DualExtraCost))
+	builder.WriteString(", ")
+	builder.WriteString("cost_breakdown=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CostBreakdown))
 	builder.WriteString(", ")
 	if v := _m.AccountRateMultiplier; v != nil {
 		builder.WriteString("account_rate_multiplier=")

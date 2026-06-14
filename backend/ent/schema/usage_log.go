@@ -114,6 +114,16 @@ func (UsageLog) Fields() []ent.Field {
 		field.Float("vip_savings_usd").
 			Default(0).
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,10)"}),
+		field.Bool("dual_protection_enabled").
+			Default(false),
+		field.Int("dual_attempt_count").
+			Default(0),
+		field.Float("dual_extra_cost").
+			Default(0).
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,10)"}),
+		field.JSON("cost_breakdown", map[string]any{}).
+			Optional().
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}),
 
 		// account_rate_multiplier: 账号计费倍率快照（NULL 表示按 1.0 处理）
 		field.Float("account_rate_multiplier").
