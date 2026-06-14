@@ -28,6 +28,13 @@ const messages: Record<string, string> = {
   'usage.dualSecondaryCost': 'Secondary cost',
   'usage.dualUnsupported': 'Unsupported',
   'usage.dualWarning': 'Dual warning',
+  'usage.dualSecondPath': 'Second path',
+  'usage.dualSecondPathNotStarted': 'Not started',
+  'usage.dualNoExtraCost': 'The primary path returned in time, so the second path was not started and no extra dual cost was billed.',
+  'usage.dualBillingBasisTerminalUsage': 'Billed from completed usage',
+  'usage.dualBillingBasisPartialUsage': 'Billed from observed partial usage and estimated input cost',
+  'usage.dualBillingBasisDispatchedNoUsage': 'Dispatched upstream without usage, billed from estimated cost',
+  'usage.dualBillingBasisUnsupportedWs': 'Realtime/WebSocket dual protection is unsupported',
   'usage.billingBasis': 'Billing basis',
   'usage.vipDiscount': 'VIP discount',
   'usage.vipSavings': 'VIP savings',
@@ -242,7 +249,8 @@ describe('admin UsageTable tooltip', () => {
     expect(text).toContain('$0.003000')
     expect(text).toContain('Loser cost')
     expect(text).toContain('Billing basis')
-    expect(text).toContain('terminal_usage')
+    expect(text).toContain('Billed from completed usage')
+    expect(text).not.toContain('terminal_usage')
     expect(text).toContain('Dual warning')
     expect(text).toContain('Before VIP')
     expect(text).toContain('$0.015000')
@@ -252,6 +260,68 @@ describe('admin UsageTable tooltip', () => {
     expect(text).toContain('-$0.003000')
     expect(text).toContain('User billed')
     expect(text).toContain('$0.012000')
+  })
+
+  it('explains dual protection when the second path was not started', async () => {
+    const row = {
+      request_id: 'req-admin-dual-not-dispatched',
+      actual_cost: 0.000156,
+      total_cost: 0.000625,
+      account_rate_multiplier: 1,
+      rate_multiplier: 0.25,
+      service_tier: 'priority',
+      input_cost: 0.00017,
+      output_cost: 0.00009,
+      cache_creation_cost: 0,
+      cache_read_cost: 0.000365,
+      input_tokens: 227,
+      output_tokens: 18,
+      cost_breakdown: {
+        fast: { mode: 'force_priority', service_tier: 'priority' },
+        dual: {
+          enabled: true,
+          attempt_count: 1,
+          primary_cost: 0.000156,
+          secondary_cost: 0,
+          extra_cost: 0,
+          billing_disclaimer: 'Dual warning',
+          attempts: [
+            { role: 'primary', billing_basis: 'terminal_usage', billed_cost: 0.000156 },
+            { role: 'secondary', billing_basis: 'not_dispatched', billed_cost: 0 },
+          ],
+        },
+        final: { actual_cost: 0.000156 },
+      },
+    }
+
+    const wrapper = mount(UsageTable, {
+      props: {
+        data: [row],
+        loading: false,
+        columns: [],
+      },
+      global: {
+        stubs: {
+          DataTable: DataTableStub,
+          EmptyState: true,
+          Icon: true,
+          Teleport: true,
+        },
+      },
+    })
+
+    const tooltipTriggers = wrapper.findAll('.group.relative')
+    await tooltipTriggers[tooltipTriggers.length - 1].trigger('mouseenter')
+    await nextTick()
+
+    const text = wrapper.text()
+    expect(text).toContain('Dual protection')
+    expect(text).toContain('Attempts')
+    expect(text).toContain('Second path')
+    expect(text).toContain('Not started')
+    expect(text).toContain('no extra dual cost')
+    expect(text).not.toContain('not_dispatched')
+    expect(text).not.toContain('Dual warning')
   })
 
   it('shows requested and upstream models separately for admin rows', () => {

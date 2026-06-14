@@ -50,6 +50,30 @@ export const usageDualPrimaryCost = (row?: UsageCostBreakdownHost | null): numbe
 export const usageDualSecondaryCost = (row?: UsageCostBreakdownHost | null): number =>
   finiteNumber(usageCostBreakdown(row)?.dual?.secondary_cost) ?? 0
 
+const usageDualSecondaryAttempt = (
+  row?: UsageCostBreakdownHost | null
+): UsageCostBreakdownAttempt | undefined => {
+  const attempts = usageCostBreakdown(row)?.dual?.attempts
+  return Array.isArray(attempts)
+    ? attempts.find((attempt: UsageCostBreakdownAttempt) => attempt.role === 'secondary')
+    : undefined
+}
+
+export const usageDualSecondaryNotStarted = (row?: UsageCostBreakdownHost | null): boolean => {
+  const secondaryAttempt = usageDualSecondaryAttempt(row)
+  const secondaryBasis = secondaryAttempt?.billing_basis?.trim()
+  return (
+    usageDualEnabled(row) &&
+    usageDualAttemptCount(row) === 1 &&
+    usageDualSecondaryCost(row) === 0 &&
+    usageDualExtraCost(row) === 0 &&
+    (!secondaryAttempt || secondaryBasis === 'not_dispatched')
+  )
+}
+
+export const usageDualHasLoserCost = (row?: UsageCostBreakdownHost | null): boolean =>
+  usageDualSecondaryCost(row) > 0 || usageDualExtraCost(row) > 0
+
 export const usageDualUnsupportedReason = (row?: UsageCostBreakdownHost | null): string => {
   const reason = usageCostBreakdown(row)?.dual?.unsupported_reason
   return typeof reason === 'string' ? reason.trim() : ''
@@ -60,10 +84,35 @@ export const usageDualBillingBasis = (row?: UsageCostBreakdownHost | null): stri
   if (!Array.isArray(attempts)) {
     return ''
   }
+  const secondaryAttempt = usageDualSecondaryAttempt(row)
   const billedAttempt = attempts.find((attempt: UsageCostBreakdownAttempt) =>
-    typeof attempt.billing_basis === 'string' && attempt.billing_basis.trim()
+    typeof attempt.billing_basis === 'string' &&
+    attempt.billing_basis.trim() &&
+    attempt.billing_basis.trim() !== 'not_dispatched'
   )
-  return billedAttempt?.billing_basis?.trim() ?? ''
+  const basis = (secondaryAttempt?.billing_basis ?? billedAttempt?.billing_basis ?? '').trim()
+  if (!basis || basis === 'not_dispatched') {
+    return ''
+  }
+  return basis
+}
+
+export const usageDualBillingBasisLabel = (
+  row: UsageCostBreakdownHost | null | undefined,
+  translate: (key: string) => string
+): string => {
+  const basis = usageDualBillingBasis(row)
+  if (!basis) {
+    return ''
+  }
+  const labelKeyByBasis: Record<string, string> = {
+    terminal_usage: 'usage.dualBillingBasisTerminalUsage',
+    partial_usage: 'usage.dualBillingBasisPartialUsage',
+    dispatched_no_usage: 'usage.dualBillingBasisDispatchedNoUsage',
+    dual_unsupported_ws_adapter: 'usage.dualBillingBasisUnsupportedWs',
+  }
+  const labelKey = labelKeyByBasis[basis]
+  return labelKey ? translate(labelKey) : basis
 }
 
 export const usageDualDisclaimer = (row?: UsageCostBreakdownHost | null): string => {

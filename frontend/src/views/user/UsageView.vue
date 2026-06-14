@@ -603,16 +603,23 @@
                 <span class="text-muted-soft">{{ t('usage.dualExtraCost') }}</span>
                 <span class="font-semibold text-accent-amber">{{ formatUsageCostUSD(usageDualExtraCost(tooltipData)) }}</span>
               </div>
-              <div v-if="usageDualBillingBasis(tooltipData)" class="flex items-center justify-between gap-6">
+              <div v-if="usageDualBillingBasisLabel(tooltipData, t)" class="flex items-center justify-between gap-6">
                 <span class="text-muted-soft">{{ t('usage.billingBasis') }}</span>
-                <span class="font-medium text-on-dark">{{ usageDualBillingBasis(tooltipData) }}</span>
+                <span class="font-medium text-on-dark">{{ usageDualBillingBasisLabel(tooltipData, t) }}</span>
+              </div>
+              <div v-if="usageDualSecondaryNotStarted(tooltipData)" class="flex items-center justify-between gap-6">
+                <span class="text-muted-soft">{{ t('usage.dualSecondPath') }}</span>
+                <span class="font-medium text-on-dark">{{ t('usage.dualSecondPathNotStarted') }}</span>
               </div>
               <div v-if="usageDualUnsupportedReason(tooltipData)" class="flex items-center justify-between gap-6">
                 <span class="text-muted-soft">{{ t('usage.dualUnsupported') }}</span>
                 <span class="font-medium text-warning">{{ usageDualUnsupportedReason(tooltipData) }}</span>
               </div>
-              <p class="mt-1.5 max-w-[320px] whitespace-normal text-[11px] leading-snug text-accent-amber">
+              <p v-if="usageDualHasLoserCost(tooltipData)" class="mt-1.5 max-w-[320px] whitespace-normal text-[11px] leading-snug text-accent-amber">
                 {{ usageDualDisclaimer(tooltipData) || t('usage.dualWarning') }}
+              </p>
+              <p v-else-if="usageDualSecondaryNotStarted(tooltipData)" class="mt-1.5 max-w-[320px] whitespace-normal text-[11px] leading-snug text-muted-soft">
+                {{ t('usage.dualNoExtraCost') }}
               </p>
             </div>
           </template>
@@ -688,12 +695,14 @@ import { resolveUsageRequestType } from '@/utils/usageRequestType'
 import {
   formatUsageCostUSD,
   usageDualAttemptCount,
-  usageDualBillingBasis,
+  usageDualBillingBasisLabel,
   usageDualDisclaimer,
   usageDualEnabled,
   usageDualExtraCost,
+  usageDualHasLoserCost,
   usageDualPrimaryCost,
   usageDualSecondaryCost,
+  usageDualSecondaryNotStarted,
   usageDualUnsupportedReason,
   usageFastMode,
   usageFinalCost,
