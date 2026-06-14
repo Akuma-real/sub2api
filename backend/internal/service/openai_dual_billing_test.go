@@ -125,17 +125,23 @@ func TestBuildOpenAICostBreakdownSnapshotIncludesAccelerationAndVIP(t *testing.T
 	}
 	snapshot = EnrichOpenAICostBreakdownSnapshotFromUsageLog(snapshot, usageLog)
 
-	require.Equal(t, AccelerationFastModeForcePriority, snapshot["fast"].(map[string]any)["mode"])
-	require.Equal(t, OpenAIFastTierPriority, snapshot["fast"].(map[string]any)["service_tier"])
-	dual := snapshot["dual"].(map[string]any)
+	fast, ok := snapshot["fast"].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, AccelerationFastModeForcePriority, fast["mode"])
+	require.Equal(t, OpenAIFastTierPriority, fast["service_tier"])
+	dual, ok := snapshot["dual"].(map[string]any)
+	require.True(t, ok)
 	require.Equal(t, true, dual["enabled"])
 	require.Equal(t, 2, dual["attempt_count"])
 	require.InDelta(t, 0.003, dual["extra_cost"], 1e-12)
 	require.InDelta(t, 0.003, dual["secondary_cost"], 1e-12)
-	vip := snapshot["vip"].(map[string]any)
+	vip, ok := snapshot["vip"].(map[string]any)
+	require.True(t, ok)
 	require.InDelta(t, 0.8, vip["discount_multiplier"], 1e-12)
 	require.InDelta(t, 0.002, vip["savings_usd"], 1e-12)
-	require.InDelta(t, 0.011, snapshot["final"].(map[string]any)["actual_cost"], 1e-12)
+	final, ok := snapshot["final"].(map[string]any)
+	require.True(t, ok)
+	require.InDelta(t, 0.011, final["actual_cost"], 1e-12)
 }
 
 func TestBuildOpenAICostBreakdownSnapshotDoesNotMarkConfiguredDualAsActive(t *testing.T) {
@@ -148,7 +154,8 @@ func TestBuildOpenAICostBreakdownSnapshotDoesNotMarkConfiguredDualAsActive(t *te
 
 	snapshot := BuildOpenAICostBreakdownSnapshot(&OpenAIForwardResult{}, &CostBreakdown{}, apiKey, nil, false)
 
-	dual := snapshot["dual"].(map[string]any)
+	dual, ok := snapshot["dual"].(map[string]any)
+	require.True(t, ok)
 	require.Equal(t, true, dual["configured"])
 	require.Equal(t, false, dual["enabled"])
 	require.Equal(t, 0, dual["attempt_count"])

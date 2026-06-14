@@ -1015,9 +1015,6 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 				result = dualRun.Winner.result
 				err = dualRun.Winner.err
 			}
-			if dualRun.Handled && err == nil {
-				// Captured winner response has already been replayed to the real writer.
-			}
 		}
 		if !dualAttempted {
 			result, err = func() (*service.OpenAIForwardResult, error) {

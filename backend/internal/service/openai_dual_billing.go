@@ -258,33 +258,36 @@ func OpenAIDualFirstResponseTimeout(apiKey *APIKey) int {
 }
 
 func BuildOpenAICostBreakdownSnapshot(result *OpenAIForwardResult, cost *CostBreakdown, apiKey *APIKey, account *Account, isSubscriptionBill bool) map[string]any {
+	final := map[string]any{
+		"billing_type": "balance",
+		"actual_cost":  0,
+	}
+	if isSubscriptionBill {
+		final["billing_type"] = "subscription"
+	}
+	vip := map[string]any{
+		"discount_multiplier": nil,
+		"savings_usd":         0,
+	}
+	dual := map[string]any{
+		"configured":         EffectiveOpenAIDualProtectionEnabled(apiKey),
+		"enabled":            false,
+		"first_timeout_ms":   OpenAIDualFirstResponseTimeout(apiKey),
+		"attempt_count":      0,
+		"primary_cost":       0,
+		"secondary_cost":     0,
+		"extra_cost":         0,
+		"unsupported_reason": "",
+		"billing_disclaimer": "all dispatched upstream attempts may be billed, including losers not returned to the client",
+	}
 	snapshot := map[string]any{
 		"fast": map[string]any{
 			"mode":         apiKeyAccelerationFastMode(apiKey),
 			"service_tier": optionalStringValue(resultServiceTier(result)),
 		},
-		"dual": map[string]any{
-			"configured":         EffectiveOpenAIDualProtectionEnabled(apiKey),
-			"enabled":            false,
-			"first_timeout_ms":   OpenAIDualFirstResponseTimeout(apiKey),
-			"attempt_count":      0,
-			"primary_cost":       0,
-			"secondary_cost":     0,
-			"extra_cost":         0,
-			"unsupported_reason": "",
-			"billing_disclaimer": "all dispatched upstream attempts may be billed, including losers not returned to the client",
-		},
-		"vip": map[string]any{
-			"discount_multiplier": nil,
-			"savings_usd":         0,
-		},
-		"final": map[string]any{
-			"billing_type": "balance",
-			"actual_cost":  0,
-		},
-	}
-	if isSubscriptionBill {
-		snapshot["final"].(map[string]any)["billing_type"] = "subscription"
+		"dual":  dual,
+		"vip":   vip,
+		"final": final,
 	}
 	if cost != nil {
 		snapshot["base"] = map[string]any{
@@ -297,10 +300,10 @@ func BuildOpenAICostBreakdownSnapshot(result *OpenAIForwardResult, cost *CostBre
 			"rate_multiplier_applied": cost.ActualCost,
 			"billing_mode":            cost.BillingMode,
 		}
-		snapshot["final"].(map[string]any)["actual_cost"] = cost.ActualCost
+		final["actual_cost"] = cost.ActualCost
 		if cost.VIPProtectedActualCost > 0 || cost.VIPDiscountableActualCost > 0 {
-			snapshot["vip"].(map[string]any)["discountable_cost"] = cost.VIPDiscountableActualCost
-			snapshot["vip"].(map[string]any)["protected_cost"] = cost.VIPProtectedActualCost
+			vip["discountable_cost"] = cost.VIPDiscountableActualCost
+			vip["protected_cost"] = cost.VIPProtectedActualCost
 		}
 	}
 	if account != nil {
@@ -311,7 +314,6 @@ func BuildOpenAICostBreakdownSnapshot(result *OpenAIForwardResult, cost *CostBre
 		}
 	}
 	if result != nil && result.DualProtection != nil {
-		dual := snapshot["dual"].(map[string]any)
 		dual["enabled"] = result.DualProtection.Enabled
 		dual["attempt_count"] = result.DualProtection.AttemptCount
 		dual["extra_cost"] = result.DualProtection.ExtraCost

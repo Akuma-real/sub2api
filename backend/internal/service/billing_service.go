@@ -160,7 +160,7 @@ type CostBreakdown struct {
 	// VIPProtectedActualCost is the part of ActualCost that must never be
 	// discounted below upstream/attempt cost, such as dual-request loser billing.
 	VIPProtectedActualCost float64
-	BillingMode       string  // 计费模式（"token"/"per_request"/"image"），由 CalculateCostUnified 填充
+	BillingMode            string // 计费模式（"token"/"per_request"/"image"），由 CalculateCostUnified 填充
 }
 
 // ErrModelPricingUnavailable indicates that none of the configured pricing

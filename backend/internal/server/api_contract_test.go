@@ -245,6 +245,11 @@ func TestAPIContracts(t *testing.T) {
 					"window_1d_start": null,
 					"window_7d_start": null,
 					"expires_at": null,
+					"acceleration_settings": {
+						"fast_mode": "off",
+						"dual_protection_enabled": false,
+						"dual_first_response_timeout_ms": 8000
+					},
 					"created_at": "2025-01-02T03:04:05Z",
 					"updated_at": "2025-01-02T03:04:05Z"
 				}
@@ -294,6 +299,11 @@ func TestAPIContracts(t *testing.T) {
 							"window_1d_start": null,
 							"window_7d_start": null,
 							"expires_at": null,
+							"acceleration_settings": {
+								"fast_mode": "off",
+								"dual_protection_enabled": false,
+								"dual_first_response_timeout_ms": 8000
+							},
 							"created_at": "2025-01-02T03:04:05Z",
 							"updated_at": "2025-01-02T03:04:05Z"
 						}
@@ -577,6 +587,11 @@ func TestAPIContracts(t *testing.T) {
 						"total_cost": 0.5,
 						"actual_cost": 0.5,
 						"rate_multiplier": 1,
+						"vip_savings_usd": 0,
+						"dual_protection_enabled": false,
+						"dual_attempt_count": 0,
+						"dual_extra_cost": 0,
+						"cost_breakdown": null,
 						"billing_type": 0,
 							"stream": true,
 							"duration_ms": 100,
