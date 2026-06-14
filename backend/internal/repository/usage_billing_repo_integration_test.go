@@ -234,7 +234,7 @@ func TestUsageBillingRepositoryApply_VIPDoesNotDiscountProtectedBalanceCost(t *t
 	var vipLevelID int64
 	require.NoError(t, integrationDB.QueryRowContext(ctx, `
 		INSERT INTO vip_levels (name, price, validity_days, discount_multiplier, created_at, updated_at)
-		VALUES ($1, 0, 30, 0.5, NOW(), NOW())
+		VALUES ($1, 0.01, 30, 0.5, NOW(), NOW())
 		RETURNING id
 	`, "protected-cost-test-"+uuid.NewString()).Scan(&vipLevelID))
 	_, err := integrationDB.ExecContext(ctx, `
